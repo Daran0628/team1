@@ -7,6 +7,7 @@ from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 
 from core.config.MySqlConfig import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS
+from core.config.RedisConfig import redis_client
 
 bcrypt = Bcrypt()
 jwt = JWTManager()
@@ -31,7 +32,8 @@ def init_extensions(app):
 
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
-        return is_token_blacklisted(jwt_payload["jti"])
+        jti = jwt_payload["jti"]
+        return redis_client.exists(f"blacklist:{jti}") == 1
 
     @jwt.revoked_token_loader
     def revoked_token_response(jwt_header, jwt_payload):
