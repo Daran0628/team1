@@ -4,14 +4,19 @@ from datetime import timedelta
 from flask import jsonify
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
+from flask_sqlalchemy import SQLAlchemy
 
-from redis_client import is_token_blacklisted
+from core.config.MySqlConfig import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS
 
 bcrypt = Bcrypt()
 jwt = JWTManager()
+db = SQLAlchemy()
 
 
 def init_extensions(app):
+    app.config["SQLALCHEMY_DATABASE_URI"]        = SQLALCHEMY_DATABASE_URI
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = SQLALCHEMY_TRACK_MODIFICATIONS
+
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(
         minutes=int(os.getenv("JWT_ACCESS_EXPIRES_MIN", 15))
@@ -20,6 +25,7 @@ def init_extensions(app):
         days=int(os.getenv("JWT_REFRESH_EXPIRES_DAYS", 7))
     )
 
+    db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
 
