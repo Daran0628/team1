@@ -6,12 +6,14 @@ import os
 from flask import Flask, send_from_directory
 from extensions import db, init_extensions
 from web.routes.AuthenticationRestController import auth_bp
+from web.routes.RBACRestController import rbac_bp
 from web.routes.Todo import todo_bp
 
 app = Flask(__name__)
 init_extensions(app)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(rbac_bp)
 app.register_blueprint(todo_bp)
 
 with app.app_context():
