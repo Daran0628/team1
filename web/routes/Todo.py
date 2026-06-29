@@ -1,21 +1,9 @@
-from functools import wraps
-
 from flask import Blueprint, jsonify
 from flask_jwt_extended import get_jwt, jwt_required
 
+from core.jwt.JwtUtils import role_required
+
 todo_bp = Blueprint("todo", __name__, url_prefix="/api/todo")
-
-
-def _role_required(*roles):
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            claims = get_jwt()
-            if claims.get("role") not in roles:
-                return jsonify({"isSuccess": False, "message": "접근 권한이 없습니다."}), 403
-            return fn(*args, **kwargs)
-        return wrapper
-    return decorator
 
 
 @todo_bp.route("/all", methods=["GET"])
@@ -28,7 +16,7 @@ def all_users():
 
 @todo_bp.route("/user", methods=["GET"])
 @jwt_required()
-@_role_required("USER")
+@role_required("USER")
 def user_only():
     """USER 전용"""
     return jsonify({"isSuccess": True, "message": "USER 전용 접근 성공"})
@@ -36,7 +24,7 @@ def user_only():
 
 @todo_bp.route("/admin", methods=["GET"])
 @jwt_required()
-@_role_required("ADMIN")
+@role_required("ADMIN")
 def admin_only():
     """ADMIN 전용"""
     return jsonify({"isSuccess": True, "message": "ADMIN 전용 접근 성공"})
@@ -44,7 +32,7 @@ def admin_only():
 
 @todo_bp.route("/user-admin", methods=["GET"])
 @jwt_required()
-@_role_required("USER", "ADMIN")
+@role_required("USER", "ADMIN")
 def user_and_admin():
     """USER + ADMIN 접근"""
     return jsonify({"isSuccess": True, "message": "USER/ADMIN 접근 성공"})
