@@ -48,14 +48,16 @@ class CreatePermissionRequestDTO:
 
 @dataclass
 class AssignPermissionRequestDTO:
-    role_id:       str
-    permission_id: str
+    role_id:        str
+    permission_ids: list    # 단건 또는 복수 ["id1", "id2", ...]
 
     def __post_init__(self):
         if not self.role_id or not self.role_id.strip():
             raise ValueError("role_id는 필수입니다.")
-        if not self.permission_id or not self.permission_id.strip():
-            raise ValueError("permission_id는 필수입니다.")
+        if not isinstance(self.permission_ids, list) or len(self.permission_ids) == 0:
+            raise ValueError("permissionIds는 비어있지 않은 배열이어야 합니다.")
+        if any(not isinstance(p, str) or not p.strip() for p in self.permission_ids):
+            raise ValueError("permissionIds의 각 항목은 비어있지 않은 문자열이어야 합니다.")
 
 
 # ──────────────────────────────────────────────

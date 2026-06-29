@@ -111,12 +111,13 @@ class RBACService:
         role = Role.query.get(dto.role_id)
         if not role:
             raise ValueError("ROLE_NOT_FOUND")
-        perm = Permission.query.get(dto.permission_id)
-        if not perm:
-            raise ValueError("PERMISSION_NOT_FOUND")
-        if perm in role.permissions:
-            raise ValueError("PERMISSION_ALREADY_ASSIGNED")
-        role.permissions.append(perm)
+        for perm_id in dto.permission_ids:
+            perm = Permission.query.get(perm_id)
+            if not perm:
+                raise ValueError("PERMISSION_NOT_FOUND")
+            if perm in role.permissions:
+                raise ValueError("PERMISSION_ALREADY_ASSIGNED")
+            role.permissions.append(perm)
         db.session.commit()
 
     def revoke_permission(self, role_id: str, permission_id: str) -> None:

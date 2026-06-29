@@ -156,7 +156,7 @@ def assign_permission():
     try:
         dto = AssignPermissionRequestDTO(
             role_id=data.get("roleId", ""),
-            permission_id=data.get("permissionId", ""),
+            permission_ids=data.get("permissionIds", []),
         )
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))
