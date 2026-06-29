@@ -13,7 +13,7 @@ class MemberConverter:
             name_ko=member.name_ko,
             account_id=member.account_id,
             employee_no=member.employee_no,
-            dept_path_name=member.dept_path_name,
+            department_id=member.department_id,
             enrollment_status=member.enrollment_status,
             account_type=member.account_type,
         )
