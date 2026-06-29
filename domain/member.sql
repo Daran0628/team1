@@ -15,10 +15,10 @@ CREATE TABLE IF NOT EXISTS tb_members (
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     last_login      DATETIME        NULL,
 
-    PRIMARY KEY (member_id)
+    PRIMARY KEY (member_id),
     CONSTRAINT fk_member_department
         FOREIGN KEY (department_id)
-        REFERENCES department(department_id)
+        REFERENCES tb_department(department_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
