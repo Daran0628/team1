@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 | 업무지원포털</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; }
+
+        /* 사이드바 */
+        .sidebar { width: 240px; min-height: 100vh; background: #1a1a2e; padding: 2rem 1.25rem; display: flex; flex-direction: column; gap: 6px; position: fixed; top: 0; left: 0; bottom: 0; }
+        .logo { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); letter-spacing: -0.5px; }
+        .logo span { color: #4f46e5; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+        .nav-item.active { background: #4f46e5; color: #fff; }
+        .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+        .sidebar-bottom { margin-top: auto; }
+
+        /* 메인 */
+        .main { margin-left: 240px; flex: 1; padding: 2.5rem 2rem; }
+
+        /* 헤더 */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; }
+        .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+        .btn-write { display: none; align-items: center; gap: 6px; padding: 0.625rem 1.25rem; background: #4f46e5; color: #fff; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-write:hover { background: #4338ca; }
+
+        /* 검색 */
+        .search-wrap { margin-bottom: 1.25rem; }
+        .search-wrap input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
+        .search-wrap input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+
+        /* 테이블 카드 */
+        .table-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { padding: 0.875rem 1.25rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f3f4f6; background: #fafafa; }
+        tbody tr { border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #f9fafb; }
+        tbody td { padding: 1rem 1.25rem; font-size: 0.875rem; color: #374151; }
+        .td-title { font-weight: 500; color: #111827; display: flex; align-items: center; gap: 8px; }
+        .pin-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; background: #ede9fe; color: #6d28d9; border-radius: 20px; }
+        .td-num { color: #9ca3af; font-size: 0.8rem; width: 60px; }
+        .td-date { color: #9ca3af; font-size: 0.8rem; white-space: nowrap; }
+        .td-view { color: #9ca3af; font-size: 0.8rem; width: 80px; }
+
+        /* 빈 상태 */
+        .empty { padding: 4rem; text-align: center; color: #9ca3af; }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .empty p { font-size: 0.9rem; }
+
+        /* 스켈레톤 */
+        .skeleton-row td { padding: 1rem 1.25rem; }
+        .skeleton-bar { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* 토스트 */
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1f2937; color: #fff; padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.875rem; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; z-index: 999; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item active"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h1 class="page-title">공지사항</h1>
+        <button class="btn-write" id="btn-write" onclick="location.href='/static/pages/notice_create.html'">
+            ✏️ 글쓰기
+        </button>
+    </div>
+
+    <div class="search-wrap">
+        <input type="text" id="search-input" placeholder="🔍  제목으로 검색..." oninput="filterNotices()">
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th class="td-num">번호</th>
+                    <th>제목</th>
+                    <th class="td-date">작성일</th>
+                    <th class="td-view">조회수</th>
+                </tr>
+            </thead>
+            <tbody id="notice-list">
+                <tr class="skeleton-row"><td><div class="skeleton-bar" style="width:30px"></div></td><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80px"></div></td><td><div class="skeleton-bar" style="width:30px"></div></td></tr>
+                <tr class="skeleton-row"><td><div class="skeleton-bar" style="width:30px"></div></td><td><div class="skeleton-bar" style="width:45%"></div></td><td><div class="skeleton-bar" style="width:80px"></div></td><td><div class="skeleton-bar" style="width:30px"></div></td></tr>
+                <tr class="skeleton-row"><td><div class="skeleton-bar" style="width:30px"></div></td><td><div class="skeleton-bar" style="width:55%"></div></td><td><div class="skeleton-bar" style="width:80px"></div></td><td><div class="skeleton-bar" style="width:30px"></div></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = sessionStorage.getItem('access_token');
+    const role  = sessionStorage.getItem('role');
+    let allNotices = [];
+
+    if (!token) location.replace('/login');
+    if (role === 'ADMIN' || role === 'SUPERADMIN') {
+        document.getElementById('btn-write').style.display = 'flex';
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function filterNotices() {
+        const q = document.getElementById('search-input').value.toLowerCase();
+        renderNotices(allNotices.filter(n => n.title.toLowerCase().includes(q)));
+    }
+
+    function renderNotices(list) {
+        const tbody = document.getElementById('notice-list');
+        tbody.innerHTML = '';
+        if (!list.length) {
+            tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">📭</div><p>등록된 공지사항이 없습니다.</p></div></td></tr>`;
+            return;
+        }
+        let num = list.filter(n => !n.isPinned).length;
+        list.forEach(n => {
+            const tr = document.createElement('tr');
+            tr.onclick = () => location.href = `/static/pages/notice_detail.html?id=${n.noticeId}`;
+            tr.innerHTML = `
+                <td class="td-num">${n.isPinned ? '-' : num--}</td>
+                <td><div class="td-title">${n.isPinned ? '<span class="pin-badge">📌 고정</span>' : ''}${n.title}</div></td>
+                <td class="td-date">${n.createdAt.slice(0,10)}</td>
+                <td class="td-view">${n.viewCount}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function loadNotices() {
+        try {
+            const res = await fetch('/api/notices', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (res.status === 401) { location.replace('/login'); return; }
+            const data = await res.json();
+            allNotices = data.result || [];
+            renderNotices(allNotices);
+        } catch { showToast('데이터를 불러오지 못했습니다.'); }
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        location.replace('/login');
+    }
+
+    loadNotices();
+</script>
+</body>
+</html>

@@ -14,6 +14,7 @@ _service = TicketService()
 def _ticket_to_dict(ticket):
     return {
         "ticketId":   ticket.id,
+        "ticketNo":   ticket.ticket_no,  # ← 추가
         "memberId":   ticket.member_id,
         "assignedTo": ticket.assigned_to,
         "title":      ticket.title,
@@ -89,7 +90,7 @@ def update_ticket_status(ticket_id):
     data   = request.get_json(silent=True) or {}
     status = data.get("status", "").strip()
 
-    if status not in ("OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"):
+    if status not in ("OPEN", "IN_PROGRESS", "PENDING", "RESOLVED", "CLOSED"):
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "올바른 상태값을 입력해주세요.")
 
     try:

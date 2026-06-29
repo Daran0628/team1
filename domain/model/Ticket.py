@@ -8,6 +8,7 @@ from extensions import db
 class TicketStatus(str):
     OPEN        = "OPEN"
     IN_PROGRESS = "IN_PROGRESS"
+    PENDING     = "PENDING"
     RESOLVED    = "RESOLVED"
     CLOSED      = "CLOSED"
 
@@ -21,6 +22,7 @@ class Ticket(BaseEntity):
         primary_key=True,
         default=lambda: str(uuid.uuid4())
     )
+    ticket_no = db.Column(db.Integer, autoincrement=True, unique=True, nullable=True)  # ← 추가
 
     member_id = db.Column(
         db.String(36),
