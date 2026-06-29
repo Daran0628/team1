@@ -1,3 +1,4 @@
+import uuid
 import sqlalchemy as sa
 
 from domain.enum.AccountType import AccountType
@@ -10,12 +11,12 @@ from extensions import db
 class Member(BaseEntity):
     __tablename__ = "tb_members"
 
-    id = db.Column("member_id", db.BigInteger, primary_key=True, autoincrement=True)
+    id = db.Column("member_id", db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     name_ko = db.Column(db.String(18), nullable=False)
     account_id = db.Column(db.String(20), nullable=False)
     employee_no = db.Column(db.String(10), nullable=False)
-    dept_path_name = db.Column(db.String(15), nullable=False)
+    department_id = db.Column(db.String(36), nullable=False)
     email = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(60), nullable=False)
 
@@ -34,7 +35,7 @@ class Member(BaseEntity):
 
     car_num = db.Column(db.String(8), nullable=True)
     address = db.Column(db.String(50), nullable=False)
-    deleted_at = db.Column(db.Date, nullable=True)
+    last_login = db.Column(db.DateTime, nullable=True)
 
     # ── UserDetails 동등 인터페이스 ──────────────────────────────
 
