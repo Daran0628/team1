@@ -121,6 +121,61 @@
     </div>
 </div>
 
+<!-- ══ Add Binding Modal ════════════════════════════════════════ -->
+<div class="modal-overlay" id="bindingModal" hidden>
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h2 id="bindingModalTitle">Add Binding</h2>
+            <button class="btn-x" data-close="bindingModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label>Subject Type</label>
+                <div class="subject-type-tabs" id="subjectTypeTabs">
+                    <button class="tab-btn active" data-type="MEMBER">Member</button>
+                    <button class="tab-btn" data-type="TEAM">Group</button>
+                    <button class="tab-btn" data-type="DEPARTMENT">Department</button>
+                </div>
+            </div>
+
+            <div class="field" id="memberPickSection">
+                <input type="search" id="bindMemberSearch" class="search-input bind-search" placeholder="이름 또는 계정 검색...">
+                <div class="subject-list" id="bindMemberList"></div>
+            </div>
+
+            <div class="field" id="groupPickSection" hidden>
+                <input type="search" id="bindGroupSearch" class="search-input bind-search" placeholder="그룹명 검색...">
+                <div class="subject-list" id="bindGroupList"></div>
+            </div>
+
+            <div class="field" id="deptPickSection" hidden>
+                <label>Department ID <span class="req">*</span></label>
+                <input type="text" id="bindDeptId" placeholder="department UUID">
+            </div>
+
+            <div class="field">
+                <label>Resource Type <span class="req">*</span></label>
+                <select id="bindResourceType" class="field-select">
+                    <option value="">선택...</option>
+                    <option value="STORAGE">STORAGE</option>
+                    <option value="VDI">VDI</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Resource ID <span class="req">*</span></label>
+                <input type="text" id="bindResourceId" placeholder="resource UUID">
+            </div>
+
+            <div class="form-error" id="bindingModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="bindingModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSaveBinding">Create Binding</button>
+        </div>
+    </div>
+</div>
+
 <script src="/static/js/rbac.js"></script>
 </body>
 </html>
