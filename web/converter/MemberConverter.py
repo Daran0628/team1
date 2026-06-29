@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from domain.model.member import Member
-from web.dto.auth_response_dto import LoginResponseDTO, LogoutResponseDTO
+from domain.model.Member import Member
+from web.dto.AuthResponseDTO import LoginResponseDTO, LogoutResponseDTO
 
 
 class MemberConverter:

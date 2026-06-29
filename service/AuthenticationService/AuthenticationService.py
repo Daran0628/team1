@@ -5,10 +5,10 @@ from flask_bcrypt import check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from core.config.RedisConfig import redis_client
-from domain.model.member import Member
-from web.converter.member_converter import MemberConverter
-from web.dto.auth_request_dto import LoginRequestDTO
-from web.dto.auth_response_dto import LoginResponseDTO, LogoutResponseDTO
+from domain.model.Member import Member
+from web.converter.MemberConverter import MemberConverter
+from web.dto.AuthRequestDTO import LoginRequestDTO
+from web.dto.AuthResponseDTO import LoginResponseDTO, LogoutResponseDTO
 
 logger = logging.getLogger(__name__)
 
