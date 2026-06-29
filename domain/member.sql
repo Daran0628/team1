@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS tb_members (
-    member_id       BIGINT          NOT NULL AUTO_INCREMENT,
+    member_id       CHAR(36) ,
     name_ko         VARCHAR(18)     NOT NULL,
     account_id      VARCHAR(20)     NOT NULL,
     employee_no     VARCHAR(10)     NOT NULL,
-    dept_path_name  VARCHAR(15)     NOT NULL,
+    department_id   CHAR(36) NOT NULL,
     email           VARCHAR(50)     NOT NULL,
     password        VARCHAR(60)     NOT NULL,
     enrollment_status ENUM('ACTIVE', 'ON_LEAVE', 'RESIGNED') NOT NULL,
@@ -11,9 +11,22 @@ CREATE TABLE IF NOT EXISTS tb_members (
     work_type       ENUM('FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN') NOT NULL,
     car_num         VARCHAR(8)      NULL,
     address         VARCHAR(50)     NOT NULL,
-    deleted_at      DATE            NULL,
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_login      DATETIME        NULL,
 
     PRIMARY KEY (member_id)
+    CONSTRAINT fk_member_department
+        FOREIGN KEY (department_id)
+        REFERENCES department(department_id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 수정
+-- member_id BIGINT -> uer_id CHAR(36)
+-- dept_path_name -> department_id (FK)
+-- 추가
+-- last_login
+-- 삭제
+-- deleted_at
