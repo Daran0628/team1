@@ -4,6 +4,7 @@ load_dotenv()
 from app import app, db
 from flask_bcrypt import generate_password_hash
 from domain.model.Member import Member
+from domain.model.StorageBucket import StorageBucket
 from domain.model.StorageResource import StorageResource
 from domain.model.Vdi import Vdi, VdiSnapshot
 from domain.model.Department import Department
@@ -101,14 +102,29 @@ with app.app_context():
     hong1  = Member.query.filter_by(account_id="hong1").first()
     admin1 = Member.query.filter_by(account_id="admin1").first()
 
+    SEED_BUCKET_NAME = "dev-uploads"
+    seed_bucket = StorageBucket.query.filter_by(bucket_name=SEED_BUCKET_NAME).first()
+    if not seed_bucket:
+        seed_bucket = StorageBucket(
+            bucket_name=SEED_BUCKET_NAME,
+            created_by=admin1.id if admin1 else "00000000-0000-0000-0000-000000000000",
+        )
+        db.session.add(seed_bucket)
+        db.session.flush()   # bucket_name FK 확보
+        print(f"[OK BUCKET]    {SEED_BUCKET_NAME}")
+    else:
+        print(f"[SKIP BUCKET]  {SEED_BUCKET_NAME} 이미 존재")
+
     STORAGE_DATA = [
         {
             "resource_name": "홍길동_보고서.pdf",
+            "bucket_name":   SEED_BUCKET_NAME,
             "s3_key":        "uploads/hong1/reports/report-2026.pdf",
             "owner_id":      hong1.id  if hong1  else None,
         },
         {
             "resource_name": "관리자_공지문.docx",
+            "bucket_name":   SEED_BUCKET_NAME,
             "s3_key":        "uploads/admin1/notices/notice-2026.docx",
             "owner_id":      admin1.id if admin1 else None,
         },
@@ -124,6 +140,7 @@ with app.app_context():
             continue
         resource = StorageResource(
             resource_name=data["resource_name"],
+            bucket_name=  data["bucket_name"],
             s3_key=       data["s3_key"],
             owner_id=     data["owner_id"],
         )
