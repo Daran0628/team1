@@ -63,6 +63,7 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s;
     outline: none;
     -webkit-appearance: none;
+    appearance: none;
 }
 
 .form-group input:focus {
