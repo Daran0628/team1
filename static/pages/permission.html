@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>IAM — Permissions</title>
+    <link rel="stylesheet" href="/static/css/rbac.css">
+</head>
+<body>
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>Administration</span> <span>›</span>
+        <a href="/permission">IAM</a> <span>›</span>
+        <span>Permissions</span>
+    </nav>
+    <h1>Permissions</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnAddPerm" class="btn btn-primary">⊕ Add Permission</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+        </div>
+        <div class="toolbar-right">
+            <span id="itemsCount" class="items-count"></span>
+            <select id="typeFilter" class="search-input" style="width:auto;cursor:pointer;">
+                <option value="">All types</option>
+                <option value="STORAGE">STORAGE</option>
+                <option value="VDI">VDI</option>
+                <option value="RBAC">RBAC</option>
+            </select>
+            <input type="search" id="searchInput" class="search-input" placeholder="Search permissions...">
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-perm-type">Type</th>
+                    <th class="col-name">Action</th>
+                    <th class="col-perm-res">Resources</th>
+                    <th class="col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="permBody">
+                <tr><td colspan="4" class="state-cell">불러오는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-bar" id="paginationBar"></div>
+
+</main>
+
+<!-- ══ Add Permission Modal ════════════════════════════════════ -->
+<div class="modal-overlay" id="addPermModal" hidden>
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h2>Add Permission</h2>
+            <button class="btn-x" data-close="addPermModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputType">Type <span class="req">*</span></label>
+                <select id="inputType" class="field-select">
+                    <option value="">선택...</option>
+                    <option value="STORAGE">STORAGE</option>
+                    <option value="VDI">VDI</option>
+                    <option value="RBAC">RBAC</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Actions <span class="req">*</span></label>
+                <div class="action-grid" id="actionGrid">
+                    <span class="no-perms">Type을 먼저 선택하세요</span>
+                </div>
+            </div>
+            <!-- Resource ID 목록 (RBAC 타입이면 숨김) -->
+            <div class="field" id="resourceIdsSection">
+                <label>Resource IDs</label>
+                <div class="res-input-row">
+                    <input type="text" id="inputResId" placeholder="resource UUID 입력 후 Add 클릭">
+                    <button type="button" class="btn btn-ghost" id="btnAddResId">Add</button>
+                </div>
+                <div class="res-id-list" id="resIdList"></div>
+            </div>
+            <div class="form-error" id="addPermModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="addPermModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSavePerm">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Delete Confirm Modal ════════════════════════════════════ -->
+<div class="modal-overlay" id="deletePermModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>Delete Permission</h2>
+            <button class="btn-x" data-close="deletePermModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="deletePermMsg" class="delete-msg"></p>
+            <div class="form-error" id="deletePermErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="deletePermModal">Cancel</button>
+            <button class="btn btn-danger" id="btnConfirmDeletePerm">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/permission.js"></script>
+</body>
+</html>

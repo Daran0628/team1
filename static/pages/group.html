@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>IAM — Groups</title>
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/group.css">
+</head>
+<body>
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>Administration</span> <span>›</span>
+        <a href="/group">IAM</a> <span>›</span>
+        <span>Groups</span>
+    </nav>
+    <h1>Groups</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnAddGroup" class="btn btn-primary">⊕ Add Group</button>
+            <button id="btnRefresh"  class="btn btn-icon" title="새로고침">↻</button>
+        </div>
+        <div class="toolbar-right">
+            <span id="itemsCount" class="items-count"></span>
+            <input type="search" id="searchInput" class="search-input" placeholder="Search groups...">
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-toggle"></th>
+                    <th class="col-name">Name</th>
+                    <th class="col-name">Description</th>
+                    <th class="col-perms">Members</th>
+                    <th class="col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="groupBody">
+                <tr><td colspan="5" class="state-cell">불러오는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-bar" id="paginationBar"></div>
+
+</main>
+
+<!-- ══ Add / Edit Group Modal ═══════════════════════════════ -->
+<div class="modal-overlay" id="groupModal" hidden>
+    <div class="modal">
+        <div class="modal-head">
+            <h2 id="groupModalTitle">Add Group</h2>
+            <button class="btn-x" data-close="groupModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputGroupName">Group Name <span class="req">*</span></label>
+                <input type="text" id="inputGroupName" maxlength="50" placeholder="e.g. dev-team">
+            </div>
+            <div class="field">
+                <label for="inputGroupDesc">Description</label>
+                <input type="text" id="inputGroupDesc" maxlength="255" placeholder="선택 사항">
+            </div>
+            <div class="form-error" id="groupModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="groupModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSaveGroup">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Manage Members Modal ══════════════════════════════════ -->
+<div class="modal-overlay" id="membersModal" hidden>
+    <div class="modal modal-xl">
+        <div class="modal-head">
+            <h2 id="membersModalTitle">Manage Members</h2>
+            <button class="btn-x" data-close="membersModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <!-- 필터 바 -->
+            <div class="member-filter-bar">
+                <select id="deptFilter">
+                    <option value="">All departments</option>
+                </select>
+                <input type="search" id="memberSearch" class="search-input"
+                       placeholder="이름 또는 계정 검색...">
+                <button id="btnQuickAddDept" class="btn btn-ghost" hidden>
+                    ＋ 이 부서 전원 추가
+                </button>
+            </div>
+            <!-- 멤버 피커 -->
+            <div class="member-picker" id="memberPicker">불러오는 중...</div>
+            <div class="form-error" id="membersModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="membersModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSaveMembers">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Delete Confirm Modal ══════════════════════════════════ -->
+<div class="modal-overlay" id="deleteGroupModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>Delete Group</h2>
+            <button class="btn-x" data-close="deleteGroupModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="deleteGroupMsg" class="delete-msg"></p>
+            <div class="form-error" id="deleteGroupErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="deleteGroupModal">Cancel</button>
+            <button class="btn btn-danger" id="btnConfirmDeleteGroup">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/group.js"></script>
+</body>
+</html>

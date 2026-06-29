@@ -12,6 +12,33 @@ class SuccessStatus(Enum):
     MEMBER_INFO_SUCCESS          = (HTTPStatus.OK,      "MEMBER2005", "회원 정보를 조회했습니다.")
     MEMBER_UPDATE_SUCCESS        = (HTTPStatus.OK,      "MEMBER2006", "회원 정보를 수정했습니다.")
 
+    # RBAC - Role
+    RBAC_ROLE_CREATE  = (HTTPStatus.CREATED, "RBAC2001", "역할이 생성되었습니다.")
+    RBAC_ROLE_READ    = (HTTPStatus.OK,      "RBAC2002", "역할 조회에 성공했습니다.")
+    RBAC_ROLE_UPDATE  = (HTTPStatus.OK,      "RBAC2003", "역할이 수정되었습니다.")
+    RBAC_ROLE_DELETE  = (HTTPStatus.OK,      "RBAC2004", "역할이 삭제되었습니다.")
+
+    # RBAC - Permission
+    RBAC_PERMISSION_CREATE  = (HTTPStatus.CREATED, "RBAC2011", "권한이 생성되었습니다.")
+    RBAC_PERMISSION_READ    = (HTTPStatus.OK,      "RBAC2012", "권한 조회에 성공했습니다.")
+    RBAC_PERMISSION_DELETE  = (HTTPStatus.OK,      "RBAC2013", "권한이 삭제되었습니다.")
+    RBAC_PERMISSION_ASSIGN  = (HTTPStatus.OK,      "RBAC2014", "역할에 권한이 할당되었습니다.")
+    RBAC_PERMISSION_REVOKE  = (HTTPStatus.OK,      "RBAC2015", "역할에서 권한이 회수되었습니다.")
+
+    # RBAC - RoleBinding
+    RBAC_BINDING_CREATE = (HTTPStatus.CREATED, "RBAC2021", "역할 바인딩이 생성되었습니다.")
+    RBAC_BINDING_READ   = (HTTPStatus.OK,      "RBAC2022", "역할 바인딩 조회에 성공했습니다.")
+    RBAC_BINDING_UPDATE = (HTTPStatus.OK,      "RBAC2023", "역할 바인딩이 수정되었습니다.")
+    RBAC_BINDING_DELETE = (HTTPStatus.OK,      "RBAC2024", "역할 바인딩이 삭제되었습니다.")
+
+    # Group (커스텀 그룹)
+    GROUP_CREATE        = (HTTPStatus.CREATED, "GROUP2001", "그룹이 생성되었습니다.")
+    GROUP_READ          = (HTTPStatus.OK,      "GROUP2002", "그룹 조회에 성공했습니다.")
+    GROUP_UPDATE        = (HTTPStatus.OK,      "GROUP2003", "그룹이 수정되었습니다.")
+    GROUP_DELETE        = (HTTPStatus.OK,      "GROUP2004", "그룹이 삭제되었습니다.")
+    GROUP_MEMBER_ADD    = (HTTPStatus.OK,      "GROUP2005", "그룹에 멤버가 추가되었습니다.")
+    GROUP_MEMBER_REMOVE = (HTTPStatus.OK,      "GROUP2006", "그룹에서 멤버가 제거되었습니다.")
+
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
         obj._value_ = code

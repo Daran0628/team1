@@ -4,6 +4,8 @@ load_dotenv()
 from app import app, db
 from flask_bcrypt import generate_password_hash
 from domain.model.Member import Member
+from domain.model.StorageResource import StorageResource
+from domain.model.Vdi import Vdi, VdiSnapshot
 from domain.model.Department import Department
 from domain.enum.AccountType import AccountType
 from domain.enum.EnrollmentStatus import EnrollmentStatus
@@ -94,3 +96,116 @@ with app.app_context():
 
     
     print("완료")
+
+    # ── Object Storage 더미 데이터 ─────────────────────────────
+    hong1  = Member.query.filter_by(account_id="hong1").first()
+    admin1 = Member.query.filter_by(account_id="admin1").first()
+
+    STORAGE_DATA = [
+        {
+            "resource_name": "홍길동_보고서.pdf",
+            "s3_key":        "uploads/hong1/reports/report-2026.pdf",
+            "owner_id":      hong1.id  if hong1  else None,
+        },
+        {
+            "resource_name": "관리자_공지문.docx",
+            "s3_key":        "uploads/admin1/notices/notice-2026.docx",
+            "owner_id":      admin1.id if admin1 else None,
+        },
+    ]
+
+    for data in STORAGE_DATA:
+        if not data["owner_id"]:
+            print(f"[SKIP STORAGE] {data['resource_name']} — 멤버 없음")
+            continue
+        exists = StorageResource.query.filter_by(s3_key=data["s3_key"]).first()
+        if exists:
+            print(f"[SKIP STORAGE] {data['resource_name']} 이미 존재")
+            continue
+        resource = StorageResource(
+            resource_name=data["resource_name"],
+            s3_key=       data["s3_key"],
+            owner_id=     data["owner_id"],
+        )
+        db.session.add(resource)
+        print(f"[OK STORAGE]   {data['resource_name']}")
+
+    db.session.commit()
+
+    # ── VDI 더미 데이터 ─────────────────────────────────────────
+    VDI_DATA = [
+        {
+            "container_name": "hong1-desktop",
+            "image":          "ubuntu-desktop:22.04",
+            "status":         "STOPPED",
+            "assigned_to":    hong1.id  if hong1  else None,
+        },
+        {
+            "container_name": "admin1-desktop",
+            "image":          "ubuntu-desktop:22.04",
+            "status":         "RUNNING",
+            "assigned_to":    admin1.id if admin1 else None,
+        },
+    ]
+
+    created_vdis = []
+    for data in VDI_DATA:
+        if not data["assigned_to"]:
+            print(f"[SKIP VDI] {data['container_name']} — 멤버 없음")
+            continue
+        exists = Vdi.query.filter_by(container_name=data["container_name"]).first()
+        if exists:
+            print(f"[SKIP VDI] {data['container_name']} 이미 존재")
+            created_vdis.append(exists)
+            continue
+        vdi = Vdi(
+            container_name=data["container_name"],
+            image=         data["image"],
+            status=        data["status"],
+            assigned_to=   data["assigned_to"],
+        )
+        db.session.add(vdi)
+        db.session.flush()   # snapshot FK를 위해 vdi_id 확보
+        created_vdis.append(vdi)
+        print(f"[OK VDI]   {data['container_name']}")
+
+    db.session.commit()
+
+    # ── VDI Snapshot 더미 데이터 ────────────────────────────────
+    SNAPSHOT_DATA = [
+        {
+            "vdi":           created_vdis[0] if len(created_vdis) > 0 else None,
+            "snapshot_name": "초기 스냅샷",
+            "image_tag":     "hong1-desktop:snap-001",
+            "created_by":    hong1.id  if hong1  else None,
+        },
+        {
+            "vdi":           created_vdis[1] if len(created_vdis) > 1 else None,
+            "snapshot_name": "관리자 기본 스냅샷",
+            "image_tag":     "admin1-desktop:snap-001",
+            "created_by":    admin1.id if admin1 else None,
+        },
+    ]
+
+    for data in SNAPSHOT_DATA:
+        if not data["vdi"] or not data["created_by"]:
+            print(f"[SKIP SNAP] {data['snapshot_name']} — VDI 또는 멤버 없음")
+            continue
+        exists = VdiSnapshot.query.filter_by(
+            vdi_id=data["vdi"].vdi_id,
+            snapshot_name=data["snapshot_name"],
+        ).first()
+        if exists:
+            print(f"[SKIP SNAP] {data['snapshot_name']} 이미 존재")
+            continue
+        snap = VdiSnapshot(
+            vdi_id=       data["vdi"].vdi_id,
+            snapshot_name=data["snapshot_name"],
+            image_tag=    data["image_tag"],
+            created_by=   data["created_by"],
+        )
+        db.session.add(snap)
+        print(f"[OK SNAP]  {data['snapshot_name']} → {data['image_tag']}")
+
+    db.session.commit()
+    print("VDI 시드 완료")

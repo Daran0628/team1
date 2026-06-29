@@ -8,6 +8,8 @@ from extensions import db, init_extensions
 from domain.model.Member import Member
 from domain.model.Department import Department
 from web.routes.AuthenticationRestController import auth_bp
+from web.routes.GroupRestController import group_bp
+from web.routes.RBACRestController import rbac_bp
 from web.routes.Todo import todo_bp
 from web.routes.MemberRestController import member_bp
 
@@ -15,13 +17,22 @@ app = Flask(__name__)
 init_extensions(app)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(rbac_bp)
+app.register_blueprint(group_bp)
 app.register_blueprint(todo_bp)
 app.register_blueprint(member_bp)
 
 with app.app_context():
-    from domain.model.Member import Member  # 모델 등록
+    from domain.model.Member import Member
+    from domain.model.RolePermission import role_permission_table
+    from domain.model.Role import Role
+    from domain.model.Permission import Permission, PermissionResource
+    from domain.model.RoleBinding import RoleBinding
+    from domain.model.StorageResource import StorageResource
+    from domain.model.Vdi import Vdi, VdiSnapshot
+    from domain.model.Group import Group, tb_group_member
     from domain.model.Department import Department
-    db.create_all()                         # 없는 테이블만 자동 생성
+    db.create_all()
 
 @app.route('/')
 def index():
@@ -37,12 +48,35 @@ def login_page():
         'login.html'
     )
 
+
+@app.route('/role')
+def rbac_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'rbac.html'
+    )
+
+@app.route('/group')
+def group_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'group.html'
+    )
+
+@app.route('/permission')
+def permission_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'permission.html'
+    )
+
 @app.route('/mypage')
 def mypage():
     return send_from_directory(
         os.path.join(os.path.dirname(__file__), 'static', 'pages'),
         'mypage.html'
     )
+
 
 
 if __name__ == '__main__':
