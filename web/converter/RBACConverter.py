@@ -63,6 +63,7 @@ class RBACConverter:
             member_id=member.id,
             account_id=member.account_id,
             name_ko=member.name_ko,
+            department_id=member.department_id,
         )
 
     @staticmethod

@@ -136,6 +136,16 @@ def remove_members(group_id: str):
 
 
 # ──────────────────────────────────────────────
+# /api/group/members  — 전체 멤버 목록 (그룹 피커 용)
+# ──────────────────────────────────────────────
+
+@group_bp.route("/members", methods=["GET"])
+@jwt_required()
+def get_all_members():
+    return ApiResponse.on_success(SuccessStatus.GROUP_READ, _service.get_all_members())
+
+
+# ──────────────────────────────────────────────
 # /api/group/department  — 부서 기반 멤버 조회 / 일괄 추가
 # ──────────────────────────────────────────────
 

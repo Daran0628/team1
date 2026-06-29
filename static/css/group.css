@@ -1,0 +1,87 @@
+.modal.modal-xl { max-width: 740px; }
+
+/* ── 멤버 필터 바 ─────────────────────────────────────────── */
+.member-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.875rem;
+}
+.member-filter-bar select {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 0.42rem 0.7rem;
+    font-size: 0.875rem;
+    outline: none;
+    cursor: pointer;
+    min-width: 160px;
+}
+.member-filter-bar .search-input { width: 200px; }
+
+/* ── 멤버 피커 ───────────────────────────────────────────── */
+.member-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 380px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: var(--bg);
+}
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: border-color 0.13s, background 0.13s;
+    user-select: none;
+}
+.member-item:hover { border-color: var(--primary); background: #f5f3ff; }
+.member-item.is-member { border-color: #c4b5fd; background: #f5f3ff; }
+.member-item input[type=checkbox] {
+    width: 15px; height: 15px;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.member-item-info { flex: 1; }
+.member-item-name  { font-weight: 600; font-size: 0.875rem; }
+.member-item-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+.dept-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fff;
+    background: #6366f1;
+    border-radius: 3px;
+    padding: 0.05rem 0.35rem;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── 확장 행 멤버 태그 (그룹 테이블) ────────────────────────── */
+.member-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 0.22rem 0.5rem;
+    font-size: 0.8rem;
+    background: var(--surface);
+}
+.member-tag .member-name  { font-weight: 600; }
+.member-tag .member-acct  { color: var(--muted); font-size: 0.72rem; }
+
+/* ── 피커 빈 상태 ────────────────────────────────────────── */
+.picker-empty { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.875rem; }

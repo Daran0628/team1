@@ -102,6 +102,11 @@ class GroupService:
 
     # ── 부서 기반 조회 / 일괄 추가 ───────────────────────────────
 
+    def get_all_members(self) -> list[GroupMemberDTO]:
+        """전체 멤버 목록 반환 (그룹 멤버 피커 용도)."""
+        members = Member.query.order_by(Member.department_id, Member.name_ko).all()
+        return [RBACConverter.to_group_member_dto(m) for m in members]
+
     def get_members_by_dept(self, dept_id: str) -> list[GroupMemberDTO]:
         """특정 부서 소속 멤버의 UUID 목록 반환."""
         members = Member.query.filter_by(department_id=dept_id).all()

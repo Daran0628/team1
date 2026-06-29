@@ -49,6 +49,13 @@ def rbac_page():
         'rbac.html'
     )
 
+@app.route('/group')
+def group_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'group.html'
+    )
+
 @app.route('/permission')
 def permission_page():
     return send_from_directory(
