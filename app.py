@@ -39,5 +39,19 @@ def login_page():
         'login.html'
     )
 
+@app.route('/role')
+def rbac_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'rbac.html'
+    )
+
+@app.route('/permission')
+def permission_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'permission.html'
+    )
+
 if __name__ == '__main__':
     app.run(debug=True)

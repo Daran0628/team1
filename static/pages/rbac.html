@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>IAM — Roles</title>
+    <link rel="stylesheet" href="/static/css/rbac.css">
+</head>
+<body>
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>Administration</span> <span>›</span>
+        <a href="/role">IAM</a> <span>›</span>
+        <span>Roles</span>
+    </nav>
+    <h1>Roles</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnAddRole" class="btn btn-primary">⊕ Add Role</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+        </div>
+        <div class="toolbar-right">
+            <span id="itemsCount" class="items-count"></span>
+            <input type="search" id="searchInput" class="search-input" placeholder="Search roles...">
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-toggle"></th>
+                    <th class="col-name">Name</th>
+                    <th class="col-perms">Permissions</th>
+                    <th class="col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="rolesBody">
+                <tr><td colspan="4" class="state-cell">불러오는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-bar" id="paginationBar"></div>
+
+</main>
+
+<!-- ══ Add / Edit Role Modal ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="roleModal" hidden>
+    <div class="modal">
+        <div class="modal-head">
+            <h2 id="roleModalTitle">Add Role</h2>
+            <button class="btn-x" data-close="roleModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputRoleName">Role Name <span class="req">*</span></label>
+                <input type="text" id="inputRoleName" maxlength="50" placeholder="e.g. storage-admin">
+            </div>
+            <div class="field">
+                <label for="inputRoleDesc">Description</label>
+                <input type="text" id="inputRoleDesc" maxlength="255" placeholder="선택 사항">
+            </div>
+            <div class="form-error" id="roleModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="roleModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSaveRole">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Assign Permissions Modal ═══════════════════════════════════════ -->
+<div class="modal-overlay" id="assignModal" hidden>
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h2 id="assignModalTitle">Assign Permissions</h2>
+            <button class="btn-x" data-close="assignModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="assign-filter">
+                <select id="permResourceFilter">
+                    <option value="">All resources</option>
+                    <option value="STORAGE">STORAGE</option>
+                    <option value="VDI">VDI</option>
+                </select>
+            </div>
+            <div class="perm-grid" id="permGrid">불러오는 중...</div>
+            <div class="form-error" id="assignModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="assignModal">Cancel</button>
+            <button class="btn btn-primary" id="btnAssignConfirm">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Delete Confirm Modal ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="deleteModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>Delete Role</h2>
+            <button class="btn-x" data-close="deleteModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="deleteModalMsg" class="delete-msg"></p>
+            <div class="form-error" id="deleteModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="deleteModal">Cancel</button>
+            <button class="btn btn-danger" id="btnConfirmDelete">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/rbac.js"></script>
+</body>
+</html>
