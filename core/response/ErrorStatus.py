@@ -12,12 +12,22 @@ class ErrorStatus(Enum):
     _FORBIDDEN             = (HTTPStatus.FORBIDDEN,             "COMMON403", "금지된 요청입니다.")
 
     # 멤버
-    MEMBER_NOT_FOUND                = (HTTPStatus.NOT_FOUND,  "MEMBER4001", "사용자가 존재하지 않습니다.")
+    MEMBER_NOT_FOUND                = (HTTPStatus.NOT_FOUND,   "MEMBER4001", "사용자가 존재하지 않습니다.")
     MEMBER_PASSWORD_NOT_MATCHED     = (HTTPStatus.BAD_REQUEST, "MEMBER4002", "비밀번호가 일치하지 않습니다.")
-    MEMBER_TOKEN_NULL               = (HTTPStatus.FORBIDDEN,  "MEMBER4003", "액세스 토큰 또는 리프레시 토큰 값이 없습니다.")
-    MEMBER_REFRESH_TOKEN_BLACKLIST  = (HTTPStatus.FORBIDDEN,  "MEMBER4004", "블랙리스트로 등록된 리프레시 토큰 입니다.")
-    MEMBER_REFRESH_TOKEN_EXPIRED    = (HTTPStatus.FORBIDDEN,  "MEMBER4005", "만료된 리프레시 토큰 입니다.")
-    MEMBER_REFRESH_TOKEN_INVALID    = (HTTPStatus.FORBIDDEN,  "MEMBER4006", "유효한 액세스 토큰이 아닙니다.")
+    MEMBER_TOKEN_NULL               = (HTTPStatus.FORBIDDEN,   "MEMBER4003", "액세스 토큰 또는 리프레시 토큰 값이 없습니다.")
+    MEMBER_REFRESH_TOKEN_BLACKLIST  = (HTTPStatus.FORBIDDEN,   "MEMBER4004", "블랙리스트로 등록된 리프레시 토큰 입니다.")
+    MEMBER_REFRESH_TOKEN_EXPIRED    = (HTTPStatus.FORBIDDEN,   "MEMBER4005", "만료된 리프레시 토큰 입니다.")
+    MEMBER_REFRESH_TOKEN_INVALID    = (HTTPStatus.FORBIDDEN,   "MEMBER4006", "유효한 액세스 토큰이 아닙니다.")
+
+    # RBAC
+    RBAC_ROLE_NOT_FOUND             = (HTTPStatus.NOT_FOUND,   "RBAC4001", "역할을 찾을 수 없습니다.")
+    RBAC_ROLE_NAME_DUPLICATE        = (HTTPStatus.CONFLICT,    "RBAC4002", "이미 존재하는 역할 이름입니다.")
+    RBAC_ROLE_HAS_BINDINGS          = (HTTPStatus.CONFLICT,    "RBAC4003", "해당 역할에 바인딩된 대상이 있어 삭제할 수 없습니다.")
+    RBAC_PERMISSION_NOT_FOUND       = (HTTPStatus.NOT_FOUND,   "RBAC4011", "권한을 찾을 수 없습니다.")
+    RBAC_PERMISSION_DUPLICATE       = (HTTPStatus.CONFLICT,    "RBAC4012", "이미 존재하는 권한입니다.")
+    RBAC_PERMISSION_ALREADY_ASSIGNED = (HTTPStatus.CONFLICT,   "RBAC4013", "이미 역할에 할당된 권한입니다.")
+    RBAC_BINDING_NOT_FOUND          = (HTTPStatus.NOT_FOUND,   "RBAC4021", "역할 바인딩을 찾을 수 없습니다.")
+    RBAC_BINDING_ALREADY_EXISTS     = (HTTPStatus.CONFLICT,    "RBAC4022", "이미 존재하는 역할 바인딩입니다.")
 
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
