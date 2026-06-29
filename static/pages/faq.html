@@ -63,8 +63,12 @@
     <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
     <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
     <a href="/static/pages/faq.html" class="nav-item active"><span class="nav-icon">❓</span> FAQ</a>
-    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/static/pages/ticket.html" class="nav-item">
+        <span class="nav-icon">🎫</span> 헬프데스크
+        <span id="notify-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">0</span>
+    </a>
     <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
     <div class="sidebar-bottom">
         <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
     </div>
@@ -104,6 +108,7 @@
     if (!token) location.replace('/login');
     if (role === 'ADMIN' || role === 'SUPERADMIN') {
         document.getElementById('btn-write').style.display = 'flex';
+        document.getElementById('admin-menu').style.display = 'flex';
     }
 
     function showToast(msg) {
@@ -180,12 +185,29 @@
         } catch { showToast('데이터를 불러오지 못했습니다.'); }
     }
 
+    async function loadNotifyCount() {
+        if (role !== 'ADMIN' && role !== 'SUPERADMIN') return;
+        try {
+            const res = await fetch('/api/tickets/notify/count', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            const count = data.result?.count || 0;
+            const badge = document.getElementById('notify-badge');
+            if (count > 0 && badge) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+            }
+        } catch {}
+    }
+
     function logout() {
         sessionStorage.clear();
         location.replace('/login');
     }
 
     loadFaqs();
+    loadNotifyCount();
 </script>
 </body>
 </html>

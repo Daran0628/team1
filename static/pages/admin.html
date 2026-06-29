@@ -21,12 +21,10 @@
         .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
         .page-sub { font-size: 0.875rem; color: #9ca3af; margin-bottom: 2rem; }
 
-        /* 탭 */
         .admin-tabs { display: flex; gap: 4px; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem; width: fit-content; }
         .admin-tab { padding: 8px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: #6b7280; border: none; background: none; transition: all 0.2s; }
         .admin-tab.active { background: #4f46e5; color: #fff; }
 
-        /* 테이블 카드 */
         .table-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
         .table-header { padding: 1rem 1.25rem; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
         .table-header-title { font-size: 0.95rem; font-weight: 600; color: #111827; }
@@ -54,7 +52,6 @@
         .status-select:focus { border-color: #4f46e5; }
 
         .empty { padding: 3rem; text-align: center; color: #9ca3af; font-size: 0.9rem; }
-
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -63,6 +60,9 @@
 
         .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1f2937; color: #fff; padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.875rem; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; z-index: 999; }
         .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* 알림 배지 */
+        .notify-dot { background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: auto; }
     </style>
 </head>
 <body>
@@ -72,7 +72,10 @@
     <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
     <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
     <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
-    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/static/pages/ticket.html" class="nav-item">
+        <span class="nav-icon">🎫</span> 헬프데스크
+        <span id="notify-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">0</span>
+    </a>
     <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
     <a href="/static/pages/admin.html" class="nav-item active"><span class="nav-icon">⚙️</span> 관리자</a>
     <div class="sidebar-bottom">
@@ -91,7 +94,6 @@
         <button class="admin-tab" onclick="switchTab('member', this)">👤 회원</button>
     </div>
 
-    <!-- 공지사항 탭 -->
     <div class="tab-content active" id="tab-notice">
         <div class="table-card">
             <div class="table-header">
@@ -105,7 +107,6 @@
         </div>
     </div>
 
-    <!-- FAQ 탭 -->
     <div class="tab-content" id="tab-faq">
         <div class="table-card">
             <div class="table-header">
@@ -119,7 +120,6 @@
         </div>
     </div>
 
-    <!-- 티켓 탭 -->
     <div class="tab-content" id="tab-ticket">
         <div class="table-card">
             <div class="table-header">
@@ -133,7 +133,6 @@
         </div>
     </div>
 
-    <!-- 회원 탭 -->
     <div class="tab-content" id="tab-member">
         <div class="table-card">
             <div class="table-header">
@@ -173,7 +172,7 @@
         btn.classList.add('active');
         if (name === 'notice') loadNotices();
         if (name === 'faq')    loadFaqs();
-        if (name === 'ticket') loadTickets();
+        if (name === 'ticket') { loadTickets(); clearNotifyCount(); }
         if (name === 'member') loadMembers();
     }
 
@@ -189,7 +188,6 @@
         return `<span class="${cls}">${label}</span>`;
     }
 
-    // 공지사항
     async function loadNotices() {
         const res  = await fetch('/api/notices', { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
@@ -217,7 +215,6 @@
         else showToast('삭제 실패했습니다.');
     }
 
-    // FAQ
     async function loadFaqs() {
         const res  = await fetch('/api/faqs', { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
@@ -244,7 +241,6 @@
         else showToast('삭제 실패했습니다.');
     }
 
-    // 티켓
     async function loadTickets() {
         const res  = await fetch('/api/tickets', { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
@@ -291,7 +287,6 @@
         else showToast('삭제 실패했습니다.');
     }
 
-    // 회원
     async function loadMembers() {
         const res  = await fetch('/api/auth/members', { headers: { 'Authorization': 'Bearer ' + token } });
         const data = await res.json();
@@ -313,12 +308,39 @@
         });
     }
 
+    async function loadNotifyCount() {
+        try {
+            const res = await fetch('/api/tickets/notify/count', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            const count = data.result?.count || 0;
+            const badge = document.getElementById('notify-badge');
+            if (count > 0 && badge) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+            }
+        } catch {}
+    }
+
+    async function clearNotifyCount() {
+        try {
+            await fetch('/api/tickets/notify/clear', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const badge = document.getElementById('notify-badge');
+            if (badge) badge.style.display = 'none';
+        } catch {}
+    }
+
     function logout() {
         sessionStorage.clear();
         location.replace('/login');
     }
 
     loadNotices();
+    loadNotifyCount();
 </script>
 </body>
 </html>

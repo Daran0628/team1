@@ -14,7 +14,7 @@ _service = TicketService()
 def _ticket_to_dict(ticket):
     return {
         "ticketId":   ticket.id,
-        "ticketNo":   ticket.ticket_no,  # ← 추가
+        "ticketNo":   ticket.ticket_no,
         "memberId":   ticket.member_id,
         "assignedTo": ticket.assigned_to,
         "title":      ticket.title,
@@ -113,3 +113,25 @@ def delete_ticket(ticket_id):
         return ApiResponse.on_success(SuccessStatus._OK, None)
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._NOT_FOUND, str(e))
+
+
+@ticket_bp.route("/notify/count", methods=["GET"])
+@jwt_required()
+def get_notify_count():
+    """관리자 알림 카운트 조회"""
+    claims = get_jwt()
+    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
+        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
+    count = _service.get_notify_count()
+    return ApiResponse.on_success(SuccessStatus._OK, {"count": count})
+
+
+@ticket_bp.route("/notify/clear", methods=["POST"])
+@jwt_required()
+def clear_notify_count():
+    """관리자 알림 카운트 초기화"""
+    claims = get_jwt()
+    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
+        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
+    _service.clear_notify_count()
+    return ApiResponse.on_success(SuccessStatus._OK, {"message": "알림 초기화 완료"})

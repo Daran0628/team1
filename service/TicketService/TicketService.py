@@ -1,8 +1,10 @@
 from domain.model.Ticket import Ticket
-from extensions import db
+from extensions import db, redis_client
 
 
 class TicketService:
+
+    ADMIN_NOTIFY_KEY = "admin:new_ticket_count"
 
     def get_all(self):
         """티켓 전체 목록 (최신순)"""
@@ -21,7 +23,7 @@ class TicketService:
         return ticket
 
     def create(self, member_id: str, title: str, content: str, priority: str = "MEDIUM"):
-        """티켓 생성"""
+        """티켓 생성 + 관리자 알림 카운트 증가"""
         ticket = Ticket(
             member_id=member_id,
             title=title,
@@ -31,7 +33,29 @@ class TicketService:
         )
         db.session.add(ticket)
         db.session.commit()
+
+        # Redis 알림 카운트 증가
+        try:
+            redis_client.incr(self.ADMIN_NOTIFY_KEY)
+        except Exception:
+            pass
+
         return ticket
+
+    def get_notify_count(self):
+        """관리자 알림 카운트 조회"""
+        try:
+            count = redis_client.get(self.ADMIN_NOTIFY_KEY)
+            return int(count) if count else 0
+        except Exception:
+            return 0
+
+    def clear_notify_count(self):
+        """관리자 알림 카운트 초기화"""
+        try:
+            redis_client.delete(self.ADMIN_NOTIFY_KEY)
+        except Exception:
+            pass
 
     def update_status(self, ticket_id: str, status: str):
         """티켓 상태 변경 (관리자)"""
