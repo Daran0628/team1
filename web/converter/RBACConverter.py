@@ -1,6 +1,9 @@
+from domain.model.Group import Group
+from domain.model.Member import Member
 from domain.model.Permission import Permission
 from domain.model.Role import Role
 from domain.model.RoleBinding import RoleBinding
+from web.dto.GroupResponseDTO import GroupMemberDTO, GroupResponseDTO
 from web.dto.RBACResponseDTO import (
     GroupBindingResponseDTO,
     PermissionResponseDTO,
@@ -52,4 +55,21 @@ class RBACConverter:
             role_name=binding.role.role_name,
             granted_by=binding.granted_by,
             granted_at=binding.granted_at,
+        )
+
+    @staticmethod
+    def to_group_member_dto(member: Member) -> GroupMemberDTO:
+        return GroupMemberDTO(
+            member_id=member.id,
+            account_id=member.account_id,
+            name_ko=member.name_ko,
+        )
+
+    @staticmethod
+    def to_group_dto(group: Group) -> GroupResponseDTO:
+        return GroupResponseDTO(
+            group_id=group.id,
+            group_name=group.group_name,
+            description=group.description,
+            members=[RBACConverter.to_group_member_dto(m) for m in group.members],
         )

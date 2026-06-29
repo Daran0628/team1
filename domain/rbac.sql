@@ -46,6 +46,43 @@ CREATE TABLE IF NOT EXISTS tb_role_permission (
 
 
 -- ============================================================
+-- Group  (커스텀 그룹 / TEAM 주체)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS tb_group (
+    group_id        CHAR(36)        NOT NULL,
+    group_name      VARCHAR(50)     NOT NULL,
+    description     VARCHAR(255),
+    created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (group_id),
+    UNIQUE KEY uk_group_name (group_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ============================================================
+-- Group -> Member  (M:N)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS tb_group_member (
+    group_id        CHAR(36)        NOT NULL,
+    member_id       CHAR(36)        NOT NULL,
+
+    PRIMARY KEY (group_id, member_id),
+
+    CONSTRAINT fk_group_member_group
+        FOREIGN KEY (group_id)
+        REFERENCES tb_group(group_id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_group_member_member
+        FOREIGN KEY (member_id)
+        REFERENCES tb_members(member_id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ============================================================
 -- Role Binding
 --
 -- MEMBER

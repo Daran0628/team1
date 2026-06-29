@@ -29,6 +29,14 @@ class SuccessStatus(Enum):
     RBAC_BINDING_UPDATE = (HTTPStatus.OK,      "RBAC2023", "역할 바인딩이 수정되었습니다.")
     RBAC_BINDING_DELETE = (HTTPStatus.OK,      "RBAC2024", "역할 바인딩이 삭제되었습니다.")
 
+    # Group (커스텀 그룹)
+    GROUP_CREATE        = (HTTPStatus.CREATED, "GROUP2001", "그룹이 생성되었습니다.")
+    GROUP_READ          = (HTTPStatus.OK,      "GROUP2002", "그룹 조회에 성공했습니다.")
+    GROUP_UPDATE        = (HTTPStatus.OK,      "GROUP2003", "그룹이 수정되었습니다.")
+    GROUP_DELETE        = (HTTPStatus.OK,      "GROUP2004", "그룹이 삭제되었습니다.")
+    GROUP_MEMBER_ADD    = (HTTPStatus.OK,      "GROUP2005", "그룹에 멤버가 추가되었습니다.")
+    GROUP_MEMBER_REMOVE = (HTTPStatus.OK,      "GROUP2006", "그룹에서 멤버가 제거되었습니다.")
+
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
         obj._value_ = code
