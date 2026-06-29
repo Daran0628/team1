@@ -5,6 +5,7 @@ from domain.enum.AccountType import AccountType
 from domain.enum.EnrollmentStatus import EnrollmentStatus
 from domain.enum.WorkType import WorkType
 from domain.model.BaseEntity import BaseEntity
+from domain.model.Department import Department
 from extensions import db
 
 
@@ -16,7 +17,7 @@ class Member(BaseEntity):
     name_ko = db.Column(db.String(18), nullable=False)
     account_id = db.Column(db.String(20), nullable=False)
     employee_no = db.Column(db.String(10), nullable=False)
-    department_id = db.Column(db.String(36), nullable=False)
+    department_id = db.Column(db.String(36), db.ForeignKey("tb_department.department_id"), nullable=False)
     email = db.Column(db.String(50), nullable=False)
     password = db.Column(db.String(60), nullable=False)
 

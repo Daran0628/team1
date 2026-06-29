@@ -6,6 +6,7 @@ from flask_bcrypt import generate_password_hash
 from domain.model.Member import Member
 from domain.model.StorageResource import StorageResource
 from domain.model.Vdi import Vdi, VdiSnapshot
+from domain.model.Department import Department
 from domain.enum.AccountType import AccountType
 from domain.enum.EnrollmentStatus import EnrollmentStatus
 from domain.enum.WorkType import WorkType
@@ -42,7 +43,34 @@ TEST_USERS = [
     },
 ]
 
+DEPARTMENTS = [
+    {
+        "id": DEV_DEPT_ID,
+        "department_name": "개발팀"
+    },
+    {
+        "id": ADMIN_DEPT_ID,
+        "department_name": "관리팀"
+    }
+]
+
 with app.app_context():
+
+    for dept in DEPARTMENTS:
+        exists = Department.query.filter_by(id=dept["id"]).first()
+
+        if exists:
+            continue
+
+        db.session.add(
+            Department(
+                id=dept["id"],
+                department_name=dept["department_name"]
+            )
+        )
+
+    db.session.commit()
+
     for data in TEST_USERS:
         exists = Member.query.filter_by(account_id=data["account_id"]).first()
         if exists:
@@ -65,6 +93,8 @@ with app.app_context():
         print(f"[OK]   {data['account_id']} / {data['password']}")
 
     db.session.commit()
+
+    
     print("완료")
 
     # ── Object Storage 더미 데이터 ─────────────────────────────

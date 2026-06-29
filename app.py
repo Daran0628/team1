@@ -5,10 +5,13 @@ import os
 
 from flask import Flask, send_from_directory
 from extensions import db, init_extensions
+from domain.model.Member import Member
+from domain.model.Department import Department
 from web.routes.AuthenticationRestController import auth_bp
 from web.routes.GroupRestController import group_bp
 from web.routes.RBACRestController import rbac_bp
 from web.routes.Todo import todo_bp
+from web.routes.MemberRestController import member_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -17,6 +20,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(rbac_bp)
 app.register_blueprint(group_bp)
 app.register_blueprint(todo_bp)
+app.register_blueprint(member_bp)
 
 with app.app_context():
     from domain.model.Member import Member
@@ -27,6 +31,7 @@ with app.app_context():
     from domain.model.StorageResource import StorageResource
     from domain.model.Vdi import Vdi, VdiSnapshot
     from domain.model.Group import Group, tb_group_member
+    from domain.model.Department import Department
     db.create_all()
 
 @app.route('/')
@@ -42,6 +47,7 @@ def login_page():
         os.path.join(os.path.dirname(__file__), 'static', 'pages'),
         'login.html'
     )
+
 
 @app.route('/role')
 def rbac_page():
@@ -63,6 +69,15 @@ def permission_page():
         os.path.join(os.path.dirname(__file__), 'static', 'pages'),
         'permission.html'
     )
+
+@app.route('/mypage')
+def mypage():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'mypage.html'
+    )
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
