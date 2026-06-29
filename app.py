@@ -25,6 +25,7 @@ with app.app_context():
     from domain.model.Permission import Permission, PermissionResource
     from domain.model.RoleBinding import RoleBinding
     from domain.model.StorageResource import StorageResource
+    from domain.model.Vdi import Vdi, VdiSnapshot
     from domain.model.Group import Group, tb_group_member
     db.create_all()
 
