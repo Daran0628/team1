@@ -9,6 +9,8 @@ class SuccessStatus(Enum):
     MEMBER_LOGIN_SUCCESS         = (HTTPStatus.OK,      "MEMBER2001", "로그인에 성공했습니다.")
     MEMBER_LOGOUT_SUCCESS        = (HTTPStatus.OK,      "MEMBER2002", "로그아웃에 성공했습니다.")
     MEMBER_REFRESH_TOKEN_SUCCESS = (HTTPStatus.CREATED, "MEMBER2004", "토큰 재발급을 성공했습니다.")
+    MEMBER_INFO_SUCCESS          = (HTTPStatus.OK,      "MEMBER2005", "회원 정보를 조회했습니다.")
+    MEMBER_UPDATE_SUCCESS        = (HTTPStatus.OK,      "MEMBER2006", "회원 정보를 수정했습니다.")
 
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)

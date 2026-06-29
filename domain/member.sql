@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS tb_members (
     last_login      DATETIME        NULL,
 
     PRIMARY KEY (member_id),
-    CONSTRAINT fk_members_department
+    CONSTRAINT fk_member_department
         FOREIGN KEY (department_id)
         REFERENCES tb_department(department_id)
         ON UPDATE CASCADE
