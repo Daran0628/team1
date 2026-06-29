@@ -15,8 +15,13 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(todo_bp)
 
 with app.app_context():
-    from domain.model.Member import Member  # 모델 등록
-    db.create_all()                         # 없는 테이블만 자동 생성
+    from domain.model.Member import Member
+    from domain.model.RolePermission import role_permission_table
+    from domain.model.Role import Role
+    from domain.model.Permission import Permission
+    from domain.model.RoleBinding import RoleBinding
+    from domain.model.StorageResource import StorageResource
+    db.create_all()
 
 @app.route('/')
 def index():
