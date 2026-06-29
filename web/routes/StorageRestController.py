@@ -6,6 +6,8 @@ from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
 from domain.model.Member import Member
+from domain.model.StorageBucket import StorageBucket
+from domain.model.StorageResource import StorageResource
 from service.StorageService.StorageService import (
     StorageException,
     create_bucket,
@@ -45,6 +47,44 @@ def _handle(fn):
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))
     except Exception as e:
         return ApiResponse.on_failure(ErrorStatus._INTERNAL_SERVER_ERROR, str(e))
+
+
+# ── 버킷/오브젝트 목록 (권한 할당 UI용) ──────────────────────────────────────
+
+@storage_bp.route('/buckets-meta', methods=['GET'])
+@jwt_required()
+@storage_required('READ')
+def api_list_buckets_meta():
+    """버킷 목록 (bucket_id 포함) — STORAGE permission 생성 시 BUCKET 선택용."""
+    buckets = StorageBucket.query.order_by(StorageBucket.created_at).all()
+    result = [
+        {"bucketId": b.bucket_id, "bucketName": b.bucket_name, "createdAt": b.created_at.isoformat()}
+        for b in buckets
+    ]
+    return ApiResponse.on_success(SuccessStatus.STORAGE_BUCKET_READ, result)
+
+
+@storage_bp.route('/resources', methods=['GET'])
+@jwt_required()
+@storage_required('READ')
+def api_list_db_resources():
+    """DB에 등록된 오브젝트 목록 (resource_id 포함) — STORAGE permission 생성 시 OBJECT 선택용."""
+    bucket_name = request.args.get('bucketName')
+    q = StorageResource.query.filter_by(is_deleted=False)
+    if bucket_name:
+        q = q.filter_by(bucket_name=bucket_name)
+    resources = q.order_by(StorageResource.created_at).all()
+    result = [
+        {
+            "resourceId":   r.resource_id,
+            "bucketName":   r.bucket_name,
+            "resourceName": r.resource_name,
+            "s3Key":        r.s3_key,
+            "createdAt":    r.created_at.isoformat(),
+        }
+        for r in resources
+    ]
+    return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_LIST, result)
 
 
 # ── Bucket endpoints ──────────────────────────────────────────────────────────

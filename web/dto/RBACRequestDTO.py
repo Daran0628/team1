@@ -34,9 +34,12 @@ class UpdateRoleRequestDTO:
 
 @dataclass
 class CreatePermissionRequestDTO:
-    type:         str
-    actions:      List[str]
-    resource_ids: List[str] = field(default_factory=list)
+    type:      str
+    actions:   List[str]
+    resources: List[dict] = field(default_factory=list)
+    # resources 항목 형식: {"resourceType": "BUCKET"|"OBJECT", "resourceId": "<uuid>"}
+
+    _VALID_RESOURCE_TYPES = {'BUCKET', 'OBJECT'}
 
     def __post_init__(self):
         from domain.enum.StorageAction import StorageAction
@@ -55,10 +58,17 @@ class CreatePermissionRequestDTO:
         invalid = [a for a in self.actions if a not in _valid_actions[self.type]]
         if invalid:
             raise ValueError(f"유효하지 않은 action: {invalid}. 허용: {sorted(_valid_actions[self.type])}")
-        if not isinstance(self.resource_ids, list):
-            raise ValueError("resource_ids는 배열이어야 합니다.")
-        if any(not isinstance(r, str) or not r.strip() for r in self.resource_ids):
-            raise ValueError("resource_ids의 각 항목은 비어있지 않은 문자열이어야 합니다.")
+        if not isinstance(self.resources, list):
+            raise ValueError("resources는 배열이어야 합니다.")
+        for r in self.resources:
+            if not isinstance(r, dict):
+                raise ValueError("resources의 각 항목은 {resourceType, resourceId} 객체여야 합니다.")
+            rt = r.get('resourceType', '')
+            rid = r.get('resourceId', '')
+            if rt not in self._VALID_RESOURCE_TYPES:
+                raise ValueError(f"resourceType은 {self._VALID_RESOURCE_TYPES} 중 하나여야 합니다.")
+            if not rid or not rid.strip():
+                raise ValueError("resourceId는 비어있지 않은 문자열이어야 합니다.")
 
 
 @dataclass

@@ -28,13 +28,20 @@ CREATE TABLE IF NOT EXISTS tb_permission (
 -- ============================================================
 -- Permission -> Resource  (M:N)
 -- RBAC 타입은 리소스 불필요, STORAGE/VDI 타입은 리소스 UUID 목록
--- resource_id : tb_storage_resource.resource_id 또는 VDI UUID
+-- resource_type : BUCKET | OBJECT
+-- resource_id   : tb_storage_bucket.bucket_id 또는 tb_storage_resource.resource_id
+-- Migration (기존 DB):
+--   ALTER TABLE tb_permission_resource
+--       DROP PRIMARY KEY,
+--       ADD COLUMN resource_type VARCHAR(10) NOT NULL DEFAULT 'OBJECT',
+--       ADD PRIMARY KEY (permission_id, resource_type, resource_id);
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tb_permission_resource (
     permission_id   CHAR(36)        NOT NULL,
+    resource_type   VARCHAR(10)     NOT NULL DEFAULT 'OBJECT',
     resource_id     CHAR(36)        NOT NULL,
 
-    PRIMARY KEY (permission_id, resource_id),
+    PRIMARY KEY (permission_id, resource_type, resource_id),
 
     CONSTRAINT fk_perm_resource_perm
         FOREIGN KEY (permission_id)

@@ -70,8 +70,6 @@ def rbac_required(level: str):
     """
     level='READ'   → READ 또는 MANAGE 보유 시 허용
     level='MANAGE' → MANAGE 보유 시만 허용
-
-    @jwt_required() 아래에 붙여야 JWT 컨텍스트가 준비된 상태에서 실행됨.
     """
     def decorator(fn):
         @wraps(fn)
@@ -87,11 +85,45 @@ def rbac_required(level: str):
 
 # ── Storage 접근 권한 확인 ───────────────────────────────────
 
+def _storage_resource_allowed(perm, bucket_name: str | None, object_name: str | None) -> bool:
+    """
+    권한에 resource 제한이 없으면 → True (전체 허용)
+    BUCKET resource 매칭 → True (해당 버킷 전체 허용)
+    OBJECT resource 매칭 → True (해당 오브젝트만 허용)
+    둘 다 해당 없음 → False
+    """
+    if not perm._resources:
+        return True
+
+    bucket_ids = perm.bucket_ids
+    object_ids  = perm.object_ids
+
+    if bucket_ids and bucket_name:
+        from domain.model.StorageBucket import StorageBucket
+        bucket = StorageBucket.query.filter_by(bucket_name=bucket_name).first()
+        if bucket and bucket.bucket_id in bucket_ids:
+            return True
+
+    if object_ids and object_name and bucket_name:
+        from domain.model.StorageResource import StorageResource
+        resource = StorageResource.query.filter_by(
+            bucket_name=bucket_name,
+            s3_key=object_name,
+            is_deleted=False,
+        ).first()
+        if resource and resource.resource_id in object_ids:
+            return True
+
+    return False
+
+
 def check_storage_action(required_action: str) -> bool:
     """
-    required_action: StorageAction 값 (READ / DOWNLOAD / UPLOAD / DELETE / MOVE / MANAGE)
-    MANAGE 권한은 모든 action을 허용.
+    required_action: StorageAction 값 (READ / DOWNLOAD / UPLOAD / DELETE / MANAGE)
+    Flask request context에서 bucket_name, objectName을 자동으로 읽어 리소스 범위 검사.
     """
+    from flask import request
+
     if get_jwt().get('role', '') in _ADMIN_ACCOUNT_TYPES:
         return True
 
@@ -99,20 +131,27 @@ def check_storage_action(required_action: str) -> bool:
     if not member:
         return False
 
+    bucket_name = (request.view_args or {}).get('bucket_name')
+    object_name = (
+        request.args.get('objectName')
+        or (request.get_json(silent=True) or {}).get('objectName')
+        or (request.get_json(silent=True) or {}).get('sourceObject')
+    )
+
     for binding in _collect_all_bindings(member):
         role = binding.role
         if role.role_name in _ADMIN_ROLE_NAMES:
             return True
         for perm in role.permissions:
-            if perm.perm_type == 'STORAGE':
-                if perm.action in ('MANAGE', required_action):
+            if perm.perm_type == 'STORAGE' and perm.action in ('MANAGE', required_action):
+                if _storage_resource_allowed(perm, bucket_name, object_name):
                     return True
     return False
 
 
 def storage_required(action: str):
     """
-    action: StorageAction 값 (READ / DOWNLOAD / UPLOAD / DELETE / MOVE / MANAGE)
+    action: StorageAction 값 (READ / DOWNLOAD / UPLOAD / DELETE / MANAGE)
     @jwt_required() 아래에 붙여서 사용.
     """
     def decorator(fn):

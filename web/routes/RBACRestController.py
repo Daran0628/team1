@@ -125,7 +125,7 @@ def create_permission():
         dto = CreatePermissionRequestDTO(
             type=data.get("type", ""),
             actions=data.get("actions") or [],
-            resource_ids=data.get("resourceIds") or [],
+            resources=data.get("resources") or [],
         )
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))

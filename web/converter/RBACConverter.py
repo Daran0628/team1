@@ -20,7 +20,10 @@ class RBACConverter:
             permission_id=permission.permission_id,
             type=permission.perm_type,
             action=permission.action,
-            resource_ids=permission.resource_ids,
+            resources=[
+                {"resourceType": r.resource_type, "resourceId": r.resource_id}
+                for r in permission._resources
+            ],
         )
 
     @staticmethod
