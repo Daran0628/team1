@@ -486,6 +486,72 @@ body {
 }
 .btn-add-binding:hover { border-color: var(--primary); background: #f5f3ff; }
 
+/* ── Action checkbox grid (permission modal) ─────────────────── */
+.action-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: var(--bg);
+    min-height: 44px;
+}
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.65rem;
+    border: 1.5px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+    background: var(--surface);
+    font-size: 0.8rem;
+    font-weight: 500;
+    user-select: none;
+    transition: border-color 0.12s, background 0.12s;
+}
+.action-item:hover { border-color: var(--primary); background: #f5f3ff; }
+.action-item.is-checked { border-color: var(--primary); background: #ede9fe; color: var(--primary); }
+.action-item-all { border-style: dashed; font-weight: 700; }
+.action-item input[type=checkbox] {
+    accent-color: var(--primary);
+    width: 14px; height: 14px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+/* ── Permission table columns ────────────────────────────────── */
+.col-perm-type { width: 100px; }
+.col-perm-res  { }
+.badge-RBAC    { background: #7c3aed; }
+
+/* ── Add Permission modal — resource ID list ─────────────────── */
+.res-input-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.res-input-row input { flex: 1; }
+.res-id-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    min-height: 1rem;
+}
+.res-id-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1.5px solid #c4b5fd;
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.78rem;
+    font-family: monospace;
+    background: #faf7ff;
+    color: var(--text);
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 640px) {
     .page-header, .main-content { padding-left: 1rem; padding-right: 1rem; }

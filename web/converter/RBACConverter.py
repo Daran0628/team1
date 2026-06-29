@@ -18,8 +18,9 @@ class RBACConverter:
     def to_permission_dto(permission: Permission) -> PermissionResponseDTO:
         return PermissionResponseDTO(
             permission_id=permission.permission_id,
-            resource=permission.resource,
+            type=permission.perm_type,
             action=permission.action,
+            resource_ids=permission.resource_ids,
         )
 
     @staticmethod

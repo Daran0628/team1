@@ -22,7 +22,7 @@ with app.app_context():
     from domain.model.Member import Member
     from domain.model.RolePermission import role_permission_table
     from domain.model.Role import Role
-    from domain.model.Permission import Permission
+    from domain.model.Permission import Permission, PermissionResource
     from domain.model.RoleBinding import RoleBinding
     from domain.model.StorageResource import StorageResource
     from domain.model.Group import Group, tb_group_member

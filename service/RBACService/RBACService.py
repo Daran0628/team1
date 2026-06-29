@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy.exc import IntegrityError
 
 from domain.enum.SubjectType import SubjectType
-from domain.model.Permission import Permission
+from domain.model.Permission import Permission, PermissionResource
 from domain.model.Role import Role
 from domain.model.RoleBinding import RoleBinding
 from extensions import db
@@ -81,23 +81,29 @@ class RBACService:
 
     # ── Permission ────────────────────────────────────────────
 
-    def create_permission(self, dto: CreatePermissionRequestDTO) -> PermissionResponseDTO:
-        if Permission.query.filter_by(resource=dto.resource, action=dto.action).first():
-            raise ValueError("PERMISSION_DUPLICATE")
-
-        perm = Permission(
-            permission_id=str(uuid.uuid4()),
-            resource=dto.resource,
-            action=dto.action,
-        )
-        db.session.add(perm)
+    def create_permission(self, dto: CreatePermissionRequestDTO) -> list[PermissionResponseDTO]:
+        perms = []
+        for action in dto.actions:
+            perm_id = str(uuid.uuid4())
+            perm = Permission(
+                permission_id=perm_id,
+                perm_type=dto.type,
+                action=action,
+            )
+            for rid in (dto.resource_ids or []):
+                perm._resources.append(PermissionResource(
+                    permission_id=perm_id,
+                    resource_id=rid,
+                ))
+            db.session.add(perm)
+            perms.append(perm)
         db.session.commit()
-        return RBACConverter.to_permission_dto(perm)
+        return [RBACConverter.to_permission_dto(p) for p in perms]
 
-    def get_all_permissions(self, resource: str | None = None) -> list[PermissionResponseDTO]:
+    def get_all_permissions(self, type_: str | None = None) -> list[PermissionResponseDTO]:
         q = Permission.query
-        if resource:
-            q = q.filter_by(resource=resource)
+        if type_:
+            q = q.filter(Permission.perm_type == type_)
         return [RBACConverter.to_permission_dto(p) for p in q.all()]
 
     def delete_permission(self, permission_id: str) -> None:

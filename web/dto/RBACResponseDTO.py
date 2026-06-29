@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 
 # ──────────────────────────────────────────────
@@ -10,8 +10,9 @@ from typing import Optional
 @dataclass
 class PermissionResponseDTO:
     permission_id: str
-    resource:      str
+    type:          str
     action:        str
+    resource_ids:  List[str] = field(default_factory=list)
 
 
 # ──────────────────────────────────────────────

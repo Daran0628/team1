@@ -9,29 +9,29 @@ function getToken() {
 }
 
 async function apiFetch(url, options) {
-    const token = getToken();
+    var token = getToken();
     if (!token) { window.location.replace('/login'); return null; }
 
-    const headers = Object.assign({ 'Content-Type': 'application/json',
-                                    'Authorization': 'Bearer ' + token },
-                                   (options && options.headers) || {});
-    const res = await fetch(url, Object.assign({}, options, { headers }));
+    var headers = Object.assign({ 'Content-Type': 'application/json',
+                                   'Authorization': 'Bearer ' + token },
+                                  (options && options.headers) || {});
+    var res = await fetch(url, Object.assign({}, options, { headers: headers }));
 
     if (res.status === 401) {
-        const refreshed = await tryRefresh();
+        var refreshed = await tryRefresh();
         if (!refreshed) { window.location.replace('/login'); return null; }
         headers['Authorization'] = 'Bearer ' + getToken();
-        return fetch(url, Object.assign({}, options, { headers }));
+        return fetch(url, Object.assign({}, options, { headers: headers }));
     }
     return res;
 }
 
 async function tryRefresh() {
     try {
-        const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
+        var res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
         if (!res.ok) return false;
-        const json = await res.json();
-        const token = json && json.result && json.result.accessToken;
+        var json = await res.json();
+        var token = json && json.result && json.result.accessToken;
         if (!token) return false;
         sessionStorage.setItem('access_token', token);
         return true;
@@ -39,36 +39,45 @@ async function tryRefresh() {
 }
 
 async function apiJSON(url, options) {
-    const res = await apiFetch(url, options);
+    var res = await apiFetch(url, options);
     if (!res) return null;
-    const json = await res.json();
+    var json = await res.json();
     if (!res.ok || json.isSuccess === false) {
         throw new Error((json && json.message) || 'API error');
     }
     return json.result !== undefined ? json.result : json;
 }
 
+// ── Action definitions per type ───────────────────────────────
+
+var ACTIONS_BY_TYPE = {
+    STORAGE: ['READ', 'DOWNLOAD', 'UPLOAD', 'DELETE', 'RENAME', 'MOVE', 'SHARE', 'MANAGE'],
+    VDI:     ['CONNECT', 'DISCONNECT', 'POWER_ON', 'POWER_OFF', 'REBOOT', 'SNAPSHOT', 'RESTORE', 'ASSIGN', 'REVOKE', 'MONITOR', 'MANAGE'],
+    RBAC:    ['READ', 'MANAGE'],
+};
+
 // ── State ─────────────────────────────────────────────────────
 
-const state = {
-    allPerms:  [],
-    filtered:  [],
-    pageSize:  20,
-    page:      1,
-    deleteId:  null,
+var state = {
+    allPerms:    [],
+    filtered:    [],
+    pageSize:    20,
+    page:        1,
+    deleteId:    null,
+    pendingResIds: [],   // resource UUIDs staged in the add modal
 };
 
 // ── API calls ─────────────────────────────────────────────────
 
-async function fetchPermissions(resource) {
-    const qs = resource ? '?resource=' + encodeURIComponent(resource) : '';
+async function fetchPermissions(type_) {
+    var qs = type_ ? '?type=' + encodeURIComponent(type_) : '';
     return apiJSON('/api/rbac/permission' + qs, { method: 'GET' });
 }
 
-async function createPermission(resource, action) {
+async function createPermission(type_, actions, resourceIds) {
     return apiJSON('/api/rbac/permission', {
         method: 'POST',
-        body: JSON.stringify({ resource: resource, action: action }),
+        body: JSON.stringify({ type: type_, actions: actions, resourceIds: resourceIds }),
     });
 }
 
@@ -79,71 +88,107 @@ async function deletePermission(id) {
 // ── Search / filter ───────────────────────────────────────────
 
 function applyFilter() {
-    const q        = document.getElementById('searchInput').value.trim().toLowerCase();
-    const resource = document.getElementById('resourceFilter').value;
+    var q    = document.getElementById('searchInput').value.trim().toLowerCase();
+    var type = document.getElementById('typeFilter').value;
     state.filtered = state.allPerms.filter(function(p) {
-        const matchResource = !resource || p.resource === resource;
-        const matchQ        = !q || p.action.toLowerCase().includes(q) ||
-                              p.resource.toLowerCase().includes(q);
-        return matchResource && matchQ;
+        var matchType = !type || p.type === type;
+        var matchQ    = !q || p.action.toLowerCase().includes(q) ||
+                        p.type.toLowerCase().includes(q);
+        return matchType && matchQ;
     });
     state.page = 1;
 }
 
 function currentPage() {
-    const start = (state.page - 1) * state.pageSize;
+    var start = (state.page - 1) * state.pageSize;
     return state.filtered.slice(start, start + state.pageSize);
 }
 
 // ── Render ────────────────────────────────────────────────────
 
-function renderTable() {
-    const tbody = document.getElementById('permBody');
-    const rows  = currentPage();
-    const total = state.filtered.length;
+function escText(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
 
-    const countEl = document.getElementById('itemsCount');
+function renderTable() {
+    var tbody = document.getElementById('permBody');
+    var rows  = currentPage();
+    var total = state.filtered.length;
+
+    var countEl = document.getElementById('itemsCount');
     countEl.textContent = total + ' permission' + (total !== 1 ? 's' : '');
 
     if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="state-cell">권한이 없습니다.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="state-cell">권한이 없습니다.</td></tr>';
         renderPagination();
         return;
     }
 
-    const fragment = document.createDocumentFragment();
+    var fragment = document.createDocumentFragment();
     rows.forEach(function(p, idx) {
-        const isLast = idx === rows.length - 1;
+        var isLast = idx === rows.length - 1;
 
-        const tr = document.createElement('tr');
+        var tr = document.createElement('tr');
         tr.className = 'role-row' + (isLast ? ' row-last' : '');
 
-        const tdResource = document.createElement('td');
-        const badge = document.createElement('span');
-        badge.className = 'badge badge-' + p.resource;
-        badge.textContent = p.resource;
-        tdResource.appendChild(badge);
+        // Type badge
+        var tdType = document.createElement('td');
+        var badge = document.createElement('span');
+        badge.className = 'badge badge-' + p.type;
+        badge.textContent = p.type;
+        tdType.appendChild(badge);
 
-        const tdAction = document.createElement('td');
-        const nameDiv = document.createElement('div');
+        // Action
+        var tdAction = document.createElement('td');
+        var nameDiv = document.createElement('div');
         nameDiv.className = 'role-name';
         nameDiv.textContent = p.action;
         tdAction.appendChild(nameDiv);
 
-        const tdActs = document.createElement('td');
-        const actWrap = document.createElement('div');
-        actWrap.className = 'row-actions';
+        // Resource IDs
+        var tdRes = document.createElement('td');
+        if (p.type === 'RBAC' || !p.resource_ids || p.resource_ids.length === 0) {
+            var noRes = document.createElement('span');
+            noRes.className = 'no-perms';
+            noRes.textContent = p.type === 'RBAC' ? '—' : '없음';
+            tdRes.appendChild(noRes);
+        } else {
+            var resWrap = document.createElement('div');
+            resWrap.className = 'perm-tags';
+            var showCount = Math.min(p.resource_ids.length, 3);
+            for (var i = 0; i < showCount; i++) {
+                var chip = document.createElement('span');
+                chip.className = 'perm-tag';
+                chip.title = p.resource_ids[i];
+                chip.textContent = p.resource_ids[i].slice(0, 8) + '…';
+                resWrap.appendChild(chip);
+            }
+            if (p.resource_ids.length > 3) {
+                var more = document.createElement('span');
+                more.className = 'perm-tag';
+                more.style.color = 'var(--muted)';
+                more.textContent = '+' + (p.resource_ids.length - 3) + ' more';
+                resWrap.appendChild(more);
+            }
+            tdRes.appendChild(resWrap);
+        }
 
-        const btnDel = document.createElement('button');
+        // Delete action
+        var tdActs = document.createElement('td');
+        var actWrap = document.createElement('div');
+        actWrap.className = 'row-actions';
+        var btnDel = document.createElement('button');
         btnDel.className = 'act-btn act-del';
         btnDel.textContent = 'Delete';
         btnDel.addEventListener('click', function() { openDeleteModal(p); });
-
         actWrap.appendChild(btnDel);
         tdActs.appendChild(actWrap);
 
-        tr.appendChild(tdResource);
+        tr.appendChild(tdType);
         tr.appendChild(tdAction);
+        tr.appendChild(tdRes);
         tr.appendChild(tdActs);
         fragment.appendChild(tr);
     });
@@ -154,23 +199,23 @@ function renderTable() {
 }
 
 function renderPagination() {
-    const bar   = document.getElementById('paginationBar');
-    const total = state.filtered.length;
-    const pages = Math.max(1, Math.ceil(total / state.pageSize));
+    var bar   = document.getElementById('paginationBar');
+    var total = state.filtered.length;
+    var pages = Math.max(1, Math.ceil(total / state.pageSize));
 
     if (total === 0) { bar.innerHTML = ''; return; }
 
-    const start = (state.page - 1) * state.pageSize + 1;
-    const end   = Math.min(state.page * state.pageSize, total);
+    var start = (state.page - 1) * state.pageSize + 1;
+    var end   = Math.min(state.page * state.pageSize, total);
 
     bar.innerHTML = '';
 
-    const sizeWrap = document.createElement('div');
+    var sizeWrap = document.createElement('div');
     sizeWrap.className = 'page-size-wrap';
     sizeWrap.textContent = 'Page size: ';
-    const sel = document.createElement('select');
+    var sel = document.createElement('select');
     [10, 20, 50].forEach(function(n) {
-        const opt = document.createElement('option');
+        var opt = document.createElement('option');
         opt.value = n;
         opt.textContent = n;
         if (n === state.pageSize) opt.selected = true;
@@ -183,21 +228,21 @@ function renderPagination() {
     });
     sizeWrap.appendChild(sel);
 
-    const navWrap = document.createElement('div');
+    var navWrap = document.createElement('div');
     navWrap.className = 'page-nav-wrap';
 
-    const info = document.createElement('span');
+    var info = document.createElement('span');
     info.textContent = start + '–' + end + ' of ' + total;
 
-    const prevBtn = document.createElement('button');
+    var prevBtn = document.createElement('button');
     prevBtn.textContent = '‹';
     prevBtn.disabled = state.page <= 1;
     prevBtn.addEventListener('click', function() { state.page--; renderTable(); });
 
-    const pageInfo = document.createElement('span');
+    var pageInfo = document.createElement('span');
     pageInfo.textContent = state.page + ' / ' + pages;
 
-    const nextBtn = document.createElement('button');
+    var nextBtn = document.createElement('button');
     nextBtn.textContent = '›';
     nextBtn.disabled = state.page >= pages;
     nextBtn.addEventListener('click', function() { state.page++; renderTable(); });
@@ -214,15 +259,15 @@ function renderPagination() {
 // ── Load ──────────────────────────────────────────────────────
 
 async function loadPermissions() {
-    const tbody = document.getElementById('permBody');
-    tbody.innerHTML = '<tr><td colspan="3" class="state-cell">불러오는 중...</td></tr>';
+    var tbody = document.getElementById('permBody');
+    tbody.innerHTML = '<tr><td colspan="4" class="state-cell">불러오는 중...</td></tr>';
     try {
-        const data = await fetchPermissions(null);
+        var data = await fetchPermissions(null);
         state.allPerms = Array.isArray(data) ? data : [];
         applyFilter();
         renderTable();
     } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="3" class="state-cell">불러오기 실패: ' + e.message + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="state-cell">불러오기 실패: ' + escText(e.message) + '</td></tr>';
     }
 }
 
@@ -233,28 +278,138 @@ function closeModal(id) { document.getElementById(id).setAttribute('hidden', '')
 
 // ── Add Permission modal ──────────────────────────────────────
 
+function updateActionGrid() {
+    var type       = document.getElementById('inputType').value;
+    var grid       = document.getElementById('actionGrid');
+    var resSection = document.getElementById('resourceIdsSection');
+
+    grid.innerHTML = '';
+    if (!type) {
+        var placeholder = document.createElement('span');
+        placeholder.className = 'no-perms';
+        placeholder.textContent = 'Type을 먼저 선택하세요';
+        grid.appendChild(placeholder);
+        resSection.hidden = true;
+        return;
+    }
+
+    var actions = ACTIONS_BY_TYPE[type] || [];
+
+    // ── "* 전체" 체크박스 ─────────────────────────────────────
+    var allLbl = document.createElement('label');
+    allLbl.className = 'action-item action-item-all';
+
+    var allCb = document.createElement('input');
+    allCb.type = 'checkbox';
+    allCb.addEventListener('change', function() {
+        var checked = allCb.checked;
+        allLbl.classList.toggle('is-checked', checked);
+        grid.querySelectorAll('input[name=actionCheck]').forEach(function(cb) {
+            cb.checked = checked;
+            cb.closest('label').classList.toggle('is-checked', checked);
+        });
+    });
+
+    var allSpan = document.createElement('span');
+    allSpan.textContent = '* 전체';
+    allLbl.appendChild(allCb);
+    allLbl.appendChild(allSpan);
+    grid.appendChild(allLbl);
+
+    // ── 개별 action 체크박스 ──────────────────────────────────
+    actions.forEach(function(a) {
+        var lbl = document.createElement('label');
+        lbl.className = 'action-item';
+
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = a;
+        cb.name = 'actionCheck';
+        cb.addEventListener('change', function() {
+            lbl.classList.toggle('is-checked', cb.checked);
+            // 전체 체크박스 동기화
+            var all     = grid.querySelectorAll('input[name=actionCheck]');
+            var cnt     = grid.querySelectorAll('input[name=actionCheck]:checked').length;
+            allCb.checked       = (cnt === all.length);
+            allCb.indeterminate = (cnt > 0 && cnt < all.length);
+            allLbl.classList.toggle('is-checked', allCb.checked);
+        });
+
+        var span = document.createElement('span');
+        span.textContent = a;
+
+        lbl.appendChild(cb);
+        lbl.appendChild(span);
+        grid.appendChild(lbl);
+    });
+
+    resSection.hidden = (type === 'RBAC');
+}
+
+function renderResIdList() {
+    var list = document.getElementById('resIdList');
+    list.innerHTML = '';
+    state.pendingResIds.forEach(function(rid, idx) {
+        var chip = document.createElement('span');
+        chip.className = 'res-id-chip';
+        chip.title = rid;
+        chip.textContent = rid.slice(0, 16) + '…';
+
+        var xBtn = document.createElement('button');
+        xBtn.type = 'button';
+        xBtn.className = 'revoke-x';
+        xBtn.textContent = '✕';
+        xBtn.addEventListener('click', function() {
+            state.pendingResIds.splice(idx, 1);
+            renderResIdList();
+        });
+        chip.appendChild(xBtn);
+        list.appendChild(chip);
+    });
+}
+
+function addResId() {
+    var input = document.getElementById('inputResId');
+    var rid   = input.value.trim();
+    if (!rid) return;
+    if (state.pendingResIds.includes(rid)) {
+        document.getElementById('addPermModalErr').textContent = '이미 추가된 Resource ID입니다.';
+        return;
+    }
+    state.pendingResIds.push(rid);
+    input.value = '';
+    document.getElementById('addPermModalErr').textContent = '';
+    renderResIdList();
+}
+
 function openAddModal() {
-    document.getElementById('inputResource').value = '';
-    document.getElementById('inputAction').value   = '';
+    state.pendingResIds = [];
+    document.getElementById('inputType').value  = '';
+    document.getElementById('inputResId').value = '';
     document.getElementById('addPermModalErr').textContent = '';
     document.getElementById('btnSavePerm').disabled = false;
+    updateActionGrid();
+    renderResIdList();
     openModal('addPermModal');
-    document.getElementById('inputResource').focus();
+    document.getElementById('inputType').focus();
 }
 
 async function savePerm() {
-    const resource = document.getElementById('inputResource').value;
-    const action   = document.getElementById('inputAction').value.trim();
-    const errEl    = document.getElementById('addPermModalErr');
-    const btn      = document.getElementById('btnSavePerm');
+    var type_   = document.getElementById('inputType').value;
+    var checked = document.querySelectorAll('#actionGrid input[type=checkbox]:checked');
+    var actions = [];
+    checked.forEach(function(cb) { actions.push(cb.value); });
+
+    var errEl = document.getElementById('addPermModalErr');
+    var btn   = document.getElementById('btnSavePerm');
 
     errEl.textContent = '';
-    if (!resource) { errEl.textContent = 'Resource를 선택하세요.'; return; }
-    if (!action)   { errEl.textContent = 'Action은 필수입니다.'; return; }
+    if (!type_)           { errEl.textContent = 'Type을 선택하세요.'; return; }
+    if (actions.length === 0) { errEl.textContent = 'Action을 하나 이상 선택하세요.'; return; }
 
     btn.disabled = true;
     try {
-        await createPermission(resource, action);
+        await createPermission(type_, actions, state.pendingResIds.slice());
         closeModal('addPermModal');
         await loadPermissions();
     } catch (e) {
@@ -267,10 +422,10 @@ async function savePerm() {
 
 function openDeleteModal(perm) {
     state.deleteId = perm.permission_id;
-    const msg = document.getElementById('deletePermMsg');
+    var msg = document.getElementById('deletePermMsg');
     msg.textContent = '';
-    const strong = document.createElement('strong');
-    strong.textContent = perm.resource + ':' + perm.action;
+    var strong = document.createElement('strong');
+    strong.textContent = perm.type + ':' + perm.action;
     msg.appendChild(document.createTextNode('권한 '));
     msg.appendChild(strong);
     msg.appendChild(document.createTextNode(' 을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'));
@@ -280,8 +435,8 @@ function openDeleteModal(perm) {
 }
 
 async function confirmDelete() {
-    const errEl = document.getElementById('deletePermErr');
-    const btn   = document.getElementById('btnConfirmDeletePerm');
+    var errEl = document.getElementById('deletePermErr');
+    var btn   = document.getElementById('btnConfirmDeletePerm');
     errEl.textContent = '';
     btn.disabled = true;
     try {
@@ -304,16 +459,23 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilter();
         renderTable();
     });
-    document.getElementById('resourceFilter').addEventListener('change', function() {
+    document.getElementById('typeFilter').addEventListener('change', function() {
         applyFilter();
         renderTable();
     });
 
-    document.getElementById('btnSavePerm').addEventListener('click', savePerm);
-    document.getElementById('inputAction').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') savePerm();
+    // Modal: type change → update action checkbox grid
+    document.getElementById('inputType').addEventListener('change', function() {
+        updateActionGrid();
     });
 
+    // Resource ID add
+    document.getElementById('btnAddResId').addEventListener('click', addResId);
+    document.getElementById('inputResId').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); addResId(); }
+    });
+
+    document.getElementById('btnSavePerm').addEventListener('click', savePerm);
     document.getElementById('btnConfirmDeletePerm').addEventListener('click', confirmDelete);
 
     document.querySelectorAll('[data-close]').forEach(function(btn) {

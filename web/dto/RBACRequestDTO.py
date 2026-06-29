@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, List
 
 from domain.enum.SubjectType import SubjectType
 from domain.enum.ResourceType import ResourceType
@@ -35,15 +35,31 @@ class UpdateRoleRequestDTO:
 
 @dataclass
 class CreatePermissionRequestDTO:
-    resource: str
-    action:   str
+    type:         str
+    actions:      List[str]
+    resource_ids: List[str] = field(default_factory=list)
 
     def __post_init__(self):
-        valid_resources = {r.value for r in ResourceType}
-        if self.resource not in valid_resources:
-            raise ValueError(f"resource는 {valid_resources} 중 하나여야 합니다.")
-        if not self.action or not self.action.strip():
-            raise ValueError("action은 필수입니다.")
+        from domain.enum.StorageAction import StorageAction
+        from domain.enum.VdiAction import VdiAction
+        from domain.enum.RbacAction import RbacAction
+
+        _valid_actions: dict = {
+            'STORAGE': {a.value for a in StorageAction},
+            'VDI':     {a.value for a in VdiAction},
+            'RBAC':    {a.value for a in RbacAction},
+        }
+        if self.type not in _valid_actions:
+            raise ValueError(f"type은 {list(_valid_actions.keys())} 중 하나여야 합니다.")
+        if not isinstance(self.actions, list) or len(self.actions) == 0:
+            raise ValueError("actions는 비어있지 않은 배열이어야 합니다.")
+        invalid = [a for a in self.actions if a not in _valid_actions[self.type]]
+        if invalid:
+            raise ValueError(f"유효하지 않은 action: {invalid}. 허용: {sorted(_valid_actions[self.type])}")
+        if not isinstance(self.resource_ids, list):
+            raise ValueError("resource_ids는 배열이어야 합니다.")
+        if any(not isinstance(r, str) or not r.strip() for r in self.resource_ids):
+            raise ValueError("resource_ids의 각 항목은 비어있지 않은 문자열이어야 합니다.")
 
 
 @dataclass

@@ -116,8 +116,9 @@ def create_permission():
     data = request.get_json(silent=True) or {}
     try:
         dto = CreatePermissionRequestDTO(
-            resource=data.get("resource", ""),
-            action=data.get("action", ""),
+            type=data.get("type", ""),
+            actions=data.get("actions") or [],
+            resource_ids=data.get("resourceIds") or [],
         )
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))
@@ -132,10 +133,10 @@ def create_permission():
 @rbac_bp.route("/permission", methods=["GET"])
 @jwt_required()
 def get_all_permissions():
-    resource = request.args.get("resource")
+    type_ = request.args.get("type")
     return ApiResponse.on_success(
         SuccessStatus.RBAC_PERMISSION_READ,
-        _service.get_all_permissions(resource),
+        _service.get_all_permissions(type_),
     )
 
 

@@ -13,16 +13,33 @@ CREATE TABLE IF NOT EXISTS tb_role (
 
 -- ============================================================
 -- Permission
--- resource : STORAGE, VDI ...
--- action   : READ, WRITE, DELETE ...
+-- type   : STORAGE / VDI / RBAC
+-- action : StorageAction / VdiAction / RbacAction 값
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tb_permission (
     permission_id   CHAR(36)        NOT NULL,
-    resource        VARCHAR(30)     NOT NULL,
+    type            VARCHAR(30)     NOT NULL,
     action          VARCHAR(30)     NOT NULL,
 
-    PRIMARY KEY (permission_id),
-    UNIQUE KEY uk_permission (resource, action)
+    PRIMARY KEY (permission_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- ============================================================
+-- Permission -> Resource  (M:N)
+-- RBAC 타입은 리소스 불필요, STORAGE/VDI 타입은 리소스 UUID 목록
+-- resource_id : tb_storage_resource.resource_id 또는 VDI UUID
+-- ============================================================
+CREATE TABLE IF NOT EXISTS tb_permission_resource (
+    permission_id   CHAR(36)        NOT NULL,
+    resource_id     CHAR(36)        NOT NULL,
+
+    PRIMARY KEY (permission_id, resource_id),
+
+    CONSTRAINT fk_perm_resource_perm
+        FOREIGN KEY (permission_id)
+        REFERENCES tb_permission(permission_id)
+        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 

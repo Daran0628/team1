@@ -87,8 +87,8 @@ async function fetchAllGroups() {
     return apiJSON('/api/group', { method: 'GET' });
 }
 
-async function fetchPermissions(resource) {
-    var qs = resource ? '?resource=' + encodeURIComponent(resource) : '';
+async function fetchPermissions(type_) {
+    var qs = type_ ? '?type=' + encodeURIComponent(type_) : '';
     return apiJSON('/api/rbac/permission' + qs, { method: 'GET' });
 }
 
@@ -306,7 +306,7 @@ function renderTable() {
                 perms.forEach(function(p) {
                     var tag = document.createElement('span');
                     tag.className = 'perm-tag';
-                    tag.innerHTML = renderBadge(p.resource) + ' ';
+                    tag.innerHTML = renderBadge(p.type) + ' ';
                     tag.appendChild(document.createTextNode(p.action));
                     var xBtn = document.createElement('button');
                     xBtn.className = 'revoke-x';
@@ -563,7 +563,7 @@ async function openAssignModal(role) {
     state.assignRoleId = role.role_id;
     document.getElementById('assignModalTitle').textContent = 'Assign Permissions — ' + role.role_name;
     document.getElementById('assignModalErr').textContent = '';
-    document.getElementById('permResourceFilter').value = '';
+    document.getElementById('permTypeFilter').value = '';
     document.getElementById('btnAssignConfirm').disabled = false;
     openModal('assignModal');
     await loadPermGrid(role);
@@ -571,7 +571,7 @@ async function openAssignModal(role) {
 
 async function loadPermGrid(role) {
     var grid   = document.getElementById('permGrid');
-    var filter = document.getElementById('permResourceFilter').value;
+    var filter = document.getElementById('permTypeFilter').value;
     grid.textContent = '불러오는 중...';
 
     try {
@@ -603,8 +603,8 @@ async function loadPermGrid(role) {
             strong.textContent = p.action;
 
             var badge = document.createElement('span');
-            badge.className = 'badge badge-' + p.resource;
-            badge.textContent = p.resource;
+            badge.className = 'badge badge-' + p.type;
+            badge.textContent = p.type;
 
             info.appendChild(badge);
             info.appendChild(document.createTextNode(' '));
@@ -873,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Assign modal
     document.getElementById('btnAssignConfirm').addEventListener('click', confirmAssign);
-    document.getElementById('permResourceFilter').addEventListener('change', function() {
+    document.getElementById('permTypeFilter').addEventListener('change', function() {
         var role = state.allRoles.find(function(r) { return r.role_id === state.assignRoleId; });
         if (role) loadPermGrid(role);
     });
