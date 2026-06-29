@@ -123,24 +123,20 @@ async function revokePermission(roleId, permissionId) {
     return apiJSON('/api/rbac/permission/assign' + qs, { method: 'DELETE' });
 }
 
-async function createBinding(roleId, subjectType, subjectId, resourceType, resourceId) {
+async function createBinding(roleId, subjectType, subjectId) {
     return apiJSON('/api/rbac/rolebinding', {
         method: 'POST',
         body: JSON.stringify({
-            roleId:       roleId,
-            subjectType:  subjectType,
-            subjectId:    subjectId,
-            resourceType: resourceType,
-            resourceId:   resourceId,
+            roleId:      roleId,
+            subjectType: subjectType,
+            subjectId:   subjectId,
         }),
     });
 }
 
-async function revokeBinding(subjectType, subjectId, resourceType, resourceId) {
-    var qs = '?subjectType='  + encodeURIComponent(subjectType)  +
-             '&subjectId='    + encodeURIComponent(subjectId)    +
-             '&resourceType=' + encodeURIComponent(resourceType) +
-             '&resourceId='   + encodeURIComponent(resourceId);
+async function revokeBinding(subjectType, subjectId) {
+    var qs = '?subjectType=' + encodeURIComponent(subjectType) +
+             '&subjectId='   + encodeURIComponent(subjectId);
     return apiJSON('/api/rbac/rolebinding' + qs, { method: 'DELETE' });
 }
 
@@ -172,9 +168,6 @@ function resolveSubjectName(binding) {
     return binding.subject_id;
 }
 
-function resourceShort(binding) {
-    return binding.resource_type + ':' + binding.resource_id.slice(0, 8) + '…';
-}
 
 // ── Table rendering ───────────────────────────────────────────
 
@@ -251,11 +244,6 @@ function renderTable() {
         var actWrap = document.createElement('div');
         actWrap.className = 'row-actions';
 
-        var btnAssign = document.createElement('button');
-        btnAssign.className = 'act-btn';
-        btnAssign.textContent = 'Assign Perms';
-        btnAssign.addEventListener('click', function() { openAssignModal(role); });
-
         var btnEdit = document.createElement('button');
         btnEdit.className = 'act-btn';
         btnEdit.textContent = 'Edit';
@@ -266,7 +254,6 @@ function renderTable() {
         btnDel.textContent = 'Delete';
         btnDel.addEventListener('click', function() { openDeleteModal(role); });
 
-        actWrap.appendChild(btnAssign);
         actWrap.appendChild(btnEdit);
         actWrap.appendChild(btnDel);
         tdActs.appendChild(actWrap);
@@ -319,6 +306,12 @@ function renderTable() {
             }
             content.appendChild(tagsWrap);
 
+            var addPermBtn = document.createElement('button');
+            addPermBtn.className = 'btn-add-binding';
+            addPermBtn.textContent = '＋ Add Permissions';
+            addPermBtn.addEventListener('click', function() { openAssignModal(role); });
+            content.appendChild(addPermBtn);
+
             // ── Binding sections (MEMBER / TEAM / DEPARTMENT)
             var bindings = state.bindingsByRole[rid] || { members: [], teams: [], departments: [] };
 
@@ -340,12 +333,6 @@ function renderTable() {
                     subjectSpan.className = 'binding-subject';
                     subjectSpan.textContent = resolveSubjectName(b);
 
-                    var arrow = document.createTextNode(' → ');
-
-                    var resSpan = document.createElement('span');
-                    resSpan.className = 'binding-resource';
-                    resSpan.textContent = resourceShort(b);
-
                     var xBtn = document.createElement('button');
                     xBtn.className = 'revoke-x';
                     xBtn.title = '바인딩 해제';
@@ -353,8 +340,6 @@ function renderTable() {
                     xBtn.addEventListener('click', function() { doRevokeBinding(b, role.role_name); });
 
                     tag.appendChild(subjectSpan);
-                    tag.appendChild(arrow);
-                    tag.appendChild(resSpan);
                     tag.appendChild(xBtn);
                     tags.appendChild(tag);
                 });
@@ -364,10 +349,8 @@ function renderTable() {
 
             var memberSec = makeBindingSection('Member Bindings', bindings.members);
             var teamSec   = makeBindingSection('Group Bindings',  bindings.teams);
-            var deptSec   = makeBindingSection('Dept Bindings',   bindings.departments);
             if (memberSec) content.appendChild(memberSec);
             if (teamSec)   content.appendChild(teamSec);
-            if (deptSec)   content.appendChild(deptSec);
 
             // ── Add Binding button
             var addBindBtn = document.createElement('button');
@@ -669,9 +652,6 @@ function openBindingModal(role) {
 
     document.getElementById('bindingModalTitle').textContent = 'Add Binding — ' + role.role_name;
     document.getElementById('bindingModalErr').textContent = '';
-    document.getElementById('bindResourceType').value = '';
-    document.getElementById('bindResourceId').value   = '';
-    document.getElementById('bindDeptId').value       = '';
     document.getElementById('bindMemberSearch').value = '';
     document.getElementById('bindGroupSearch').value  = '';
     document.getElementById('btnSaveBinding').disabled = false;
@@ -688,7 +668,6 @@ function openBindingModal(role) {
 function showSubjectSection(type) {
     document.getElementById('memberPickSection').hidden = (type !== 'MEMBER');
     document.getElementById('groupPickSection').hidden  = (type !== 'TEAM');
-    document.getElementById('deptPickSection').hidden   = (type !== 'DEPARTMENT');
 }
 
 function renderBindingMemberList() {
@@ -788,21 +767,12 @@ async function saveBinding() {
     var btn   = document.getElementById('btnSaveBinding');
     errEl.textContent = '';
 
-    var resourceType = document.getElementById('bindResourceType').value;
-    var resourceId   = document.getElementById('bindResourceId').value.trim();
-
     var subjectId = state.bindingSelectedId;
-    if (state.bindingSubjectType === 'DEPARTMENT') {
-        subjectId = document.getElementById('bindDeptId').value.trim();
-    }
-
-    if (!subjectId)    { errEl.textContent = 'Subject를 선택하세요.'; return; }
-    if (!resourceType) { errEl.textContent = 'Resource Type을 선택하세요.'; return; }
-    if (!resourceId)   { errEl.textContent = 'Resource ID를 입력하세요.'; return; }
+    if (!subjectId) { errEl.textContent = 'Subject를 선택하세요.'; return; }
 
     btn.disabled = true;
     try {
-        await createBinding(state.bindingRoleId, state.bindingSubjectType, subjectId, resourceType, resourceId);
+        await createBinding(state.bindingRoleId, state.bindingSubjectType, subjectId);
         closeModal('bindingModal');
         await loadRoles();
     } catch (e) {
@@ -812,10 +782,10 @@ async function saveBinding() {
 }
 
 async function doRevokeBinding(binding, roleName) {
-    var label = resolveSubjectName(binding) + ' → ' + resourceShort(binding);
+    var label = resolveSubjectName(binding);
     if (!confirm('"' + roleName + '" 에서 [' + label + '] 바인딩을 해제하시겠습니까?')) return;
     try {
-        await revokeBinding(binding.subject_type, binding.subject_id, binding.resource_type, binding.resource_id);
+        await revokeBinding(binding.subject_type, binding.subject_id);
         await loadRoles();
     } catch (e) {
         alert('해제 실패: ' + e.message);
@@ -888,8 +858,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             btn.classList.add('active');
             showSubjectSection(btn.dataset.type);
-            if (btn.dataset.type === 'MEMBER')     renderBindingMemberList();
-            else if (btn.dataset.type === 'TEAM')  renderBindingGroupList();
+            if (btn.dataset.type === 'MEMBER') renderBindingMemberList();
+            else                               renderBindingGroupList();
         });
     });
     document.getElementById('bindMemberSearch').addEventListener('input', renderBindingMemberList);

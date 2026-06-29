@@ -118,10 +118,6 @@ CREATE TABLE IF NOT EXISTS tb_role_binding (
 
     subject_id      CHAR(36)        NOT NULL,
 
-    resource_type   VARCHAR(30)     NOT NULL,
-
-    resource_id     CHAR(36)        NOT NULL,
-
     role_id         CHAR(36)        NOT NULL,
 
     granted_by      CHAR(36)        NOT NULL,
@@ -131,9 +127,7 @@ CREATE TABLE IF NOT EXISTS tb_role_binding (
 
     PRIMARY KEY (
         subject_type,
-        subject_id,
-        resource_type,
-        resource_id
+        subject_id
     ),
 
     CONSTRAINT fk_role_binding_role

@@ -143,8 +143,6 @@ class RBACService:
         existing = RoleBinding.query.filter_by(
             subject_type=subject_type,
             subject_id=dto.subject_id,
-            resource_type=dto.resource_type,
-            resource_id=dto.resource_id,
         ).first()
         if existing:
             raise ValueError("BINDING_ALREADY_EXISTS")
@@ -154,8 +152,6 @@ class RBACService:
         binding = RoleBinding(
             subject_type=subject_type,
             subject_id=dto.subject_id,
-            resource_type=dto.resource_type,
-            resource_id=dto.resource_id,
             role_id=dto.role_id,
             granted_by=granted_by,
         )
@@ -167,33 +163,23 @@ class RBACService:
         self,
         subject_types: list[str] | None = None,
         subject_id: str | None = None,
-        resource_type: str | None = None,
-        resource_id: str | None = None,
     ) -> list[RoleBindingResponseDTO]:
         q = RoleBinding.query
         if subject_types:
             q = q.filter(RoleBinding.subject_type.in_([SubjectType(s) for s in subject_types]))
         if subject_id:
             q = q.filter_by(subject_id=subject_id)
-        if resource_type:
-            q = q.filter_by(resource_type=resource_type)
-        if resource_id:
-            q = q.filter_by(resource_id=resource_id)
         return [RBACConverter.to_binding_dto(b) for b in q.all()]
 
     def update_binding(
         self,
         subject_type: str,
         subject_id: str,
-        resource_type: str,
-        resource_id: str,
         dto: UpdateRoleBindingRequestDTO,
     ) -> RoleBindingResponseDTO:
         binding = RoleBinding.query.filter_by(
             subject_type=SubjectType(subject_type),
             subject_id=subject_id,
-            resource_type=resource_type,
-            resource_id=resource_id,
         ).first()
         if not binding:
             raise ValueError("BINDING_NOT_FOUND")
@@ -207,14 +193,10 @@ class RBACService:
         self,
         subject_type: str,
         subject_id: str,
-        resource_type: str,
-        resource_id: str,
     ) -> None:
         binding = RoleBinding.query.filter_by(
             subject_type=SubjectType(subject_type),
             subject_id=subject_id,
-            resource_type=resource_type,
-            resource_id=resource_id,
         ).first()
         if not binding:
             raise ValueError("BINDING_NOT_FOUND")
@@ -227,7 +209,6 @@ class RBACService:
         self,
         subject_type: str | None = None,
         subject_id: str | None = None,
-        resource_type: str | None = None,
     ) -> list[GroupBindingResponseDTO]:
         filter_types = (
             [SubjectType(subject_type)] if subject_type
@@ -236,6 +217,4 @@ class RBACService:
         q = RoleBinding.query.filter(RoleBinding.subject_type.in_(filter_types))
         if subject_id:
             q = q.filter_by(subject_id=subject_id)
-        if resource_type:
-            q = q.filter_by(resource_type=resource_type)
         return [RBACConverter.to_group_binding_dto(b) for b in q.all()]

@@ -33,14 +33,12 @@ class RoleResponseDTO:
 
 @dataclass
 class RoleBindingResponseDTO:
-    subject_type:  str
-    subject_id:    str
-    resource_type: str
-    resource_id:   str
-    role_id:       str
-    role_name:     str
-    granted_by:    str
-    granted_at:    datetime
+    subject_type: str
+    subject_id:   str
+    role_id:      str
+    role_name:    str
+    granted_by:   str
+    granted_at:   datetime
 
 
 # ──────────────────────────────────────────────
@@ -49,11 +47,9 @@ class RoleBindingResponseDTO:
 
 @dataclass
 class GroupBindingResponseDTO:
-    subject_type:  str          # DEPARTMENT or TEAM
-    subject_id:    str
-    resource_type: str
-    resource_id:   str
-    role_id:       str
-    role_name:     str
-    granted_by:    str
-    granted_at:    datetime
+    subject_type: str          # DEPARTMENT or TEAM
+    subject_id:   str
+    role_id:      str
+    role_name:    str
+    granted_by:   str
+    granted_at:   datetime

@@ -197,8 +197,6 @@ def create_binding():
         dto = CreateRoleBindingRequestDTO(
             subject_type=data.get("subjectType", ""),
             subject_id=data.get("subjectId", ""),
-            resource_type=data.get("resourceType", ""),
-            resource_id=data.get("resourceId", ""),
             role_id=data.get("roleId", ""),
         )
     except ValueError as e:
@@ -218,8 +216,6 @@ def get_bindings():
     result = _service.get_bindings(
         subject_types=subject_types,
         subject_id=request.args.get("subjectId"),
-        resource_type=request.args.get("resourceType"),
-        resource_id=request.args.get("resourceId"),
     )
     return ApiResponse.on_success(SuccessStatus.RBAC_BINDING_READ, result)
 
@@ -227,14 +223,12 @@ def get_bindings():
 @rbac_bp.route("/rolebinding", methods=["PUT"])
 @jwt_required()
 def update_binding():
-    data = request.get_json(silent=True) or {}
-    subject_type  = request.args.get("subjectType", "")
-    subject_id    = request.args.get("subjectId", "")
-    resource_type = request.args.get("resourceType", "")
-    resource_id   = request.args.get("resourceId", "")
+    data         = request.get_json(silent=True) or {}
+    subject_type = request.args.get("subjectType", "")
+    subject_id   = request.args.get("subjectId", "")
 
-    if not all([subject_type, subject_id, resource_type, resource_id]):
-        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "쿼리 파라미터(subjectType, subjectId, resourceType, resourceId)가 필요합니다.")
+    if not all([subject_type, subject_id]):
+        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "쿼리 파라미터(subjectType, subjectId)가 필요합니다.")
 
     try:
         dto = UpdateRoleBindingRequestDTO(role_id=data.get("roleId", ""))
@@ -242,7 +236,7 @@ def update_binding():
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))
 
     try:
-        result = _service.update_binding(subject_type, subject_id, resource_type, resource_id, dto)
+        result = _service.update_binding(subject_type, subject_id, dto)
         return ApiResponse.on_success(SuccessStatus.RBAC_BINDING_UPDATE, result)
     except ValueError as e:
         return _handle(e)
@@ -251,16 +245,14 @@ def update_binding():
 @rbac_bp.route("/rolebinding", methods=["DELETE"])
 @jwt_required()
 def delete_binding():
-    subject_type  = request.args.get("subjectType", "")
-    subject_id    = request.args.get("subjectId", "")
-    resource_type = request.args.get("resourceType", "")
-    resource_id   = request.args.get("resourceId", "")
+    subject_type = request.args.get("subjectType", "")
+    subject_id   = request.args.get("subjectId", "")
 
-    if not all([subject_type, subject_id, resource_type, resource_id]):
-        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "쿼리 파라미터(subjectType, subjectId, resourceType, resourceId)가 필요합니다.")
+    if not all([subject_type, subject_id]):
+        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "쿼리 파라미터(subjectType, subjectId)가 필요합니다.")
 
     try:
-        _service.delete_binding(subject_type, subject_id, resource_type, resource_id)
+        _service.delete_binding(subject_type, subject_id)
         return ApiResponse.on_success(SuccessStatus.RBAC_BINDING_DELETE)
     except ValueError as e:
         return _handle(e)
@@ -279,21 +271,16 @@ def create_group_binding():
         dto = CreateGroupBindingRequestDTO(
             subject_type=data.get("subjectType", ""),
             subject_id=data.get("subjectId", ""),
-            resource_type=data.get("resourceType", ""),
-            resource_id=data.get("resourceId", ""),
             role_id=data.get("roleId", ""),
         )
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))
 
-    # CreateGroupBindingRequestDTO → CreateRoleBindingRequestDTO로 위임
     try:
         from web.dto.RBACRequestDTO import CreateRoleBindingRequestDTO as BindingDTO
         binding_dto = BindingDTO(
             subject_type=dto.subject_type,
             subject_id=dto.subject_id,
-            resource_type=dto.resource_type,
-            resource_id=dto.resource_id,
             role_id=dto.role_id,
         )
         result = _service.create_binding(binding_dto, granted_by)
@@ -308,7 +295,6 @@ def get_group_bindings():
     result = _service.get_group_bindings(
         subject_type=request.args.get("subjectType"),
         subject_id=request.args.get("subjectId"),
-        resource_type=request.args.get("resourceType"),
     )
     return ApiResponse.on_success(SuccessStatus.RBAC_BINDING_READ, result)
 
@@ -316,16 +302,14 @@ def get_group_bindings():
 @rbac_bp.route("/group", methods=["DELETE"])
 @jwt_required()
 def delete_group_binding():
-    subject_type  = request.args.get("subjectType", "")
-    subject_id    = request.args.get("subjectId", "")
-    resource_type = request.args.get("resourceType", "")
-    resource_id   = request.args.get("resourceId", "")
+    subject_type = request.args.get("subjectType", "")
+    subject_id   = request.args.get("subjectId", "")
 
-    if not all([subject_type, subject_id, resource_type, resource_id]):
-        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "쿼리 파라미터(subjectType, subjectId, resourceType, resourceId)가 필요합니다.")
+    if not all([subject_type, subject_id]):
+        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "쿼리 파라미터(subjectType, subjectId)가 필요합니다.")
 
     try:
-        _service.delete_binding(subject_type, subject_id, resource_type, resource_id)
+        _service.delete_binding(subject_type, subject_id)
         return ApiResponse.on_success(SuccessStatus.RBAC_BINDING_DELETE)
     except ValueError as e:
         return _handle(e)

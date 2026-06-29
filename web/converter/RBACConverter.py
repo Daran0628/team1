@@ -37,8 +37,6 @@ class RBACConverter:
         return RoleBindingResponseDTO(
             subject_type=binding.subject_type.value,
             subject_id=binding.subject_id,
-            resource_type=binding.resource_type,
-            resource_id=binding.resource_id,
             role_id=binding.role_id,
             role_name=binding.role.role_name,
             granted_by=binding.granted_by,
@@ -50,8 +48,6 @@ class RBACConverter:
         return GroupBindingResponseDTO(
             subject_type=binding.subject_type.value,
             subject_id=binding.subject_id,
-            resource_type=binding.resource_type,
-            resource_id=binding.resource_id,
             role_id=binding.role_id,
             role_name=binding.role.role_name,
             granted_by=binding.granted_by,

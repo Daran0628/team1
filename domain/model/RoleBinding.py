@@ -13,8 +13,6 @@ class RoleBinding(db.Model):
         primary_key=True,
     )
     subject_id    = db.Column(db.String(36), primary_key=True)
-    resource_type = db.Column(db.String(30), primary_key=True)
-    resource_id   = db.Column(db.String(36), primary_key=True)
 
     role_id    = db.Column(db.String(36), db.ForeignKey("tb_role.role_id"), nullable=False)
     granted_by = db.Column(db.String(36), nullable=False)
@@ -25,6 +23,5 @@ class RoleBinding(db.Model):
     def __repr__(self) -> str:
         return (
             f"<RoleBinding {self.subject_type.value}:{self.subject_id}"
-            f" → {self.resource_type}:{self.resource_id}"
             f" role={self.role_id}>"
         )
