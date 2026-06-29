@@ -16,17 +16,9 @@ CREATE TABLE IF NOT EXISTS tb_members (
     last_login      DATETIME        NULL,
 
     PRIMARY KEY (member_id),
-    CONSTRAINT fk_member_department
+    CONSTRAINT fk_members_department
         FOREIGN KEY (department_id)
         REFERENCES tb_department(department_id)
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 수정
--- member_id BIGINT -> uer_id CHAR(36)
--- dept_path_name -> department_id (FK)
--- 추가
--- last_login
--- 삭제
--- deleted_at
