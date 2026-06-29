@@ -29,6 +29,13 @@ class ErrorStatus(Enum):
     RBAC_BINDING_NOT_FOUND           = (HTTPStatus.NOT_FOUND,   "RBAC4021", "역할 바인딩을 찾을 수 없습니다.")
     RBAC_BINDING_ALREADY_EXISTS      = (HTTPStatus.CONFLICT,    "RBAC4022", "이미 존재하는 역할 바인딩입니다.")
 
+    # Storage (MinIO 오브젝트 스토리지)
+    STORAGE_BUCKET_NOT_FOUND      = (HTTPStatus.NOT_FOUND,  "STORAGE4001", "버켓을 찾을 수 없습니다.")
+    STORAGE_BUCKET_ALREADY_EXISTS = (HTTPStatus.CONFLICT,   "STORAGE4002", "이미 존재하는 버켓입니다.")
+    STORAGE_BUCKET_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4003", "버켓이 비어있지 않습니다. ?force=true로 강제 삭제하세요.")
+    STORAGE_OBJECT_NOT_FOUND      = (HTTPStatus.NOT_FOUND,  "STORAGE4011", "오브젝트를 찾을 수 없습니다.")
+    STORAGE_OPERATION_FAILED      = (HTTPStatus.INTERNAL_SERVER_ERROR, "STORAGE5001", "스토리지 작업에 실패했습니다.")
+
     # Group (커스텀 그룹)
     GROUP_NOT_FOUND                  = (HTTPStatus.NOT_FOUND,   "GROUP4001", "그룹을 찾을 수 없습니다.")
     GROUP_NAME_DUPLICATE             = (HTTPStatus.CONFLICT,    "GROUP4002", "이미 존재하는 그룹 이름입니다.")

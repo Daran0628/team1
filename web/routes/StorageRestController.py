@@ -1,0 +1,221 @@
+from flask import Blueprint, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+from core.rbac.RBACUtils import storage_required
+from core.response.ApiResponse import ApiResponse
+from core.response.ErrorStatus import ErrorStatus
+from core.response.SuccessStatus import SuccessStatus
+from domain.model.Member import Member
+from service.StorageService.StorageService import (
+    StorageException,
+    create_bucket,
+    list_buckets,
+    get_bucket,
+    delete_bucket,
+    list_objects,
+    upload_object,
+    stat_object,
+    presigned_download_url,
+    delete_object,
+    copy_object,
+    get_object_tags,
+    set_object_tags,
+    delete_object_tags,
+)
+from web.dto.StorageRequestDTO import (
+    CreateBucketRequestDTO,
+    CopyObjectRequestDTO,
+    SetObjectTagsRequestDTO,
+)
+
+storage_bp = Blueprint('storage', __name__, url_prefix='/api/storage')
+
+
+def _current_member_id() -> str:
+    member = Member.query.filter_by(account_id=get_jwt_identity()).first()
+    return member.id if member else get_jwt_identity()
+
+
+def _handle(fn):
+    try:
+        return fn()
+    except StorageException as e:
+        return ApiResponse.on_failure(e.error_status)
+    except ValueError as e:
+        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))
+    except Exception as e:
+        return ApiResponse.on_failure(ErrorStatus._INTERNAL_SERVER_ERROR, str(e))
+
+
+# ── Bucket endpoints ──────────────────────────────────────────────────────────
+
+@storage_bp.route('/buckets', methods=['POST'])
+@jwt_required()
+@storage_required('MANAGE')
+def api_create_bucket():
+    body = request.get_json(silent=True) or {}
+    def work():
+        dto = CreateBucketRequestDTO(bucket_name=body.get('bucketName', '').strip())
+        result = create_bucket(dto, _current_member_id())
+        return ApiResponse.on_success(SuccessStatus.STORAGE_BUCKET_CREATE, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets', methods=['GET'])
+@jwt_required()
+@storage_required('READ')
+def api_list_buckets():
+    def work():
+        result = list_buckets()
+        return ApiResponse.on_success(SuccessStatus.STORAGE_BUCKET_READ, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>', methods=['GET'])
+@jwt_required()
+@storage_required('READ')
+def api_get_bucket(bucket_name: str):
+    def work():
+        result = get_bucket(bucket_name)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_BUCKET_READ, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>', methods=['DELETE'])
+@jwt_required()
+@storage_required('MANAGE')
+def api_delete_bucket(bucket_name: str):
+    force = request.args.get('force', 'false').lower() == 'true'
+    def work():
+        delete_bucket(bucket_name, force=force)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_BUCKET_DELETE)
+    return _handle(work)
+
+
+# ── Object list / upload / stat / download URL / delete / copy ────────────────
+
+@storage_bp.route('/buckets/<bucket_name>/objects', methods=['GET'])
+@jwt_required()
+@storage_required('READ')
+def api_list_objects(bucket_name: str):
+    prefix    = request.args.get('prefix', '')
+    recursive = request.args.get('recursive', 'false').lower() == 'true'
+    def work():
+        result = list_objects(bucket_name, prefix=prefix, recursive=recursive)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_LIST, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects', methods=['POST'])
+@jwt_required()
+@storage_required('UPLOAD')
+def api_upload_object(bucket_name: str):
+    def work():
+        if 'file' not in request.files:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "file 필드가 없습니다.")
+        file = request.files['file']
+        object_name = request.form.get('objectName') or file.filename
+        content_type = file.content_type or 'application/octet-stream'
+        data = file.read()
+        result = upload_object(bucket_name, object_name, data, content_type, _current_member_id())
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_UPLOAD, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects/stat', methods=['GET'])
+@jwt_required()
+@storage_required('READ')
+def api_stat_object(bucket_name: str):
+    object_name = request.args.get('objectName', '')
+    def work():
+        if not object_name:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
+        result = stat_object(bucket_name, object_name)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_STAT, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects/download-url', methods=['GET'])
+@jwt_required()
+@storage_required('DOWNLOAD')
+def api_presigned_url(bucket_name: str):
+    object_name = request.args.get('objectName', '')
+    expires = int(request.args.get('expires', 3600))
+    def work():
+        if not object_name:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
+        result = presigned_download_url(bucket_name, object_name, expires_seconds=expires)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_URL, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects', methods=['DELETE'])
+@jwt_required()
+@storage_required('DELETE')
+def api_delete_object(bucket_name: str):
+    object_name = request.args.get('objectName', '')
+    def work():
+        if not object_name:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
+        delete_object(bucket_name, object_name)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_DELETE)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects/copy', methods=['POST'])
+@jwt_required()
+@storage_required('MANAGE')
+def api_copy_object(bucket_name: str):
+    body = request.get_json(silent=True) or {}
+    def work():
+        dto = CopyObjectRequestDTO(
+            source_object=body.get('sourceObject', ''),
+            dest_bucket=body.get('destBucket', ''),
+            dest_object=body.get('destObject', ''),
+        )
+        copy_object(bucket_name, dto)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_COPY)
+    return _handle(work)
+
+
+# ── Object Tags ───────────────────────────────────────────────────────────────
+
+@storage_bp.route('/buckets/<bucket_name>/objects/tags', methods=['GET'])
+@jwt_required()
+@storage_required('READ')
+def api_get_tags(bucket_name: str):
+    object_name = request.args.get('objectName', '')
+    def work():
+        if not object_name:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
+        result = get_object_tags(bucket_name, object_name)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_TAGS_GET, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects/tags', methods=['PUT'])
+@jwt_required()
+@storage_required('MANAGE')
+def api_set_tags(bucket_name: str):
+    body = request.get_json(silent=True) or {}
+    def work():
+        dto = SetObjectTagsRequestDTO(
+            object_name=body.get('objectName', ''),
+            tags=body.get('tags', {}),
+        )
+        set_object_tags(bucket_name, dto)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_TAGS_SET)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects/tags', methods=['DELETE'])
+@jwt_required()
+@storage_required('MANAGE')
+def api_delete_tags(bucket_name: str):
+    object_name = request.args.get('objectName', '')
+    def work():
+        if not object_name:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
+        delete_object_tags(bucket_name, object_name)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_TAGS_DELETE)
+    return _handle(work)

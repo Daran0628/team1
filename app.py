@@ -12,6 +12,7 @@ from web.routes.GroupRestController import group_bp
 from web.routes.RBACRestController import rbac_bp
 from web.routes.Todo import todo_bp
 from web.routes.MemberRestController import member_bp
+from web.routes.StorageRestController import storage_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -21,6 +22,7 @@ app.register_blueprint(rbac_bp)
 app.register_blueprint(group_bp)
 app.register_blueprint(todo_bp)
 app.register_blueprint(member_bp)
+app.register_blueprint(storage_bp)
 
 with app.app_context():
     from domain.model.Member import Member
@@ -28,6 +30,7 @@ with app.app_context():
     from domain.model.Role import Role
     from domain.model.Permission import Permission, PermissionResource
     from domain.model.RoleBinding import RoleBinding
+    from domain.model.StorageBucket import StorageBucket
     from domain.model.StorageResource import StorageResource
     from domain.model.Vdi import Vdi, VdiSnapshot
     from domain.model.Group import Group, tb_group_member

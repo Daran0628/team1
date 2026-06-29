@@ -6,7 +6,4 @@ class StorageAction(Enum):
     DOWNLOAD = "DOWNLOAD"
     UPLOAD   = "UPLOAD"
     DELETE   = "DELETE"
-    RENAME   = "RENAME"
-    MOVE     = "MOVE"
-    SHARE    = "SHARE"
     MANAGE   = "MANAGE"
