@@ -10,7 +10,7 @@ from web.dto.GroupRequestDTO import (
     RemoveGroupMembersRequestDTO,
     UpdateGroupRequestDTO,
 )
-from web.dto.GroupResponseDTO import GroupResponseDTO
+from web.dto.GroupResponseDTO import GroupMemberDTO, GroupResponseDTO
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,28 @@ class GroupService:
             if mid not in existing:
                 raise ValueError("GROUP_MEMBER_NOT_FOUND")
             group.members.remove(existing[mid])
+
+        db.session.commit()
+        return RBACConverter.to_group_dto(group)
+
+    # ── 부서 기반 조회 / 일괄 추가 ───────────────────────────────
+
+    def get_members_by_dept(self, dept_id: str) -> list[GroupMemberDTO]:
+        """특정 부서 소속 멤버의 UUID 목록 반환."""
+        members = Member.query.filter_by(department_id=dept_id).all()
+        return [RBACConverter.to_group_member_dto(m) for m in members]
+
+    def add_members_by_dept(self, group_id: str, dept_id: str) -> GroupResponseDTO:
+        """특정 부서 소속 멤버 전체를 그룹에 추가. 이미 속한 멤버는 스킵."""
+        group = Group.query.get(group_id)
+        if not group:
+            raise ValueError("GROUP_NOT_FOUND")
+
+        dept_members = Member.query.filter_by(department_id=dept_id).all()
+        existing_ids = {m.id for m in group.members}
+        for m in dept_members:
+            if m.id not in existing_ids:
+                group.members.append(m)
 
         db.session.commit()
         return RBACConverter.to_group_dto(group)

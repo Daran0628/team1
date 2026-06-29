@@ -43,7 +43,7 @@ def create_group():
         dto = CreateGroupRequestDTO(
             group_name=data.get("groupName", ""),
             description=data.get("description"),
-            member_ids=data.get("memberIds", []),
+            member_ids=data.get("memberIds") or [],
         )
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))
@@ -131,5 +131,28 @@ def remove_members(group_id: str):
     try:
         result = _service.remove_members(group_id, dto)
         return ApiResponse.on_success(SuccessStatus.GROUP_MEMBER_REMOVE, result)
+    except ValueError as e:
+        return _handle(e)
+
+
+# ──────────────────────────────────────────────
+# /api/group/department  — 부서 기반 멤버 조회 / 일괄 추가
+# ──────────────────────────────────────────────
+
+@group_bp.route("/department/<dept_id>/members", methods=["GET"])
+@jwt_required()
+def get_dept_members(dept_id: str):
+    """해당 부서 소속 멤버 UUID 목록 조회 (그룹 추가 전 미리보기 용도)."""
+    result = _service.get_members_by_dept(dept_id)
+    return ApiResponse.on_success(SuccessStatus.GROUP_READ, result)
+
+
+@group_bp.route("/<group_id>/member/department/<dept_id>", methods=["POST"])
+@jwt_required()
+def add_members_by_dept(group_id: str, dept_id: str):
+    """특정 부서 소속 멤버 전체를 그룹에 일괄 추가. 이미 속한 멤버는 스킵."""
+    try:
+        result = _service.add_members_by_dept(group_id, dept_id)
+        return ApiResponse.on_success(SuccessStatus.GROUP_MEMBER_ADD, result)
     except ValueError as e:
         return _handle(e)
