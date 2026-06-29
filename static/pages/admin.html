@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 | 업무지원포털</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; }
+
+        .sidebar { width: 240px; min-height: 100vh; background: #1a1a2e; padding: 2rem 1.25rem; display: flex; flex-direction: column; gap: 6px; position: fixed; top: 0; left: 0; bottom: 0; }
+        .logo { font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .logo span { color: #4f46e5; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; color: rgba(255,255,255,0.55); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s; }
+        .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+        .nav-item.active { background: #4f46e5; color: #fff; }
+        .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+        .sidebar-bottom { margin-top: auto; }
+
+        .main { margin-left: 240px; flex: 1; padding: 2.5rem 2rem; }
+        .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem; }
+        .page-sub { font-size: 0.875rem; color: #9ca3af; margin-bottom: 2rem; }
+
+        /* 탭 */
+        .admin-tabs { display: flex; gap: 4px; background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 1.5rem; width: fit-content; }
+        .admin-tab { padding: 8px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: #6b7280; border: none; background: none; transition: all 0.2s; }
+        .admin-tab.active { background: #4f46e5; color: #fff; }
+
+        /* 테이블 카드 */
+        .table-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+        .table-header { padding: 1rem 1.25rem; border-bottom: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+        .table-header-title { font-size: 0.95rem; font-weight: 600; color: #111827; }
+        .table-count { font-size: 0.8rem; color: #9ca3af; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { padding: 0.75rem 1.25rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #f3f4f6; background: #fafafa; }
+        tbody tr { border-bottom: 1px solid #f3f4f6; transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #f9fafb; }
+        tbody td { padding: 0.875rem 1.25rem; font-size: 0.875rem; color: #374151; vertical-align: middle; }
+
+        .badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .badge-open     { background: #dbeafe; color: #1d4ed8; }
+        .badge-progress { background: #fef3c7; color: #b45309; }
+        .badge-pending  { background: #ffedd5; color: #c2410c; }
+        .badge-resolved { background: #d1fae5; color: #065f46; }
+        .badge-closed   { background: #f3f4f6; color: #6b7280; }
+        .priority-high   { background: #fee2e2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .priority-medium { background: #fef3c7; color: #b45309; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .priority-low    { background: #d1fae5; color: #065f46; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+        .btn-del { padding: 4px 12px; background: #fee2e2; color: #b91c1c; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-del:hover { background: #fecaca; }
+        .status-select { padding: 4px 8px; border: 1.5px solid #d1d5db; border-radius: 6px; font-size: 0.75rem; outline: none; cursor: pointer; }
+        .status-select:focus { border-color: #4f46e5; }
+
+        .empty { padding: 3rem; text-align: center; color: #9ca3af; font-size: 0.9rem; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .skeleton-bar { height: 14px; border-radius: 6px; background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1f2937; color: #fff; padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.875rem; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; z-index: 999; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item active"><span class="nav-icon">⚙️</span> 관리자</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+    <h1 class="page-title">관리자 페이지</h1>
+    <p class="page-sub">공지사항 · FAQ · 티켓 · 회원 관리</p>
+
+    <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchTab('notice', this)">📢 공지사항</button>
+        <button class="admin-tab" onclick="switchTab('faq', this)">❓ FAQ</button>
+        <button class="admin-tab" onclick="switchTab('ticket', this)">🎫 티켓</button>
+        <button class="admin-tab" onclick="switchTab('member', this)">👤 회원</button>
+    </div>
+
+    <!-- 공지사항 탭 -->
+    <div class="tab-content active" id="tab-notice">
+        <div class="table-card">
+            <div class="table-header">
+                <span class="table-header-title">공지사항 목록</span>
+                <span class="table-count" id="notice-count"></span>
+            </div>
+            <table>
+                <thead><tr><th>제목</th><th>고정</th><th>작성일</th><th>조회수</th><th>삭제</th></tr></thead>
+                <tbody id="admin-notice-list"><tr><td colspan="5"><div class="empty">로딩 중...</div></td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FAQ 탭 -->
+    <div class="tab-content" id="tab-faq">
+        <div class="table-card">
+            <div class="table-header">
+                <span class="table-header-title">FAQ 목록</span>
+                <span class="table-count" id="faq-count"></span>
+            </div>
+            <table>
+                <thead><tr><th>질문</th><th>카테고리</th><th>작성일</th><th>삭제</th></tr></thead>
+                <tbody id="admin-faq-list"><tr><td colspan="4"><div class="empty">로딩 중...</div></td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 티켓 탭 -->
+    <div class="tab-content" id="tab-ticket">
+        <div class="table-card">
+            <div class="table-header">
+                <span class="table-header-title">티켓 목록</span>
+                <span class="table-count" id="ticket-count"></span>
+            </div>
+            <table>
+                <thead><tr><th>번호</th><th>제목</th><th>우선순위</th><th>상태 변경</th><th>작성일</th><th>삭제</th></tr></thead>
+                <tbody id="admin-ticket-list"><tr><td colspan="6"><div class="empty">로딩 중...</div></td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 회원 탭 -->
+    <div class="tab-content" id="tab-member">
+        <div class="table-card">
+            <div class="table-header">
+                <span class="table-header-title">회원 목록</span>
+                <span class="table-count" id="member-count"></span>
+            </div>
+            <table>
+                <thead><tr><th>이름</th><th>아이디</th><th>사원번호</th><th>이메일</th><th>권한</th><th>상태</th></tr></thead>
+                <tbody id="admin-member-list"><tr><td colspan="6"><div class="empty">로딩 중...</div></td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = sessionStorage.getItem('access_token');
+    const role  = sessionStorage.getItem('role');
+
+    if (!token) location.replace('/login');
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+        alert('관리자만 접근 가능합니다.');
+        location.replace('/static/pages/notice.html');
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        btn.classList.add('active');
+        if (name === 'notice') loadNotices();
+        if (name === 'faq')    loadFaqs();
+        if (name === 'ticket') loadTickets();
+        if (name === 'member') loadMembers();
+    }
+
+    function statusBadge(status) {
+        const map = { 'OPEN': ['badge-open','접수'], 'IN_PROGRESS': ['badge-progress','처리중'], 'PENDING': ['badge-pending','보류'], 'RESOLVED': ['badge-resolved','해결'], 'CLOSED': ['badge-closed','종료'] };
+        const [cls, label] = map[status] || ['badge-closed', status];
+        return `<span class="badge ${cls}">${label}</span>`;
+    }
+
+    function priorityBadge(p) {
+        const map = { 'HIGH': ['priority-high','높음'], 'MEDIUM': ['priority-medium','보통'], 'LOW': ['priority-low','낮음'] };
+        const [cls, label] = map[p] || ['priority-medium', p];
+        return `<span class="${cls}">${label}</span>`;
+    }
+
+    // 공지사항
+    async function loadNotices() {
+        const res  = await fetch('/api/notices', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        const list = data.result || [];
+        document.getElementById('notice-count').textContent = `총 ${list.length}건`;
+        const tbody = document.getElementById('admin-notice-list');
+        tbody.innerHTML = '';
+        if (!list.length) { tbody.innerHTML = `<tr><td colspan="5"><div class="empty">공지사항이 없습니다.</div></td></tr>`; return; }
+        list.forEach(n => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:500">${n.title}</td>
+                <td>${n.isPinned ? '📌' : '-'}</td>
+                <td style="color:#9ca3af;font-size:0.8rem">${n.createdAt.slice(0,10)}</td>
+                <td style="color:#9ca3af">${n.viewCount}</td>
+                <td><button class="btn-del" onclick="deleteNotice('${n.noticeId}', this)">삭제</button></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function deleteNotice(id, btn) {
+        if (!confirm('삭제하시겠습니까?')) return;
+        const res = await fetch(`/api/notices/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        if (res.ok) { showToast('삭제됐습니다.'); btn.closest('tr').remove(); }
+        else showToast('삭제 실패했습니다.');
+    }
+
+    // FAQ
+    async function loadFaqs() {
+        const res  = await fetch('/api/faqs', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        const list = data.result || [];
+        document.getElementById('faq-count').textContent = `총 ${list.length}건`;
+        const tbody = document.getElementById('admin-faq-list');
+        tbody.innerHTML = '';
+        if (!list.length) { tbody.innerHTML = `<tr><td colspan="4"><div class="empty">FAQ가 없습니다.</div></td></tr>`; return; }
+        list.forEach(f => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:500">${f.question}</td>
+                <td>${f.category ? `<span class="badge" style="background:#ede9fe;color:#6d28d9">${f.category}</span>` : '-'}</td>
+                <td style="color:#9ca3af;font-size:0.8rem">${f.createdAt.slice(0,10)}</td>
+                <td><button class="btn-del" onclick="deleteFaq('${f.faqId}', this)">삭제</button></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function deleteFaq(id, btn) {
+        if (!confirm('삭제하시겠습니까?')) return;
+        const res = await fetch(`/api/faqs/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        if (res.ok) { showToast('삭제됐습니다.'); btn.closest('tr').remove(); }
+        else showToast('삭제 실패했습니다.');
+    }
+
+    // 티켓
+    async function loadTickets() {
+        const res  = await fetch('/api/tickets', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        const list = data.result || [];
+        document.getElementById('ticket-count').textContent = `총 ${list.length}건`;
+        const tbody = document.getElementById('admin-ticket-list');
+        tbody.innerHTML = '';
+        if (!list.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty">티켓이 없습니다.</div></td></tr>`; return; }
+        list.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color:#9ca3af">#${t.ticketNo || '-'}</td>
+                <td style="font-weight:500">${t.title}</td>
+                <td>${priorityBadge(t.priority)}</td>
+                <td>
+                    <select class="status-select" onchange="updateStatus('${t.ticketId}', this.value)">
+                        <option value="OPEN"        ${t.status==='OPEN'?'selected':''}>접수</option>
+                        <option value="IN_PROGRESS" ${t.status==='IN_PROGRESS'?'selected':''}>처리중</option>
+                        <option value="PENDING"     ${t.status==='PENDING'?'selected':''}>보류</option>
+                        <option value="RESOLVED"    ${t.status==='RESOLVED'?'selected':''}>해결</option>
+                        <option value="CLOSED"      ${t.status==='CLOSED'?'selected':''}>종료</option>
+                    </select>
+                </td>
+                <td style="color:#9ca3af;font-size:0.8rem">${t.createdAt.slice(0,10)}</td>
+                <td><button class="btn-del" onclick="deleteTicket('${t.ticketId}', this)">삭제</button></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function updateStatus(id, status) {
+        const res = await fetch(`/api/tickets/${id}/status`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        if (res.ok) showToast('상태가 변경됐습니다. ✅');
+        else showToast('상태 변경 실패했습니다.');
+    }
+
+    async function deleteTicket(id, btn) {
+        if (!confirm('삭제하시겠습니까?')) return;
+        const res = await fetch(`/api/tickets/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        if (res.ok) { showToast('삭제됐습니다.'); btn.closest('tr').remove(); }
+        else showToast('삭제 실패했습니다.');
+    }
+
+    // 회원
+    async function loadMembers() {
+        const res  = await fetch('/api/auth/members', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        const list = data.result || [];
+        document.getElementById('member-count').textContent = `총 ${list.length}명`;
+        const tbody = document.getElementById('admin-member-list');
+        tbody.innerHTML = '';
+        if (!list.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty">회원이 없습니다.</div></td></tr>`; return; }
+        list.forEach(m => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:500">${m.nameKo || m.name_ko}</td>
+                <td>${m.accountId || m.account_id}</td>
+                <td style="color:#9ca3af">${m.employeeNo || m.employee_no}</td>
+                <td style="color:#9ca3af">${m.email}</td>
+                <td><span class="badge badge-open">${m.accountType || m.account_type}</span></td>
+                <td><span class="badge ${(m.enrollmentStatus||m.enrollment_status)==='ACTIVE' ? 'badge-resolved' : 'badge-closed'}">${m.enrollmentStatus || m.enrollment_status}</span></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        location.replace('/login');
+    }
+
+    loadNotices();
+</script>
+</body>
+</html>
