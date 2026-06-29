@@ -316,7 +316,6 @@ function renderTable() {
             var bindings = state.bindingsByRole[rid] || { members: [], teams: [], departments: [] };
 
             function makeBindingSection(labelText, list) {
-                if (list.length === 0) return null;
                 var section = document.createElement('div');
                 section.className = 'binding-section';
                 var sLabel = document.createElement('div');
@@ -325,32 +324,37 @@ function renderTable() {
                 section.appendChild(sLabel);
                 var tags = document.createElement('div');
                 tags.className = 'binding-tags';
-                list.forEach(function(b) {
-                    var tag = document.createElement('span');
-                    tag.className = 'binding-tag';
+                if (list.length === 0) {
+                    var empty = document.createElement('span');
+                    empty.className = 'no-perms';
+                    empty.textContent = '없음';
+                    tags.appendChild(empty);
+                } else {
+                    list.forEach(function(b) {
+                        var tag = document.createElement('span');
+                        tag.className = 'binding-tag';
 
-                    var subjectSpan = document.createElement('span');
-                    subjectSpan.className = 'binding-subject';
-                    subjectSpan.textContent = resolveSubjectName(b);
+                        var subjectSpan = document.createElement('span');
+                        subjectSpan.className = 'binding-subject';
+                        subjectSpan.textContent = resolveSubjectName(b);
 
-                    var xBtn = document.createElement('button');
-                    xBtn.className = 'revoke-x';
-                    xBtn.title = '바인딩 해제';
-                    xBtn.textContent = '✕';
-                    xBtn.addEventListener('click', function() { doRevokeBinding(b, role.role_name); });
+                        var xBtn = document.createElement('button');
+                        xBtn.className = 'revoke-x';
+                        xBtn.title = '바인딩 해제';
+                        xBtn.textContent = '✕';
+                        xBtn.addEventListener('click', function() { doRevokeBinding(b, role.role_name); });
 
-                    tag.appendChild(subjectSpan);
-                    tag.appendChild(xBtn);
-                    tags.appendChild(tag);
-                });
+                        tag.appendChild(subjectSpan);
+                        tag.appendChild(xBtn);
+                        tags.appendChild(tag);
+                    });
+                }
                 section.appendChild(tags);
                 return section;
             }
 
-            var memberSec = makeBindingSection('Member Bindings', bindings.members);
-            var teamSec   = makeBindingSection('Group Bindings',  bindings.teams);
-            if (memberSec) content.appendChild(memberSec);
-            if (teamSec)   content.appendChild(teamSec);
+            content.appendChild(makeBindingSection('Member Bindings', bindings.members));
+            content.appendChild(makeBindingSection('Group Bindings',  bindings.teams));
 
             // ── Add Binding button
             var addBindBtn = document.createElement('button');

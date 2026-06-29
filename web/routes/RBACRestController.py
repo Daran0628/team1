@@ -3,6 +3,7 @@ import logging
 from flask import Blueprint, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from core.rbac.RBACUtils import rbac_required
 from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
@@ -45,6 +46,7 @@ def _handle(exc: Exception):
 
 @rbac_bp.route("/role", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def create_role():
     data = request.get_json(silent=True) or {}
     try:
@@ -64,12 +66,14 @@ def create_role():
 
 @rbac_bp.route("/role", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_all_roles():
     return ApiResponse.on_success(SuccessStatus.RBAC_ROLE_READ, _service.get_all_roles())
 
 
 @rbac_bp.route("/role/<role_id>", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_role(role_id: str):
     try:
         return ApiResponse.on_success(SuccessStatus.RBAC_ROLE_READ, _service.get_role(role_id))
@@ -79,6 +83,7 @@ def get_role(role_id: str):
 
 @rbac_bp.route("/role/<role_id>", methods=["PUT"])
 @jwt_required()
+@rbac_required('MANAGE')
 def update_role(role_id: str):
     data = request.get_json(silent=True) or {}
     try:
@@ -98,6 +103,7 @@ def update_role(role_id: str):
 
 @rbac_bp.route("/role/<role_id>", methods=["DELETE"])
 @jwt_required()
+@rbac_required('MANAGE')
 def delete_role(role_id: str):
     try:
         _service.delete_role(role_id)
@@ -112,6 +118,7 @@ def delete_role(role_id: str):
 
 @rbac_bp.route("/permission", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def create_permission():
     data = request.get_json(silent=True) or {}
     try:
@@ -132,6 +139,7 @@ def create_permission():
 
 @rbac_bp.route("/permission", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_all_permissions():
     type_ = request.args.get("type")
     return ApiResponse.on_success(
@@ -142,6 +150,7 @@ def get_all_permissions():
 
 @rbac_bp.route("/permission/<permission_id>", methods=["DELETE"])
 @jwt_required()
+@rbac_required('MANAGE')
 def delete_permission(permission_id: str):
     try:
         _service.delete_permission(permission_id)
@@ -152,6 +161,7 @@ def delete_permission(permission_id: str):
 
 @rbac_bp.route("/permission/assign", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def assign_permission():
     data = request.get_json(silent=True) or {}
     try:
@@ -171,6 +181,7 @@ def assign_permission():
 
 @rbac_bp.route("/permission/assign", methods=["DELETE"])
 @jwt_required()
+@rbac_required('MANAGE')
 def revoke_permission():
     role_id       = request.args.get("roleId", "")
     permission_id = request.args.get("permissionId", "")
@@ -190,6 +201,7 @@ def revoke_permission():
 
 @rbac_bp.route("/rolebinding", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def create_binding():
     data       = request.get_json(silent=True) or {}
     granted_by = get_jwt_identity()
@@ -211,6 +223,7 @@ def create_binding():
 
 @rbac_bp.route("/rolebinding", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_bindings():
     subject_types = request.args.getlist("subjectType") or None
     result = _service.get_bindings(
@@ -222,6 +235,7 @@ def get_bindings():
 
 @rbac_bp.route("/rolebinding", methods=["PUT"])
 @jwt_required()
+@rbac_required('MANAGE')
 def update_binding():
     data         = request.get_json(silent=True) or {}
     subject_type = request.args.get("subjectType", "")
@@ -244,6 +258,7 @@ def update_binding():
 
 @rbac_bp.route("/rolebinding", methods=["DELETE"])
 @jwt_required()
+@rbac_required('MANAGE')
 def delete_binding():
     subject_type = request.args.get("subjectType", "")
     subject_id   = request.args.get("subjectId", "")
@@ -264,6 +279,7 @@ def delete_binding():
 
 @rbac_bp.route("/group", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def create_group_binding():
     data       = request.get_json(silent=True) or {}
     granted_by = get_jwt_identity()
@@ -291,6 +307,7 @@ def create_group_binding():
 
 @rbac_bp.route("/group", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_group_bindings():
     result = _service.get_group_bindings(
         subject_type=request.args.get("subjectType"),
@@ -301,6 +318,7 @@ def get_group_bindings():
 
 @rbac_bp.route("/group", methods=["DELETE"])
 @jwt_required()
+@rbac_required('MANAGE')
 def delete_group_binding():
     subject_type = request.args.get("subjectType", "")
     subject_id   = request.args.get("subjectId", "")

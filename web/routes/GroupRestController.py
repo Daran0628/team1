@@ -3,6 +3,7 @@ import logging
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
 
+from core.rbac.RBACUtils import rbac_required
 from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
@@ -37,6 +38,7 @@ def _handle(exc: Exception):
 
 @group_bp.route("", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def create_group():
     data = request.get_json(silent=True) or {}
     try:
@@ -57,12 +59,14 @@ def create_group():
 
 @group_bp.route("", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_all_groups():
     return ApiResponse.on_success(SuccessStatus.GROUP_READ, _service.get_all_groups())
 
 
 @group_bp.route("/<group_id>", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_group(group_id: str):
     try:
         return ApiResponse.on_success(SuccessStatus.GROUP_READ, _service.get_group(group_id))
@@ -72,6 +76,7 @@ def get_group(group_id: str):
 
 @group_bp.route("/<group_id>", methods=["PUT"])
 @jwt_required()
+@rbac_required('MANAGE')
 def update_group(group_id: str):
     data = request.get_json(silent=True) or {}
     try:
@@ -91,6 +96,7 @@ def update_group(group_id: str):
 
 @group_bp.route("/<group_id>", methods=["DELETE"])
 @jwt_required()
+@rbac_required('MANAGE')
 def delete_group(group_id: str):
     try:
         _service.delete_group(group_id)
@@ -105,6 +111,7 @@ def delete_group(group_id: str):
 
 @group_bp.route("/<group_id>/member", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def add_members(group_id: str):
     data = request.get_json(silent=True) or {}
     try:
@@ -121,6 +128,7 @@ def add_members(group_id: str):
 
 @group_bp.route("/<group_id>/member", methods=["DELETE"])
 @jwt_required()
+@rbac_required('MANAGE')
 def remove_members(group_id: str):
     data = request.get_json(silent=True) or {}
     try:
@@ -141,6 +149,7 @@ def remove_members(group_id: str):
 
 @group_bp.route("/members", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_all_members():
     return ApiResponse.on_success(SuccessStatus.GROUP_READ, _service.get_all_members())
 
@@ -151,6 +160,7 @@ def get_all_members():
 
 @group_bp.route("/department/<dept_id>/members", methods=["GET"])
 @jwt_required()
+@rbac_required('READ')
 def get_dept_members(dept_id: str):
     """해당 부서 소속 멤버 UUID 목록 조회 (그룹 추가 전 미리보기 용도)."""
     result = _service.get_members_by_dept(dept_id)
@@ -159,6 +169,7 @@ def get_dept_members(dept_id: str):
 
 @group_bp.route("/<group_id>/member/department/<dept_id>", methods=["POST"])
 @jwt_required()
+@rbac_required('MANAGE')
 def add_members_by_dept(group_id: str, dept_id: str):
     """특정 부서 소속 멤버 전체를 그룹에 일괄 추가. 이미 속한 멤버는 스킵."""
     try:
