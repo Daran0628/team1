@@ -3,19 +3,22 @@ load_dotenv()
 
 from app import app, db
 from flask_bcrypt import generate_password_hash
-from domain.model.member import Member
+from domain.model.Member import Member
 from domain.enum.AccountType import AccountType
 from domain.enum.EnrollmentStatus import EnrollmentStatus
 from domain.enum.WorkType import WorkType
 
 ## python seed.py로 적용
 
+DEV_DEPT_ID   = "00000000-0000-0000-0000-000000000001"
+ADMIN_DEPT_ID = "00000000-0000-0000-0000-000000000002"
+
 TEST_USERS = [
     {
         "name_ko":        "홍길동",
         "account_id":     "hong1",
         "employee_no":    "EMP001",
-        "dept_path_name": "개발팀",
+        "department_id":  DEV_DEPT_ID,
         "email":          "hong1@test.com",
         "password":       "hong1pass1",
         "enrollment_status": EnrollmentStatus.ACTIVE,
@@ -27,7 +30,7 @@ TEST_USERS = [
         "name_ko":        "관리자",
         "account_id":     "admin1",
         "employee_no":    "EMP000",
-        "dept_path_name": "관리팀",
+        "department_id":  ADMIN_DEPT_ID,
         "email":          "admin1@test.com",
         "password":       "admin1pass1",
         "enrollment_status": EnrollmentStatus.ACTIVE,
@@ -48,7 +51,7 @@ with app.app_context():
             name_ko=           data["name_ko"],
             account_id=        data["account_id"],
             employee_no=       data["employee_no"],
-            dept_path_name=    data["dept_path_name"],
+            department_id=     data["department_id"],
             email=             data["email"],
             password=          generate_password_hash(data["password"]).decode("utf-8"),
             enrollment_status= data["enrollment_status"],

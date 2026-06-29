@@ -10,7 +10,7 @@ class LoginResponseDTO:
     access_token: str           # JSON body 반환
     name_ko: str
     employee_no: str
-    dept_path_name: str
+    department_id: str
     account_id: str
     enrollment_status: EnrollmentStatus
     account_type: AccountType
