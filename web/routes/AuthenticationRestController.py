@@ -8,8 +8,8 @@ from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
 from service.AuthenticationService.AuthenticationService import AuthenticationService
-from web.dto.auth_request_dto import LoginRequestDTO
-from web.dto.auth_response_dto import RefreshResponseDTO
+from web.dto.AuthRequestDTO import LoginRequestDTO
+from web.dto.AuthResponseDTO import RefreshResponseDTO
 
 logger = logging.getLogger(__name__)
 

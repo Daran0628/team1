@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from domain.enum.AccountType import AccountType
 from domain.enum.EnrollmentStatus import EnrollmentStatus
 from domain.enum.WorkType import WorkType
-from domain.model.base_entity import BaseEntity
+from domain.model.BaseEntity import BaseEntity
 from extensions import db
 
 
