@@ -394,13 +394,14 @@ function openTerminal() {
   } else {
     term.clear();
   }
-  fitAddon.fit();
 
   var proto = location.protocol === 'https:' ? 'wss' : 'ws';
   var url   = proto + '://' + location.host + '/api/vdi/instances/' + vdiData.vdiId + '/terminal';
 
   if (ws) { ws.close(); ws = null; }
   ws = new WebSocket(url);
+
+  requestAnimationFrame(function() { fitAddon.fit(); });
 
   setWsStatus(false);
 
