@@ -90,20 +90,22 @@ def _storage_resource_allowed(perm, bucket_name: str | None, object_name: str | 
     권한에 resource 제한이 없으면 → True (전체 허용)
     BUCKET resource 매칭 → True (해당 버킷 전체 허용)
     OBJECT resource 매칭 → True (해당 오브젝트만 허용)
-    둘 다 해당 없음 → False
+    OBJECT 권한 + 버킷 레벨 접근 → True (그 버킷에 접근 가능한 오브젝트가 하나라도 있으면)
     """
     if not perm._resources:
-        return True
+        return True   # 리소스 제한 없음 → 전체 허용
 
     bucket_ids = perm.bucket_ids
-    object_ids  = perm.object_ids
+    object_ids = perm.object_ids
 
+    # ── BUCKET 레벨 권한 확인 ─────────────────────────────────
     if bucket_ids and bucket_name:
         from domain.model.StorageBucket import StorageBucket
         bucket = StorageBucket.query.filter_by(bucket_name=bucket_name).first()
         if bucket and bucket.bucket_id in bucket_ids:
             return True
 
+    # ── OBJECT 레벨 권한 확인 — 특정 오브젝트 접근 ───────────────
     if object_ids and object_name and bucket_name:
         from domain.model.StorageResource import StorageResource
         resource = StorageResource.query.filter_by(
@@ -114,12 +116,25 @@ def _storage_resource_allowed(perm, bucket_name: str | None, object_name: str | 
         if resource and resource.resource_id in object_ids:
             return True
 
+    # ── OBJECT 권한 → 버킷 레벨(목록) 접근 허용 ─────────────────
+    # object_name 없이 bucket_name만 있는 요청(예: 오브젝트 목록 조회):
+    # 해당 버킷에 접근 가능한 오브젝트가 하나라도 있으면 버킷 접근 허용
+    if object_ids and bucket_name and not object_name:
+        from domain.model.StorageResource import StorageResource
+        accessible = StorageResource.query.filter(
+            StorageResource.bucket_name == bucket_name,
+            StorageResource.resource_id.in_(object_ids),
+            StorageResource.is_deleted == False,
+        ).first()
+        if accessible:
+            return True
+
     return False
 
 
 def check_storage_action(required_action: str) -> bool:
     """
-    required_action: StorageAction 값 (READ / DOWNLOAD / UPLOAD / DELETE / MANAGE)
+    required_action: StorageAction 값 (READ / DOWNLOAD / UPLOAD / DELETE / MANAGE / SHARE)
     Flask request context에서 bucket_name, objectName을 자동으로 읽어 리소스 범위 검사.
     """
     from flask import request
@@ -132,10 +147,11 @@ def check_storage_action(required_action: str) -> bool:
         return False
 
     bucket_name = (request.view_args or {}).get('bucket_name')
+    _body = request.get_json(silent=True) or {}
     object_name = (
         request.args.get('objectName')
-        or (request.get_json(silent=True) or {}).get('objectName')
-        or (request.get_json(silent=True) or {}).get('sourceObject')
+        or _body.get('objectName')
+        or _body.get('sourceObject')
     )
 
     for binding in _collect_all_bindings(member):
@@ -143,10 +159,72 @@ def check_storage_action(required_action: str) -> bool:
         if role.role_name in _ADMIN_ROLE_NAMES:
             return True
         for perm in role.permissions:
-            if perm.perm_type == 'STORAGE' and perm.action in ('MANAGE', required_action):
-                if _storage_resource_allowed(perm, bucket_name, object_name):
-                    return True
+            if perm.perm_type != 'STORAGE':
+                continue
+            if perm.action not in ('MANAGE', required_action):
+                continue
+
+            # 버킷/오브젝트 지정 없는 메타 요청 (전체 버킷 목록, 리소스 목록 등)
+            # → 해당 액션 권한이 존재하기만 하면 허용 (리소스 범위는 개별 요청에서 검사)
+            if bucket_name is None and object_name is None:
+                return True
+
+            if _storage_resource_allowed(perm, bucket_name, object_name):
+                return True
+
     return False
+
+
+def get_accessible_object_keys(bucket_name: str) -> list[str] | None:
+    """
+    현재 로그인 유저가 해당 버킷에서 접근 가능한 오브젝트의 s3_key 목록 반환.
+    None  → 버킷 전체 허용 (BUCKET 레벨 권한 또는 전체 권한 보유)
+    list  → 접근 가능한 s3_key 목록 (OBJECT 레벨 권한만 보유)
+    """
+    if get_jwt().get('role', '') in _ADMIN_ACCOUNT_TYPES:
+        return None
+
+    member = _get_member()
+    if not member:
+        return []
+
+    accessible_object_ids: set[str] = set()
+
+    for binding in _collect_all_bindings(member):
+        role = binding.role
+        if role.role_name in _ADMIN_ROLE_NAMES:
+            return None
+        for perm in role.permissions:
+            if perm.perm_type != 'STORAGE':
+                continue
+            if perm.action not in ('MANAGE', 'READ'):
+                continue
+
+            # 전체 허용 (리소스 제한 없음)
+            if not perm._resources:
+                return None
+
+            # BUCKET 레벨 권한 → 해당 버킷 전체 허용
+            if perm.bucket_ids:
+                from domain.model.StorageBucket import StorageBucket
+                bucket = StorageBucket.query.filter_by(bucket_name=bucket_name).first()
+                if bucket and bucket.bucket_id in perm.bucket_ids:
+                    return None
+
+            # OBJECT 레벨 권한 → 오브젝트 ID 수집
+            if perm.object_ids:
+                accessible_object_ids.update(perm.object_ids)
+
+    if not accessible_object_ids:
+        return []
+
+    from domain.model.StorageResource import StorageResource
+    resources = StorageResource.query.filter(
+        StorageResource.bucket_name == bucket_name,
+        StorageResource.resource_id.in_(accessible_object_ids),
+        StorageResource.is_deleted == False,
+    ).all()
+    return [r.s3_key for r in resources]
 
 
 def storage_required(action: str):
