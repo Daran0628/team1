@@ -41,6 +41,7 @@
             </div>
             <div style="display:flex;align-items:center;gap:.5rem">
                 <button class="btn btn-ghost btn-icon" id="btnMembers" title="멤버 보기" style="font-size:.85rem">👥</button>
+                <button class="btn btn-ghost" id="btnLeaveRoom" hidden style="font-size:.8rem;color:var(--danger)">나가기</button>
             </div>
         </div>
 
@@ -109,10 +110,11 @@
             <button class="btn-x" data-close="membersModal">✕</button>
         </div>
         <div class="modal-body">
-            <div id="membersList" style="display:flex;flex-direction:column;gap:.5rem"></div>
+            <div id="membersList" style="display:flex;flex-direction:column;gap:.25rem"></div>
         </div>
         <div class="modal-foot">
             <button class="btn btn-ghost" data-close="membersModal">닫기</button>
+            <button class="btn btn-primary" id="btnInviteMember" hidden>+ 초대</button>
         </div>
     </div>
 </div>

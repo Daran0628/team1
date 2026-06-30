@@ -170,6 +170,7 @@ async function loadRoom() {
     document.getElementById('roomName').textContent = name;
     document.getElementById('roomIcon').textContent = currentRoom.room_type === 'DIRECT' ? '👤' : '#';
     document.getElementById('roomMeta').textContent = currentRoom.members.length + '명';
+    document.getElementById('btnLeaveRoom').hidden = currentRoom.room_type !== 'GROUP';
 }
 
 // ── Messages ──────────────────────────────────────────────────
@@ -462,20 +463,111 @@ document.getElementById('fileInput').addEventListener('change', async function()
 });
 
 // ── Members modal ─────────────────────────────────────────────
-document.getElementById('btnMembers').addEventListener('click', () => {
+function openMembersModal() {
     if (!currentRoom) return;
-    const list = document.getElementById('membersList');
-    list.innerHTML = currentRoom.members.map(m =>
-        '<div style="padding:.3rem 0;font-size:.875rem">' +
-            esc(m.name_ko) +
-            (m.room_role === 'ADMIN' ? ' <span style="font-size:.72rem;color:var(--primary);font-weight:600;margin-left:.3rem">관리자</span>' : '') +
-        '</div>'
-    ).join('');
+    const isGroup  = currentRoom.room_type === 'GROUP';
+    const isAdmin  = currentRoom.members.some(
+        m => m.account_id === myAccountId && m.room_role === 'ADMIN'
+    );
+    const list     = document.getElementById('membersList');
+    const btnInvite = document.getElementById('btnInviteMember');
+
+    // 초대 버튼: 그룹 + 관리자만 표시
+    btnInvite.hidden = !(isGroup && isAdmin);
+
+    list.innerHTML = currentRoom.members.map(m => {
+        const isMe = m.account_id === myAccountId;
+        const roleBadge = (isGroup && m.room_role === 'ADMIN')
+            ? '<span style="font-size:.7rem;color:var(--primary);font-weight:600;margin-left:.3rem">관리자</span>'
+            : '';
+        const kickBtn = (isGroup && isAdmin && !isMe)
+            ? '<button class="btn btn-ghost" style="margin-left:auto;font-size:.75rem;color:var(--danger);padding:.15rem .5rem" data-kick="' + m.member_id + '">추방</button>'
+            : '';
+        return '<div style="display:flex;align-items:center;padding:.3rem 0;font-size:.875rem">' +
+            esc(m.name_ko) + roleBadge + kickBtn +
+        '</div>';
+    }).join('');
+
+    // 추방 버튼 이벤트
+    list.querySelectorAll('[data-kick]').forEach(btn => {
+        btn.addEventListener('click', () => kickMember(btn.dataset.kick));
+    });
+
     document.getElementById('membersModal').hidden = false;
+}
+
+document.getElementById('btnMembers').addEventListener('click', openMembersModal);
+
+async function kickMember(targetMemberId) {
+    if (!confirm('이 멤버를 추방하시겠습니까?')) return;
+    const data = await apiJSON(
+        '/api/chat/rooms/' + roomId + '/members/' + targetMemberId,
+        { method: 'DELETE' }
+    );
+    if (!data || !data.isSuccess) { showToast('추방에 실패했습니다.', 'error'); return; }
+    showToast('멤버를 추방했습니다.', 'success');
+    // 방 정보 갱신 후 모달 다시 렌더
+    const roomData = await apiJSON('/api/chat/rooms/' + roomId);
+    if (roomData && roomData.isSuccess) currentRoom = roomData.result;
+    openMembersModal();
+}
+
+// 초대 버튼 → 멤버 모달 닫고 초대 피커 열기
+document.getElementById('btnInviteMember').addEventListener('click', () => {
+    document.getElementById('membersModal').hidden = true;
+    openInviteModal();
 });
+
+async function openInviteModal() {
+    if (!allMembers.length) {
+        const data = await apiJSON('/api/group/members');
+        allMembers = (data && data.result) || [];
+    }
+    // 이미 멤버인 사람 제외
+    const existingIds = new Set(currentRoom.members.map(m => m.member_id));
+    const candidates = allMembers.filter(m => !existingIds.has(m.member_id));
+
+    if (!candidates.length) { showToast('초대할 수 있는 멤버가 없습니다.', 'info'); return; }
+
+    selectedMemberIds.clear();
+    selectedType = 'GROUP';
+    document.getElementById('groupNameField').hidden = true;
+    document.getElementById('createErr').textContent = '';
+
+    const list = document.getElementById('memberPickList');
+    list.innerHTML = candidates.map(m => {
+        return '<label class="member-pick-item">' +
+            '<input type="checkbox" name="pickedMember" value="' + m.member_id + '">' +
+            '<div><div class="member-pick-name">' + esc(m.name_ko) + '</div>' +
+            '<div class="member-pick-sub">' + esc(m.account_id) + '</div></div>' +
+        '</label>';
+    }).join('');
+
+    list.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('change', () => {
+            inp.checked ? selectedMemberIds.add(inp.value) : selectedMemberIds.delete(inp.value);
+            inp.closest('label').classList.toggle('selected', inp.checked);
+        });
+    });
+
+    // 만들기 버튼을 "초대" 용도로 임시 교체
+    const btnCreate = document.getElementById('btnCreateRoom');
+    btnCreate.textContent = '초대';
+    btnCreate._inviteMode = true;
+
+    document.getElementById('createModal').hidden = false;
+}
+
 
 // ── Create room modal (sidebar button) ───────────────────────
 document.getElementById('btnNewChat').addEventListener('click', openCreateModal);
+
+document.getElementById('btnLeaveRoom').addEventListener('click', async () => {
+    if (!confirm('채팅방을 나가시겠습니까?')) return;
+    const data = await apiJSON('/api/chat/rooms/' + roomId + '/leave', { method: 'POST' });
+    if (!data || !data.isSuccess) { showToast('나가기에 실패했습니다.', 'error'); return; }
+    window.location.href = '/chat';
+});
 
 async function openCreateModal() {
     selectedMemberIds.clear();
@@ -540,22 +632,42 @@ document.getElementById('memberSearch').addEventListener('input', function() {
 });
 
 document.getElementById('btnCreateRoom').addEventListener('click', async () => {
+    const btn = document.getElementById('btnCreateRoom');
     const err = document.getElementById('createErr');
     err.textContent = '';
     const memberIds = [...selectedMemberIds];
     if (!memberIds.length) { err.textContent = '멤버를 선택해주세요.'; return; }
+
+    // 초대 모드: 기존 방에 멤버 추가
+    if (btn._inviteMode) {
+        btn.disabled = true;
+        const data = await apiJSON('/api/chat/rooms/' + roomId + '/members', {
+            method: 'POST',
+            body: JSON.stringify({ memberIds }),
+        });
+        btn.disabled = false;
+        btn._inviteMode = false;
+        btn.textContent = '만들기';
+        document.getElementById('createModal').hidden = true;
+        if (!data || !data.isSuccess) { showToast('초대에 실패했습니다.', 'error'); return; }
+        showToast('멤버를 초대했습니다.', 'success');
+        const roomData = await apiJSON('/api/chat/rooms/' + roomId);
+        if (roomData && roomData.isSuccess) currentRoom = roomData.result;
+        return;
+    }
+
+    // 일반 방 생성 모드
     const body = { roomType: selectedType, memberIds };
     if (selectedType === 'GROUP') {
         const name = document.getElementById('inputRoomName').value.trim();
         if (!name) { err.textContent = '채팅방 이름을 입력해주세요.'; return; }
         body.roomName = name;
     }
-    const btn = document.getElementById('btnCreateRoom');
     btn.disabled = true;
     const data = await apiJSON('/api/chat/rooms', { method: 'POST', body: JSON.stringify(body) });
     btn.disabled = false;
     if (!data || !data.isSuccess) { err.textContent = (data && data.message) || '생성 실패'; return; }
-    document.getElementById('createModal').hidden = false;
+    document.getElementById('createModal').hidden = true;
     window.location.href = '/chat/' + data.result.room_id;
 });
 
