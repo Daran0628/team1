@@ -177,9 +177,14 @@ def api_list_snapshots(vdi_id: str):
 
 @sock.route('/api/vdi/instances/<vdi_id>/terminal')
 def vdi_terminal(ws, vdi_id: str):
-    # 1. JWT 검증 (WS는 헤더 설정 불가 → 쿼리 파라미터로 전달)
-    token = request.args.get('token', '')
+    # 1. JWT 검증 (쿼리 파라미터 노출 방지 → 연결 후 첫 메시지로 수신)
+    import json as _json
     try:
+        auth_msg = ws.receive(timeout=10)
+        auth_data = _json.loads(auth_msg)
+        if auth_data.get('type') != 'auth':
+            raise ValueError('expected auth message')
+        token = auth_data.get('token', '')
         decoded = decode_token(token)
         account_id = decoded['sub']
     except Exception:

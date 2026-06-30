@@ -33,7 +33,12 @@ def create_vdi(container_name: str, image: str, member_id: str) -> dict:
 
     vdi = Vdi(container_name=container_name, image=image, status='RUNNING', assigned_to=member_id)
     db.session.add(vdi)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        _docker('rm', '-f', container_name)
+        raise VdiException(ErrorStatus.VDI_CREATE_FAILED, 'DB commit failed')
     return _to_dict(vdi)
 
 
@@ -139,7 +144,7 @@ def _sync_status(vdi: Vdi) -> None:
     if result.returncode != 0:
         return
     actual = result.stdout.strip().upper()
-    mapping = {'RUNNING': 'RUNNING', 'EXITED': 'EXITED', 'CREATED': 'STOPPED', 'PAUSED': 'STOPPED'}
+    mapping = {'RUNNING': 'RUNNING', 'RESTARTING': 'RUNNING', 'EXITED': 'EXITED', 'CREATED': 'STOPPED', 'PAUSED': 'STOPPED'}
     new_status = mapping.get(actual, 'EXITED')
     if new_status != vdi.status:
         vdi.status = new_status

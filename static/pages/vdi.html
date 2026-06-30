@@ -298,11 +298,13 @@ function toast(msg, error) {
 
 // ── 상태 ──────────────────────────────────────────────────────
 
-var vdiId     = new URLSearchParams(location.search).get('id');
-var vdiData   = null;
-var term      = null;
-var fitAddon  = null;
-var ws        = null;
+var vdiId           = new URLSearchParams(location.search).get('id');
+var vdiData         = null;
+var term            = null;
+var fitAddon        = null;
+var ws              = null;
+var onDataDisposable = null;
+var resizeObs       = null;
 
 // ── VDI 로드 ──────────────────────────────────────────────────
 
@@ -395,7 +397,7 @@ function openTerminal() {
   setTimeout(function() { fitAddon.fit(); }, 50);
 
   var proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  var url   = proto + '://' + location.host + '/api/vdi/instances/' + vdiData.vdiId + '/terminal?token=' + getToken();
+  var url   = proto + '://' + location.host + '/api/vdi/instances/' + vdiData.vdiId + '/terminal';
 
   if (ws) { ws.close(); ws = null; }
   ws = new WebSocket(url);
@@ -403,6 +405,7 @@ function openTerminal() {
   setWsStatus(false);
 
   ws.onopen = function() {
+    ws.send(JSON.stringify({ type: 'auth', token: getToken() }));
     setWsStatus(true);
     sendResize();
     term.write('\r\n\x1b[32m[연결되었습니다]\x1b[0m\r\n');
@@ -417,11 +420,13 @@ function openTerminal() {
     term.write('\r\n\x1b[31m[WebSocket 오류가 발생했습니다]\x1b[0m\r\n');
   };
 
-  term.onData(function(data) {
+  if (onDataDisposable) { onDataDisposable.dispose(); onDataDisposable = null; }
+  onDataDisposable = term.onData(function(data) {
     if (ws && ws.readyState === WebSocket.OPEN) ws.send(data);
   });
 
-  var resizeObs = new ResizeObserver(function() { fitAddon.fit(); sendResize(); });
+  if (resizeObs) { resizeObs.disconnect(); }
+  resizeObs = new ResizeObserver(function() { fitAddon.fit(); sendResize(); });
   resizeObs.observe(document.getElementById('terminal-container'));
 }
 
