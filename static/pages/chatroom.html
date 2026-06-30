@@ -119,6 +119,31 @@
     </div>
 </div>
 
+<!-- ══ 멤버 초대 모달 (초대 전용 — createModal과 분리) ════════════ -->
+<div class="modal-overlay" id="inviteModal" hidden>
+    <div class="modal">
+        <div class="modal-head">
+            <h2>멤버 초대</h2>
+            <button class="btn-x" data-close="inviteModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label>멤버 선택 <span class="req">*</span></label>
+                <input type="search" id="inviteSearch" class="search-input"
+                       style="width:100%;margin-bottom:.5rem" placeholder="이름 또는 계정 검색...">
+                <div id="invitePickList" class="member-pick-list">
+                    <div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem">불러오는 중...</div>
+                </div>
+            </div>
+            <div class="form-error" id="inviteErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="inviteModal">취소</button>
+            <button class="btn btn-primary" id="btnDoInvite">초대</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ══ 이미지 라이트박스 ════════════════════════════════════════ -->

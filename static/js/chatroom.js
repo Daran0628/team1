@@ -107,6 +107,8 @@ let selectedType     = 'DIRECT';
 let selectedMemberIds = new Set();
 let lastMsgSenderId  = null;
 let lastMsgDate      = null;
+let inviteSelectedIds = new Set();
+let inviteCandidates  = [];
 
 // ── Sidebar rooms ─────────────────────────────────────────────
 async function loadSidebarRooms() {
@@ -207,7 +209,17 @@ async function fetchMissedMessages(sinceIso) {
     scrollToBottom();
 }
 
-function appendMessage(msg) {
+function appendMessage(rawMsg) {
+    // SSE 경로는 이미 정규화됨. HTTP 경로(loadMessages 등)도 동일하게 처리
+    const msg = {
+        message_id:   rawMsg.message_id   || rawMsg.messageId,
+        sender_id:    rawMsg.sender_id     || rawMsg.senderId,
+        sender_name:  rawMsg.sender_name   || rawMsg.senderName || '',
+        message_type: (rawMsg.message_type || rawMsg.messageType || 'TEXT').toUpperCase(),
+        content:      rawMsg.content       || '',
+        created_at:   rawMsg.created_at    || rawMsg.createdAt   || new Date().toISOString(),
+        files:        rawMsg.files         || [],
+    };
     const area = document.getElementById('messagesArea');
 
     // 날짜 구분선
@@ -534,41 +546,71 @@ async function openInviteModal() {
         const data = await apiJSON('/api/group/members');
         allMembers = (data && data.result) || [];
     }
-    // 이미 멤버인 사람 제외
     const existingIds = new Set(currentRoom.members.map(m => m.member_id));
-    const candidates = allMembers.filter(m => !existingIds.has(m.member_id));
+    inviteCandidates = allMembers.filter(m => !existingIds.has(m.member_id));
 
-    if (!candidates.length) { showToast('초대할 수 있는 멤버가 없습니다.', 'info'); return; }
+    if (!inviteCandidates.length) { showToast('초대할 수 있는 멤버가 없습니다.', 'info'); return; }
 
-    selectedMemberIds.clear();
-    selectedType = 'GROUP';
-    document.getElementById('groupNameField').hidden = true;
-    document.querySelector('.create-room-tabs').hidden = true;
-    document.getElementById('createErr').textContent = '';
+    inviteSelectedIds.clear();
+    document.getElementById('inviteErr').textContent = '';
+    document.getElementById('inviteSearch').value = '';
 
-    const list = document.getElementById('memberPickList');
-    list.innerHTML = candidates.map(m => {
-        return '<label class="member-pick-item">' +
-            '<input type="checkbox" name="pickedMember" value="' + m.member_id + '">' +
+    renderInvitePick('');
+    document.getElementById('inviteModal').hidden = false;
+}
+
+function renderInvitePick(query) {
+    const list = document.getElementById('invitePickList');
+    const filtered = inviteCandidates.filter(m =>
+        !query || m.name_ko.toLowerCase().includes(query) || m.account_id.toLowerCase().includes(query)
+    );
+    if (!filtered.length) {
+        list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:.85rem">멤버가 없습니다.</div>';
+        return;
+    }
+    list.innerHTML = filtered.map(m => {
+        const sel = inviteSelectedIds.has(m.member_id);
+        return '<label class="member-pick-item' + (sel ? ' selected' : '') + '">' +
+            '<input type="checkbox" name="inviteMember" value="' + m.member_id + '"' + (sel ? ' checked' : '') + '>' +
             '<div><div class="member-pick-name">' + esc(m.name_ko) + '</div>' +
             '<div class="member-pick-sub">' + esc(m.account_id) + '</div></div>' +
         '</label>';
     }).join('');
-
     list.querySelectorAll('input').forEach(inp => {
         inp.addEventListener('change', () => {
-            inp.checked ? selectedMemberIds.add(inp.value) : selectedMemberIds.delete(inp.value);
+            inp.checked ? inviteSelectedIds.add(inp.value) : inviteSelectedIds.delete(inp.value);
             inp.closest('label').classList.toggle('selected', inp.checked);
         });
     });
-
-    // 만들기 버튼을 "초대" 용도로 임시 교체
-    const btnCreate = document.getElementById('btnCreateRoom');
-    btnCreate.textContent = '초대';
-    btnCreate._inviteMode = true;
-
-    document.getElementById('createModal').hidden = false;
 }
+
+document.getElementById('inviteSearch').addEventListener('input', function() {
+    renderInvitePick(this.value.trim().toLowerCase());
+});
+
+document.getElementById('btnDoInvite').addEventListener('click', async () => {
+    const err = document.getElementById('inviteErr');
+    err.textContent = '';
+    const memberIds = [...inviteSelectedIds];
+    if (!memberIds.length) { err.textContent = '멤버를 선택해주세요.'; return; }
+
+    const btn = document.getElementById('btnDoInvite');
+    btn.disabled = true;
+    const data = await apiJSON('/api/chat/rooms/' + roomId + '/members', {
+        method: 'POST',
+        body: JSON.stringify({ memberIds }),
+    });
+    btn.disabled = false;
+
+    if (!data || !data.isSuccess) {
+        err.textContent = (data && data.message) || '초대에 실패했습니다.';
+        return;
+    }
+    document.getElementById('inviteModal').hidden = true;
+    showToast('멤버를 초대했습니다.', 'success');
+    const roomData = await apiJSON('/api/chat/rooms/' + roomId);
+    if (roomData && roomData.isSuccess) currentRoom = roomData.result;
+});
 
 
 // ── Create room modal (sidebar button) ───────────────────────
@@ -650,26 +692,6 @@ document.getElementById('btnCreateRoom').addEventListener('click', async () => {
     const memberIds = [...selectedMemberIds];
     if (!memberIds.length) { err.textContent = '멤버를 선택해주세요.'; return; }
 
-    // 초대 모드: 기존 방에 멤버 추가
-    if (btn._inviteMode) {
-        btn.disabled = true;
-        const data = await apiJSON('/api/chat/rooms/' + roomId + '/members', {
-            method: 'POST',
-            body: JSON.stringify({ memberIds }),
-        });
-        btn.disabled = false;
-        btn._inviteMode = false;
-        btn.textContent = '만들기';
-        document.querySelector('.create-room-tabs').hidden = false;
-        document.getElementById('createModal').hidden = true;
-        if (!data || !data.isSuccess) { showToast('초대에 실패했습니다.', 'error'); return; }
-        showToast('멤버를 초대했습니다.', 'success');
-        const roomData = await apiJSON('/api/chat/rooms/' + roomId);
-        if (roomData && roomData.isSuccess) currentRoom = roomData.result;
-        return;
-    }
-
-    // 일반 방 생성 모드
     const body = { roomType: selectedType, memberIds };
     if (selectedType === 'GROUP') {
         const name = document.getElementById('inputRoomName').value.trim();
@@ -689,15 +711,6 @@ document.querySelectorAll('[data-close]').forEach(btn => {
     btn.addEventListener('click', () => {
         const target = document.getElementById(btn.dataset.close);
         if (target) target.hidden = true;
-        // 초대 모드로 열렸다 닫히면 탭/버튼 복원
-        if (btn.dataset.close === 'createModal') {
-            const btnCreate = document.getElementById('btnCreateRoom');
-            if (btnCreate._inviteMode) {
-                btnCreate._inviteMode = false;
-                btnCreate.textContent = '만들기';
-                document.querySelector('.create-room-tabs').hidden = false;
-            }
-        }
     });
 });
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
