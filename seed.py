@@ -81,7 +81,7 @@ for idx, name in enumerate(_names, start=2):
         "employee_no":       f"EMP{idx:03d}",
         "department_id":     random.choice(_depts),
         "email":             f"user{idx:02d}@test.com",
-        "password":          "1234",
+        "password":          "testpass1a",
         "enrollment_status": random.choice([EnrollmentStatus.ACTIVE, EnrollmentStatus.ACTIVE, EnrollmentStatus.ON_LEAVE]),
         "account_type":      AccountType.User,
         "work_type":         random.choice([WorkType.FULL_TIME, WorkType.CONTRACT, WorkType.PART_TIME, WorkType.INTERN]),
@@ -119,6 +119,29 @@ with app.app_context():
     db.session.commit()
 
     print("완료")
+
+    # ── 메일박스 생성 (전체 사용자) ───────────────────────────────
+    import time
+    from service.MailService.MailService import MailService
+    mail_service = MailService()
+    members = Member.query.all()
+    failed = []
+    for m in members:
+        ok = mail_service.create_mailbox(m.account_id, m.name_ko)
+        if ok:
+            print(f"[OK MAIL]   {m.account_id}@1mail.local 메일박스 생성")
+        else:
+            print(f"[SKIP MAIL] {m.account_id} 이미 존재하거나 생성 실패")
+            failed.append(m)
+        time.sleep(0.3)
+
+    # 실패한 항목 1회 재시도
+    if failed:
+        print(f"\n재시도 중... ({len(failed)}개)")
+        for m in failed:
+            time.sleep(0.5)
+            ok = mail_service.create_mailbox(m.account_id, m.name_ko)
+            print(f"{'[OK MAIL]  ' if ok else '[FAIL MAIL]'} {m.account_id} 재시도 {'성공' if ok else '실패'}")
 
     # # ── Object Storage 더미 데이터 ─────────────────────────────
     # hong1  = Member.query.filter_by(account_id="hong1").first()

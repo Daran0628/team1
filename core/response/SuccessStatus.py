@@ -54,6 +54,13 @@ class SuccessStatus(Enum):
     GROUP_MEMBER_ADD    = (HTTPStatus.OK,      "GROUP2005", "그룹에 멤버가 추가되었습니다.")
     GROUP_MEMBER_REMOVE = (HTTPStatus.OK,      "GROUP2006", "그룹에서 멤버가 제거되었습니다.")
 
+    # Mail
+    MAIL_INBOX_SUCCESS   = (HTTPStatus.OK,      "MAIL2001", "받은 편지함 조회에 성공했습니다.")
+    MAIL_MESSAGE_SUCCESS = (HTTPStatus.OK,      "MAIL2002", "메일 조회에 성공했습니다.")
+    MAIL_SEND_SUCCESS    = (HTTPStatus.OK,      "MAIL2003", "메일이 발송되었습니다.")
+    MAIL_DELETE_SUCCESS  = (HTTPStatus.OK,      "MAIL2004", "메일이 삭제되었습니다.")
+    MAIL_MAILBOX_CREATE  = (HTTPStatus.CREATED, "MAIL2005", "메일박스가 생성되었습니다.")
+
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
         obj._value_ = code
