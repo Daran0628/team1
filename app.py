@@ -13,6 +13,7 @@ from web.routes.RBACRestController import rbac_bp
 from web.routes.Todo import todo_bp
 from web.routes.MemberRestController import member_bp
 from web.routes.StorageRestController import storage_bp
+from web.routes.VdiRestController import vdi_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -23,6 +24,7 @@ app.register_blueprint(group_bp)
 app.register_blueprint(todo_bp)
 app.register_blueprint(member_bp)
 app.register_blueprint(storage_bp)
+app.register_blueprint(vdi_bp)
 
 with app.app_context():
     from domain.model.Member import Member
@@ -87,6 +89,14 @@ def mypage():
         'mypage.html'
     )
 
+
+
+@app.route('/vdi')
+def vdi_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'vdi.html'
+    )
 
 
 @app.route('/objstorage')

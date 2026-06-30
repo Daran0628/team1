@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VDI 터미널</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.3.0/css/xterm.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 20px;
+      background: #1a1d27;
+      border-bottom: 1px solid #2d3148;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1rem; font-weight: 600; color: #a5b4fc; }
+
+    .status-badge {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-badge.running  { background: #14532d; color: #4ade80; }
+    .status-badge.stopped  { background: #4b2900; color: #fb923c; }
+    .status-badge.exited   { background: #3f0000; color: #f87171; }
+
+    .header-spacer { flex: 1; }
+
+    .btn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { opacity: .85; }
+    .btn-green  { background: #16a34a; color: #fff; }
+    .btn-orange { background: #c2410c; color: #fff; }
+    .btn-blue   { background: #3730a3; color: #fff; }
+    .btn-red    { background: #991b1b; color: #fff; }
+    .btn-gray   { background: #374151; color: #e5e7eb; }
+
+    /* ── Main layout ── */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    aside {
+      width: 260px;
+      min-width: 220px;
+      background: #13161f;
+      border-right: 1px solid #1e2235;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { padding: 16px; }
+    .sidebar-section h2 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .vdi-card {
+      background: #1e2235;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color .15s, background .15s;
+    }
+    .vdi-card:hover { background: #252a40; }
+    .vdi-card.active { border-color: #6366f1; }
+    .vdi-card-name { font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; word-break: break-all; }
+    .vdi-card-image { font-size: 0.72rem; color: #6b7280; margin-bottom: 6px; word-break: break-all; }
+    .vdi-card-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+
+    .empty-hint { color: #4b5563; font-size: 0.8rem; text-align: center; padding: 20px 0; }
+
+    /* ── Terminal area ── */
+    .terminal-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .terminal-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: #1a1d27;
+      border-bottom: 1px solid #2d3148;
+      flex-shrink: 0;
+    }
+    .terminal-toolbar span { font-size: 0.8rem; color: #9ca3af; }
+    .ws-status {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #6b7280;
+      flex-shrink: 0;
+    }
+    .ws-status.connected { background: #4ade80; }
+    .ws-status.disconnected { background: #f87171; }
+
+    #terminal-container {
+      flex: 1;
+      overflow: hidden;
+      padding: 4px;
+      background: #000;
+    }
+
+    .no-vdi-selected {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #374151;
+      font-size: 1rem;
+    }
+
+    /* ── 스냅샷 모달 ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1e2235;
+      border-radius: 10px;
+      padding: 24px;
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal h3 { font-size: 0.95rem; font-weight: 700; }
+    .modal input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #0f1117;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .modal input:focus { border-color: #6366f1; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── 알림 토스트 ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e2235;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 0.82rem;
+      color: #e2e8f0;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      z-index: 200;
+      max-width: 300px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { border-color: #991b1b; color: #fca5a5; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <h1>VDI 관리</h1>
+  <span id="header-name" style="color:#9ca3af;font-size:0.85rem;"></span>
+  <span id="header-status" class="status-badge" style="display:none;"></span>
+  <div class="header-spacer"></div>
+  <button class="btn btn-green"  id="btn-start"    disabled>▶ 시작</button>
+  <button class="btn btn-orange" id="btn-stop"     disabled>■ 중지</button>
+  <button class="btn btn-blue"   id="btn-connect"  disabled>⌨ 터미널</button>
+  <button class="btn btn-gray"   id="btn-snapshot" disabled>📷 스냅샷</button>
+</header>
+
+<div class="main">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-section">
+      <h2>내 VDI</h2>
+      <div id="vdi-list"><p class="empty-hint">로딩 중…</p></div>
+    </div>
+  </aside>
+
+  <!-- Terminal / placeholder -->
+  <div class="terminal-wrap" id="terminal-wrap">
+    <div class="terminal-toolbar" id="terminal-toolbar" style="display:none;">
+      <div class="ws-status" id="ws-dot"></div>
+      <span id="ws-label">연결 끊김</span>
+      <div style="flex:1;"></div>
+      <button class="btn btn-red" id="btn-disconnect" style="padding:4px 10px;font-size:0.75rem;">연결 끊기</button>
+    </div>
+    <div id="terminal-container" style="display:none;"></div>
+    <div class="no-vdi-selected" id="no-selection">← VDI를 선택하세요</div>
+  </div>
+
+</div>
+
+<!-- 스냅샷 모달 -->
+<div class="modal-overlay" id="snap-modal">
+  <div class="modal">
+    <h3>스냅샷 생성</h3>
+    <input id="snap-name" placeholder="스냅샷 이름" />
+    <div class="modal-actions">
+      <button class="btn btn-gray" id="snap-cancel">취소</button>
+      <button class="btn btn-blue" id="snap-confirm">생성</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div id="toast"></div>
+
+<!-- xterm.js (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+
+<script>
+// ── 유틸 ──────────────────────────────────────────────────────
+const API = '/api/vdi';
+
+function getToken() {
+  return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || '';
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 'Authorization': 'Bearer ' + getToken(), 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    ...opts,
+  });
+  const json = await res.json();
+  if (!json.isSuccess) throw new Error(json.message || '요청 실패');
+  return json.result;
+}
+
+let toastTimer;
+function toast(msg, error = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (error ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 3000);
+}
+
+// ── 상태 ──────────────────────────────────────────────────────
+let selectedVdi = null;   // { vdiId, containerName, status, … }
+let term = null;
+let fitAddon = null;
+let ws = null;
+
+// ── VDI 목록 ──────────────────────────────────────────────────
+async function loadVdiList() {
+  const list = document.getElementById('vdi-list');
+  try {
+    const vdis = await apiFetch('/instances/me');
+    if (!vdis || vdis.length === 0) {
+      list.innerHTML = '<p class="empty-hint">할당된 VDI가 없습니다.</p>';
+      return;
+    }
+    list.innerHTML = '';
+    vdis.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'vdi-card';
+      card.dataset.id = v.vdiId;
+      card.innerHTML = `
+        <div class="vdi-card-name">${v.containerName}</div>
+        <div class="vdi-card-image">${v.image}</div>
+        <div class="vdi-card-row">
+          <span class="status-badge ${v.status.toLowerCase()}">${v.status}</span>
+        </div>`;
+      card.addEventListener('click', () => selectVdi(v));
+      list.appendChild(card);
+    });
+  } catch (e) {
+    list.innerHTML = '<p class="empty-hint">불러오기 실패</p>';
+  }
+}
+
+function selectVdi(vdi) {
+  selectedVdi = vdi;
+  document.querySelectorAll('.vdi-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.id === vdi.vdiId);
+  });
+  updateHeader();
+  document.getElementById('no-selection').style.display = 'none';
+}
+
+function updateHeader() {
+  const v = selectedVdi;
+  if (!v) return;
+  document.getElementById('header-name').textContent = v.containerName;
+  const badge = document.getElementById('header-status');
+  badge.textContent = v.status;
+  badge.className = 'status-badge ' + v.status.toLowerCase();
+  badge.style.display = '';
+
+  const running = v.status === 'RUNNING';
+  document.getElementById('btn-start').disabled    = running;
+  document.getElementById('btn-stop').disabled     = !running;
+  document.getElementById('btn-connect').disabled  = !running;
+  document.getElementById('btn-snapshot').disabled = !running;
+}
+
+// ── 전원 제어 ─────────────────────────────────────────────────
+async function powerAction(action, method = 'POST') {
+  if (!selectedVdi) return;
+  try {
+    const updated = await apiFetch(`/instances/${selectedVdi.vdiId}/${action}`, { method });
+    selectedVdi = updated;
+    // 사이드바 카드 상태 업데이트
+    const card = document.querySelector(`.vdi-card[data-id="${updated.vdiId}"]`);
+    if (card) {
+      card.querySelector('.status-badge').textContent = updated.status;
+      card.querySelector('.status-badge').className = 'status-badge ' + updated.status.toLowerCase();
+    }
+    updateHeader();
+    toast(action === 'start' ? 'VDI를 시작했습니다.' : action === 'stop' ? 'VDI를 중지했습니다.' : 'VDI를 재부팅했습니다.');
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+document.getElementById('btn-start').addEventListener('click', () => powerAction('start'));
+document.getElementById('btn-stop').addEventListener('click',  () => powerAction('stop'));
+
+// ── 터미널 연결 ───────────────────────────────────────────────
+function openTerminal() {
+  if (!selectedVdi) return;
+  if (selectedVdi.status !== 'RUNNING') { toast('VDI가 실행 중이 아닙니다.', true); return; }
+
+  // xterm 초기화
+  if (!term) {
+    term = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: "'Cascadia Code', 'Fira Code', 'Courier New', monospace",
+      theme: { background: '#000000', foreground: '#f8f8f2' },
+      scrollback: 5000,
+    });
+    fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('terminal-container'));
+  } else {
+    term.clear();
+  }
+
+  document.getElementById('terminal-container').style.display = '';
+  document.getElementById('terminal-toolbar').style.display = 'flex';
+  setTimeout(() => fitAddon.fit(), 50);
+
+  // WebSocket 연결
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const url = `${proto}://${location.host}/api/vdi/instances/${selectedVdi.vdiId}/terminal?token=${getToken()}`;
+
+  if (ws) { ws.close(); ws = null; }
+  ws = new WebSocket(url);
+
+  setWsStatus(false);
+
+  ws.onopen = () => {
+    setWsStatus(true);
+    // 초기 윈도우 크기 전송
+    sendResize();
+    term.write('\r\n\x1b[32m[연결되었습니다]\x1b[0m\r\n');
+  };
+
+  ws.onmessage = e => {
+    term.write(e.data);
+  };
+
+  ws.onclose = () => {
+    setWsStatus(false);
+    term.write('\r\n\x1b[31m[연결이 종료되었습니다]\x1b[0m\r\n');
+  };
+
+  ws.onerror = () => {
+    setWsStatus(false);
+    term.write('\r\n\x1b[31m[WebSocket 오류가 발생했습니다]\x1b[0m\r\n');
+  };
+
+  // xterm → WS
+  term.onData(data => {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(data);
+  });
+
+  // 터미널 크기 변경 → resize 메시지
+  const resizeObs = new ResizeObserver(() => {
+    fitAddon.fit();
+    sendResize();
+  });
+  resizeObs.observe(document.getElementById('terminal-container'));
+}
+
+function sendResize() {
+  if (!ws || ws.readyState !== WebSocket.OPEN || !term) return;
+  ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+}
+
+function setWsStatus(connected) {
+  const dot   = document.getElementById('ws-dot');
+  const label = document.getElementById('ws-label');
+  dot.className   = 'ws-status ' + (connected ? 'connected' : 'disconnected');
+  label.textContent = connected ? '연결됨' : '연결 끊김';
+}
+
+document.getElementById('btn-connect').addEventListener('click', openTerminal);
+
+document.getElementById('btn-disconnect').addEventListener('click', () => {
+  if (ws) { ws.close(); ws = null; }
+});
+
+// ── 스냅샷 ────────────────────────────────────────────────────
+document.getElementById('btn-snapshot').addEventListener('click', () => {
+  document.getElementById('snap-name').value = '';
+  document.getElementById('snap-modal').classList.add('open');
+});
+
+document.getElementById('snap-cancel').addEventListener('click', () => {
+  document.getElementById('snap-modal').classList.remove('open');
+});
+
+document.getElementById('snap-confirm').addEventListener('click', async () => {
+  const name = document.getElementById('snap-name').value.trim();
+  if (!name) { toast('스냅샷 이름을 입력하세요.', true); return; }
+  try {
+    await apiFetch(`/instances/${selectedVdi.vdiId}/snapshots`, {
+      method: 'POST',
+      body: JSON.stringify({ snapshotName: name }),
+    });
+    document.getElementById('snap-modal').classList.remove('open');
+    toast('스냅샷이 생성되었습니다.');
+  } catch (e) {
+    toast(e.message, true);
+  }
+});
+
+// 모달 바깥 클릭으로 닫기
+document.getElementById('snap-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+// ── 초기화 ────────────────────────────────────────────────────
+loadVdiList();
+</script>
+</body>
+</html>
