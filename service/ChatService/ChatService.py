@@ -154,8 +154,10 @@ class ChatService:
 
     def leave_room(self, room_id: str, member_id: str) -> None:
         ms = self._get_membership(room_id, member_id)
+        name = ms.member.name_ko
         ms.is_active = False
         db.session.commit()
+        self._publish_notice(room_id, member_id, f"{name}님이 채팅방에 나갔습니다.")
         logger.info("member %s left room %s", member_id, room_id)
 
     # ── 멤버 관리 ────────────────────────────────────────────────
@@ -181,6 +183,10 @@ class ChatService:
                 db.session.add(ChatRoomMember(room_id=room_id, member_id=member.id))
 
         db.session.commit()
+
+        for member in new_members:
+            self._publish_notice(room_id, requester_id, f"{member.name_ko}님이 채팅방에 초대되었습니다.")
+
         return _to_room_dto(room)
 
     def remove_member(self, room_id: str, requester_id: str, target_id: str) -> ChatRoomResponseDTO:
@@ -190,8 +196,10 @@ class ChatService:
         if requester_id != target_id:
             self._assert_admin(room_id, requester_id)
         ms = self._get_membership(room_id, target_id)
+        name = ms.member.name_ko
         ms.is_active = False
         db.session.commit()
+        self._publish_notice(room_id, requester_id, f"{name}님이 채팅방에서 추방되었습니다.")
         return _to_room_dto(room)
 
     # ── 텍스트 메시지 ────────────────────────────────────────────
@@ -370,3 +378,26 @@ class ChatService:
         ms = self._get_membership(room_id, member_id)
         if ms.room_role != ChatRoomRole.Admin:
             raise ValueError("CHAT_PERMISSION_DENIED")
+
+    def _publish_notice(self, room_id: str, actor_id: str, content: str) -> None:
+        msg = ChatMessage(
+            room_id=room_id,
+            sender_id=actor_id,
+            message_type=ChatMessageType.Notice,
+            content=content,
+        )
+        db.session.add(msg)
+        db.session.commit()
+        sse.publish(
+            {
+                "messageId":   msg.id,
+                "roomId":      room_id,
+                "senderId":    actor_id,
+                "senderName":  "",
+                "messageType": "NOTICE",
+                "content":     content,
+                "createdAt":   msg.created_at.isoformat(),
+            },
+            type="message",
+            channel=f"room:{room_id}",
+        )

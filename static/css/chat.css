@@ -303,6 +303,18 @@ html, body { height: 100%; }
 }
 .msg-row.mine .msg-meta { color: rgba(255,255,255,0.55); }
 
+/* 시스템 공지 메시지 */
+.notice-msg {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin: 0.5rem auto;
+    padding: 0.2rem 0.9rem;
+    background: #f3f0ff;
+    border-radius: 12px;
+    max-width: fit-content;
+}
+
 /* ── Input bar ───────────────────────────────────────────────── */
 .chat-input-bar {
     border-top: 1.5px solid var(--border);

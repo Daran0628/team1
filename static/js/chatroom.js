@@ -209,7 +209,6 @@ async function fetchMissedMessages(sinceIso) {
 
 function appendMessage(msg) {
     const area = document.getElementById('messagesArea');
-    const mine = myMemberId ? msg.sender_id === myMemberId : false;
 
     // 날짜 구분선
     const msgDate = fmtDate(msg.created_at);
@@ -222,6 +221,18 @@ function appendMessage(msg) {
         lastMsgSenderId = null;
     }
 
+    // NOTICE(시스템 메시지)는 별도 렌더링
+    if (msg.message_type === 'NOTICE') {
+        const notice = document.createElement('div');
+        notice.className = 'notice-msg';
+        notice.dataset.messageId = msg.message_id;
+        notice.textContent = msg.content;
+        area.appendChild(notice);
+        lastMsgSenderId = null;
+        return;
+    }
+
+    const mine = myMemberId ? msg.sender_id === myMemberId : false;
     const sameSender = msg.sender_id === lastMsgSenderId;
     lastMsgSenderId = msg.sender_id;
 
@@ -532,6 +543,7 @@ async function openInviteModal() {
     selectedMemberIds.clear();
     selectedType = 'GROUP';
     document.getElementById('groupNameField').hidden = true;
+    document.querySelector('.create-room-tabs').hidden = true;
     document.getElementById('createErr').textContent = '';
 
     const list = document.getElementById('memberPickList');
@@ -648,6 +660,7 @@ document.getElementById('btnCreateRoom').addEventListener('click', async () => {
         btn.disabled = false;
         btn._inviteMode = false;
         btn.textContent = '만들기';
+        document.querySelector('.create-room-tabs').hidden = false;
         document.getElementById('createModal').hidden = true;
         if (!data || !data.isSuccess) { showToast('초대에 실패했습니다.', 'error'); return; }
         showToast('멤버를 초대했습니다.', 'success');
@@ -673,7 +686,19 @@ document.getElementById('btnCreateRoom').addEventListener('click', async () => {
 
 // ── Modal helpers ─────────────────────────────────────────────
 document.querySelectorAll('[data-close]').forEach(btn => {
-    btn.addEventListener('click', () => { document.getElementById(btn.dataset.close).hidden = true; });
+    btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.dataset.close);
+        if (target) target.hidden = true;
+        // 초대 모드로 열렸다 닫히면 탭/버튼 복원
+        if (btn.dataset.close === 'createModal') {
+            const btnCreate = document.getElementById('btnCreateRoom');
+            if (btnCreate._inviteMode) {
+                btnCreate._inviteMode = false;
+                btnCreate.textContent = '만들기';
+                document.querySelector('.create-room-tabs').hidden = false;
+            }
+        }
+    });
 });
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.hidden = true; });
