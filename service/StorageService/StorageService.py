@@ -1,7 +1,10 @@
 import io
+import logging
 import uuid
 from datetime import timedelta
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from minio import S3Error
 from minio.commonconfig import CopySource, Tags
@@ -91,19 +94,33 @@ def list_objects(bucket_name: str, prefix: str = '', recursive: bool = False) ->
     _get_bucket_or_raise(bucket_name)
     client = _minio()
     try:
-        items = client.list_objects(bucket_name, prefix=prefix, recursive=recursive)
-        return [
-            ObjectInfoDTO(
-                object_name=obj.object_name,
-                size=obj.size or 0,
-                etag=obj.etag or '',
-                last_modified=obj.last_modified,
-                is_dir=obj.is_dir,
-            )
-            for obj in items
-        ]
+        # list()로 eager 평가 — generator 반복 중 발생하는 S3Error도 여기서 잡힘
+        raw = list(client.list_objects(
+            bucket_name,
+            prefix=prefix or None,   # 빈 문자열 대신 None 전달
+            recursive=recursive,
+        ))
     except S3Error as e:
+        logger.error("MinIO list_objects 실패 | bucket=%s prefix=%r | code=%s message=%s",
+                     bucket_name, prefix, e.code, getattr(e, 'message', str(e)))
+        if e.code == 'NoSuchBucket':
+            raise StorageException(ErrorStatus.STORAGE_BUCKET_NOT_FOUND) from e
         raise StorageException(ErrorStatus.STORAGE_OPERATION_FAILED) from e
+    except Exception as e:
+        logger.error("MinIO list_objects 예외 | bucket=%s prefix=%r | %s: %s",
+                     bucket_name, prefix, type(e).__name__, e)
+        raise StorageException(ErrorStatus.STORAGE_OPERATION_FAILED) from e
+
+    return [
+        ObjectInfoDTO(
+            object_name=obj.object_name,
+            size=obj.size or 0,
+            etag=obj.etag or '',
+            last_modified=obj.last_modified,
+            is_dir=obj.is_dir,
+        )
+        for obj in raw
+    ]
 
 
 def upload_object(bucket_name: str, object_name: str, data: bytes,

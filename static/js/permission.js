@@ -179,13 +179,13 @@ function renderTable() {
                 if (r.resourceType === 'BUCKET') {
                     chip.style.background = '#dbeafe';
                     chip.style.color = '#1d4ed8';
-                    chip.textContent = '🪣 ' + resolveBucketName(r.resourceId);
-                    chip.title = 'bucket_id: ' + r.resourceId;
+                    chip.textContent = '🪣 ' + (r.resourceName || resolveBucketName(r.resourceId));
+                    chip.title = r.resourceId;
                 } else {
                     chip.style.background = '#dcfce7';
                     chip.style.color = '#15803d';
-                    chip.textContent = '📄 ' + resolveObjectName(r.resourceId);
-                    chip.title = 'resource_id: ' + r.resourceId;
+                    chip.textContent = '📄 ' + (r.resourceName || resolveObjectName(r.resourceId));
+                    chip.title = r.resourceId;
                 }
                 resWrap.appendChild(chip);
             });
