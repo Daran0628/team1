@@ -376,6 +376,10 @@ function openTerminal() {
   if (!vdiData) return;
   if (vdiData.status !== 'RUNNING') { toast('VDI가 실행 중이 아닙니다.', true); return; }
 
+  document.getElementById('terminal-container').style.display = '';
+  document.getElementById('terminal-toolbar').style.display = 'flex';
+  document.getElementById('placeholder').style.display = 'none';
+
   if (!term) {
     term = new Terminal({
       cursorBlink: true,
@@ -390,11 +394,7 @@ function openTerminal() {
   } else {
     term.clear();
   }
-
-  document.getElementById('terminal-container').style.display = '';
-  document.getElementById('terminal-toolbar').style.display = 'flex';
-  document.getElementById('placeholder').style.display = 'none';
-  setTimeout(function() { fitAddon.fit(); }, 50);
+  fitAddon.fit();
 
   var proto = location.protocol === 'https:' ? 'wss' : 'ws';
   var url   = proto + '://' + location.host + '/api/vdi/instances/' + vdiData.vdiId + '/terminal';
