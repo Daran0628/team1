@@ -27,7 +27,7 @@ def create_vdi(container_name: str, image: str, member_id: str) -> dict:
     if Vdi.query.filter_by(assigned_to=member_id).first():
         raise VdiException(ErrorStatus.VDI_MEMBER_ALREADY_HAS_VDI)
 
-    result = _docker('run', '-d', '--name', container_name, image)
+    result = _docker('run', '-dt', '--name', container_name, image)
     if result.returncode != 0:
         raise VdiException(ErrorStatus.VDI_CREATE_FAILED, result.stderr.strip())
 
