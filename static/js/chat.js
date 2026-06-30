@@ -78,7 +78,7 @@ function renderRooms(rooms) {
     }
 
     list.innerHTML = rooms.map(r => {
-        const initials = (r.room_name || r.members.map(m => m.name_ko).join(', ')).slice(0, 2).toUpperCase();
+        const initials = (r.room_name || r.members.map(m => m.name_ko).join(', ')).slice(0, 1);
         const name = r.room_type === 'DIRECT'
             ? (r.members.find(m => m.account_id !== getMyAccountId()) || r.members[0] || {name_ko: '?'}).name_ko
             : (r.room_name || '그룹 채팅');

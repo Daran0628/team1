@@ -127,7 +127,7 @@ function renderSidebar(rooms) {
         const name = r.room_type === 'DIRECT'
             ? (r.members.find(m => m.account_id !== myAccountId) || r.members[0] || {}).name_ko || '?'
             : (r.room_name || '그룹 채팅');
-        const initials = name.slice(0,2).toUpperCase();
+        const initials = name.slice(0,1);
         return '<li class="room-item' + (isActive ? ' active' : '') + '" data-id="' + r.room_id + '">' +
             '<div class="room-item-icon">' + initials + '</div>' +
             '<div class="room-item-body">' +
@@ -228,7 +228,7 @@ function appendMessage(msg) {
     row.className = 'msg-row' + (mine ? ' mine' : '') + (sameSender ? ' same-sender' : '');
     row.dataset.messageId = msg.message_id;
 
-    const initials = (msg.sender_name || '?').slice(0,2).toUpperCase();
+    const initials = (msg.sender_name || '?').slice(0,1);
 
     // 파일/이미지 버블
     let bubbleHTML;
@@ -466,15 +466,9 @@ document.getElementById('btnMembers').addEventListener('click', () => {
     if (!currentRoom) return;
     const list = document.getElementById('membersList');
     list.innerHTML = currentRoom.members.map(m =>
-        '<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem 0">' +
-            '<div style="width:30px;height:30px;border-radius:7px;background:#ede9fe;color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem">' +
-                esc(m.name_ko.slice(0,2).toUpperCase()) +
-            '</div>' +
-            '<div>' +
-                '<div style="font-weight:600;font-size:.875rem">' + esc(m.name_ko) + '</div>' +
-                '<div style="font-size:.75rem;color:var(--muted)">' + esc(m.account_id) +
-                    (m.room_role === 'ADMIN' ? ' · 관리자' : '') + '</div>' +
-            '</div>' +
+        '<div style="padding:.3rem 0;font-size:.875rem">' +
+            esc(m.name_ko) +
+            (m.room_role === 'ADMIN' ? ' <span style="font-size:.72rem;color:var(--primary);font-weight:600;margin-left:.3rem">관리자</span>' : '') +
         '</div>'
     ).join('');
     document.getElementById('membersModal').hidden = false;
