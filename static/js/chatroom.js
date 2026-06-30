@@ -269,15 +269,33 @@ function appendMessage(msg) {
 
     area.appendChild(row);
 
-    // 이미지 비동기 로드 (DOM에 붙인 뒤 실행)
+    // 이미지 비동기 로드 (DOM에 붙인 뒤 큐를 통해 순차 실행)
     const imgBubble = row.querySelector('.img-bubble');
-    if (imgBubble) loadChatImage(imgBubble);
+    if (imgBubble) enqueueImageLoad(imgBubble);
 }
 
 async function openFileUrl(fileId) {
     const data = await apiJSON('/api/chat/rooms/' + roomId + '/files/' + fileId + '/url');
     if (!data || !data.isSuccess || !data.result) { showToast('파일 URL을 가져오지 못했습니다.', 'error'); return; }
     window.open(data.result.url, '_blank', 'noopener');
+}
+
+// ── 이미지 동시 로드 제한 (브라우저 connection stall 방지) ───────
+const _imgQueue = [];
+let _imgActive = 0;
+const IMG_CONCURRENCY = 4;
+
+function enqueueImageLoad(bubble) {
+    _imgQueue.push(bubble);
+    _drainImgQueue();
+}
+
+function _drainImgQueue() {
+    while (_imgActive < IMG_CONCURRENCY && _imgQueue.length) {
+        const b = _imgQueue.shift();
+        _imgActive++;
+        loadChatImage(b).finally(() => { _imgActive--; _drainImgQueue(); });
+    }
 }
 
 async function loadChatImage(bubble) {
