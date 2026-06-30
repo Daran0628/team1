@@ -234,13 +234,21 @@ function appendMessage(msg) {
     let bubbleHTML;
     if ((msg.message_type === 'FILE' || msg.message_type === 'IMAGE') && msg.files && msg.files.length) {
         const f = msg.files[0];
-        bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + ' file-bubble" data-file-id="' + f.file_id + '">' +
-            '<span class="file-icon-lg">' + fileEmoji(f.mime_type) + '</span>' +
-            '<div class="file-info">' +
-                '<div class="file-name">' + esc(f.original_name) + '</div>' +
-                '<div class="file-size">' + fmtSize(f.file_size) + '</div>' +
-            '</div>' +
-        '</div>';
+        const isImage = f.mime_type && f.mime_type.startsWith('image/');
+        if (isImage) {
+            bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + ' img-bubble"' +
+                ' data-file-id="' + f.file_id + '" data-name="' + esc(f.original_name) + '">' +
+                '<div class="img-wrap"><div class="img-spinner"></div></div>' +
+            '</div>';
+        } else {
+            bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + ' file-bubble" data-file-id="' + f.file_id + '">' +
+                '<span class="file-icon-lg">' + fileEmoji(f.mime_type) + '</span>' +
+                '<div class="file-info">' +
+                    '<div class="file-name">' + esc(f.original_name) + '</div>' +
+                    '<div class="file-size">' + fmtSize(f.file_size) + '</div>' +
+                '</div>' +
+            '</div>';
+        }
     } else {
         bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + '">' + esc(msg.content || '') + '</div>';
     }
@@ -253,13 +261,17 @@ function appendMessage(msg) {
             '<div class="msg-meta">' + fmtTime(msg.created_at) + '</div>' +
         '</div>';
 
-    // 파일 클릭 → presigned URL
+    // 파일 클릭 → presigned URL 새 탭
     const fileBubble = row.querySelector('.file-bubble');
     if (fileBubble) {
         fileBubble.addEventListener('click', () => openFileUrl(fileBubble.dataset.fileId));
     }
 
     area.appendChild(row);
+
+    // 이미지 비동기 로드 (DOM에 붙인 뒤 실행)
+    const imgBubble = row.querySelector('.img-bubble');
+    if (imgBubble) loadChatImage(imgBubble);
 }
 
 async function openFileUrl(fileId) {
@@ -267,6 +279,45 @@ async function openFileUrl(fileId) {
     if (!data || !data.isSuccess || !data.result) { showToast('파일 URL을 가져오지 못했습니다.', 'error'); return; }
     window.open(data.result.url, '_blank', 'noopener');
 }
+
+async function loadChatImage(bubble) {
+    const fileId = bubble.dataset.fileId;
+    const name   = bubble.dataset.name || '';
+    const wrap   = bubble.querySelector('.img-wrap');
+
+    const data = await apiJSON('/api/chat/rooms/' + roomId + '/files/' + fileId + '/url');
+    if (!data || !data.isSuccess || !data.result) {
+        wrap.innerHTML = '<span class="img-error">이미지를 불러올 수 없습니다.</span>';
+        return;
+    }
+    const url = data.result.url;
+    const img = document.createElement('img');
+    img.className = 'chat-img';
+    img.alt = name;
+    img.src = url;
+    img.addEventListener('click', e => { e.stopPropagation(); openLightbox(url, name); });
+    wrap.innerHTML = '';
+    wrap.appendChild(img);
+}
+
+function openLightbox(src, name) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxName').textContent = name;
+    document.getElementById('lightbox').hidden = false;
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').hidden = true;
+    document.getElementById('lightboxImg').src = '';
+}
+
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+document.getElementById('lightbox').addEventListener('click', e => {
+    if (e.target === document.getElementById('lightbox')) closeLightbox();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+});
 
 function scrollToBottom() {
     const area = document.getElementById('messagesArea');
