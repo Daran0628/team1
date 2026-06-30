@@ -58,7 +58,7 @@ function esc(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function getMyId() {
+function getMyAccountId() {
     try {
         const token = getToken();
         if (!token) return '';
@@ -96,9 +96,10 @@ function fileEmoji(mime) {
 }
 
 // ── State ─────────────────────────────────────────────────────
-const roomId = location.pathname.split('/').filter(Boolean).pop();
-const myId   = getMyId();
-let currentRoom = null;
+const roomId      = location.pathname.split('/').filter(Boolean).pop();
+const myAccountId = getMyAccountId();
+let myMemberId    = null;  // UUID, populated after loadRoom()
+let currentRoom   = null;
 let allRooms    = [];
 let allMembers  = [];
 let sseSource   = null;
@@ -124,7 +125,7 @@ function renderSidebar(rooms) {
     list.innerHTML = rooms.map(r => {
         const isActive = r.room_id === roomId;
         const name = r.room_type === 'DIRECT'
-            ? (r.members.find(m => m.member_id !== myId) || r.members[0] || {}).name_ko || '?'
+            ? (r.members.find(m => m.account_id !== myAccountId) || r.members[0] || {}).name_ko || '?'
             : (r.room_name || '그룹 채팅');
         const initials = name.slice(0,2).toUpperCase();
         return '<li class="room-item' + (isActive ? ' active' : '') + '" data-id="' + r.room_id + '">' +
@@ -157,8 +158,12 @@ async function loadRoom() {
     if (!data || !data.isSuccess) { showToast('채팅방을 불러오지 못했습니다.', 'error'); return; }
     currentRoom = data.result;
 
+    // 내 UUID를 account_id 기준으로 한 번만 추출
+    const me = currentRoom.members.find(m => m.account_id === myAccountId);
+    if (me) myMemberId = me.member_id;
+
     const name = currentRoom.room_type === 'DIRECT'
-        ? (currentRoom.members.find(m => m.member_id !== myId) || currentRoom.members[0] || {}).name_ko || '?'
+        ? (currentRoom.members.find(m => m.account_id !== myAccountId) || currentRoom.members[0] || {}).name_ko || '?'
         : (currentRoom.room_name || '그룹 채팅');
 
     document.title = name + ' — 채팅';
@@ -171,7 +176,7 @@ async function loadRoom() {
 async function loadMessages() {
     const area = document.getElementById('messagesArea');
 
-    const member = currentRoom && currentRoom.members.find(m => m.member_id === myId);
+    const member = currentRoom && currentRoom.members.find(m => m.account_id === myAccountId);
     const since  = member && member.last_read_at ? '?since=' + encodeURIComponent(member.last_read_at) : '';
 
     // 오프라인 중 밀린 메시지 fetch
@@ -190,7 +195,7 @@ async function loadMessages() {
 
 function appendMessage(msg) {
     const area = document.getElementById('messagesArea');
-    const mine = msg.sender_id === myId;
+    const mine = myMemberId ? msg.sender_id === myMemberId : false;
 
     // 날짜 구분선
     const msgDate = fmtDate(msg.created_at);
@@ -294,7 +299,7 @@ function subscribeSSE() {
             scrollToBottom();
 
             // 자신이 보낸 메시지가 아닐 때만 읽음 처리
-            if (normalized.sender_id !== myId) markRead();
+            if (!myMemberId || normalized.sender_id !== myMemberId) markRead();
         } catch (_) {}
     });
 
@@ -407,7 +412,7 @@ async function openCreateModal() {
 function renderMemberPick(query) {
     const list = document.getElementById('memberPickList');
     const filtered = allMembers.filter(m =>
-        m.member_id !== myId &&
+        m.account_id !== myAccountId &&
         (!query || m.name_ko.toLowerCase().includes(query) || m.account_id.toLowerCase().includes(query))
     );
     if (!filtered.length) {

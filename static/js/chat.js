@@ -80,7 +80,7 @@ function renderRooms(rooms) {
     list.innerHTML = rooms.map(r => {
         const initials = (r.room_name || r.members.map(m => m.name_ko).join(', ')).slice(0, 2).toUpperCase();
         const name = r.room_type === 'DIRECT'
-            ? (r.members.find(m => m.member_id !== getMyId()) || r.members[0] || {name_ko: '?'}).name_ko
+            ? (r.members.find(m => m.account_id !== getMyAccountId()) || r.members[0] || {name_ko: '?'}).name_ko
             : (r.room_name || '그룹 채팅');
         const time = r.created_at ? fmtTime(r.created_at) : '';
         return '<a class="room-card" href="/chat/' + r.room_id + '">' +
@@ -96,7 +96,7 @@ function renderRooms(rooms) {
     }).join('');
 }
 
-function getMyId() {
+function getMyAccountId() {
     try {
         const token = getToken();
         if (!token) return '';
@@ -165,9 +165,9 @@ async function openCreateModal() {
 
 function renderMemberPick(query) {
     const list = document.getElementById('memberPickList');
-    const myId = getMyId();
+    const myAccountId = getMyAccountId();
     const filtered = allMembers.filter(m =>
-        m.member_id !== myId &&
+        m.account_id !== myAccountId &&
         (!query || m.name_ko.toLowerCase().includes(query) || m.account_id.toLowerCase().includes(query))
     );
 
