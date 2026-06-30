@@ -110,5 +110,21 @@ def objstorage_page():
     )
 
 
+@app.route('/chat')
+def chat_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'chat.html'
+    )
+
+
+@app.route('/chat/<room_id>')
+def chatroom_page(room_id):
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'chatroom.html'
+    )
+
+
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)
