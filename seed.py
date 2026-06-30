@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
+
 from app import app, db
 from flask_bcrypt import generate_password_hash
 from domain.model.Member import Member
@@ -13,6 +15,8 @@ from domain.enum.EnrollmentStatus import EnrollmentStatus
 from domain.enum.WorkType import WorkType
 
 ## python seed.py로 적용
+
+MAIL_DOMAIN = os.getenv("MAIL_DOMAIN", "1mail.local")
 
 DEV_DEPT_ID="00000000-0000-0000-0000-000000000001"
 ADMIN_DEPT_ID="00000000-0000-0000-0000-000000000002"
@@ -40,7 +44,7 @@ TEST_USERS = [
         "account_id":     "hong1",
         "employee_no":    "EMP001",
         "department_id":  DEV_DEPT_ID,
-        "email":          "hong1@test.com",
+        "email":          f"hong1@{MAIL_DOMAIN}",
         "password":       "hong1pass1",
         "enrollment_status": EnrollmentStatus.ACTIVE,
         "account_type":   AccountType.User,
@@ -52,7 +56,7 @@ TEST_USERS = [
         "account_id":     "admin1",
         "employee_no":    "EMP000",
         "department_id":  ADMIN_DEPT_ID,
-        "email":          "admin1@test.com",
+        "email":          f"admin1@{MAIL_DOMAIN}",
         "password":       "admin1pass1",
         "enrollment_status": EnrollmentStatus.ACTIVE,
         "account_type":   AccountType.Admin,
@@ -80,8 +84,8 @@ for idx, name in enumerate(_names, start=2):
         "account_id":        f"user{idx:02d}",
         "employee_no":       f"EMP{idx:03d}",
         "department_id":     random.choice(_depts),
-        "email":             f"user{idx:02d}@test.com",
-        "password":          "1234",
+        "email":             f"user{idx:02d}@{MAIL_DOMAIN}",
+        "password":          "testpass1a",
         "enrollment_status": random.choice([EnrollmentStatus.ACTIVE, EnrollmentStatus.ACTIVE, EnrollmentStatus.ON_LEAVE]),
         "account_type":      AccountType.User,
         "work_type":         random.choice([WorkType.FULL_TIME, WorkType.CONTRACT, WorkType.PART_TIME, WorkType.INTERN]),
@@ -100,7 +104,9 @@ with app.app_context():
     for data in TEST_USERS:
         exists = Member.query.filter_by(account_id=data["account_id"]).first()
         if exists:
-            print(f"[SKIP] {data['account_id']} 이미 존재")
+            exists.password = generate_password_hash(data["password"]).decode("utf-8")
+            exists.email    = data["email"]
+            print(f"[UPDATE] {data['account_id']} 비밀번호·이메일 갱신")
             continue
         member = Member(
             name_ko=           data["name_ko"],
@@ -119,6 +125,29 @@ with app.app_context():
     db.session.commit()
 
     print("완료")
+
+    # ── 메일박스 생성 (전체 사용자) ───────────────────────────────
+    import time
+    from service.MailService.MailService import MailService
+    mail_service = MailService()
+    members = Member.query.all()
+    failed = []
+    for m in members:
+        ok = mail_service.create_mailbox(m.account_id, m.name_ko)
+        if ok:
+            print(f"[OK MAIL]   {m.account_id}@1mail.local 메일박스 생성")
+        else:
+            print(f"[SKIP MAIL] {m.account_id} 이미 존재하거나 생성 실패")
+            failed.append(m)
+        time.sleep(0.3)
+
+    # 실패한 항목 1회 재시도
+    if failed:
+        print(f"\n재시도 중... ({len(failed)}개)")
+        for m in failed:
+            time.sleep(0.5)
+            ok = mail_service.create_mailbox(m.account_id, m.name_ko)
+            print(f"{'[OK MAIL]  ' if ok else '[FAIL MAIL]'} {m.account_id} 재시도 {'성공' if ok else '실패'}")
 
     # # ── Object Storage 더미 데이터 ─────────────────────────────
     # hong1  = Member.query.filter_by(account_id="hong1").first()

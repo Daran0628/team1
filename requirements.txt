@@ -9,3 +9,4 @@ minio
 flask-sse
 gunicorn
 gevent
+requests

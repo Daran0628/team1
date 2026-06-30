@@ -65,6 +65,13 @@ class SuccessStatus(Enum):
     CHAT_READ_MARKED   = (HTTPStatus.OK,      "CHAT2013", "읽음 처리되었습니다.")
     CHAT_FILE_UPLOAD   = (HTTPStatus.CREATED, "CHAT2021", "파일이 업로드되었습니다.")
     CHAT_FILE_URL      = (HTTPStatus.OK,      "CHAT2022", "파일 URL이 생성되었습니다.")
+    # Mail
+    MAIL_INBOX_SUCCESS   = (HTTPStatus.OK,      "MAIL2001", "받은 편지함 조회에 성공했습니다.")
+    MAIL_MESSAGE_SUCCESS = (HTTPStatus.OK,      "MAIL2002", "메일 조회에 성공했습니다.")
+    MAIL_SEND_SUCCESS    = (HTTPStatus.OK,      "MAIL2003", "메일이 발송되었습니다.")
+    MAIL_DELETE_SUCCESS  = (HTTPStatus.OK,      "MAIL2004", "메일이 삭제되었습니다.")
+    MAIL_MAILBOX_CREATE  = (HTTPStatus.CREATED, "MAIL2005", "메일박스가 생성되었습니다.")
+    MAIL_SENT_SUCCESS    = (HTTPStatus.OK,      "MAIL2006", "보낸 편지함 조회에 성공했습니다.")
 
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
