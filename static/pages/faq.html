@@ -41,8 +41,14 @@
         .faq-arrow { font-size: 0.75rem; color: #9ca3af; transition: transform 0.2s; flex-shrink: 0; }
         .faq-item.open .faq-arrow { transform: rotate(180deg); }
         .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s; padding: 0 1.25rem; background: #fafafa; }
-        .faq-item.open .faq-answer { max-height: 300px; padding: 1rem 1.25rem; border-top: 1px solid #f3f4f6; }
+        .faq-item.open .faq-answer { max-height: 400px; padding: 1rem 1.25rem; border-top: 1px solid #f3f4f6; }
         .faq-answer p { font-size: 0.875rem; color: #4b5563; line-height: 1.7; }
+        .faq-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-mini { padding: 4px 12px; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-mini-edit { background: #ede9fe; color: #6d28d9; }
+        .btn-mini-edit:hover { background: #ddd6fe; }
+        .btn-mini-delete { background: #fee2e2; color: #b91c1c; }
+        .btn-mini-delete:hover { background: #fecaca; }
 
         .empty { padding: 4rem; text-align: center; color: #9ca3af; }
         .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
@@ -102,11 +108,12 @@
 <script>
     const token = sessionStorage.getItem('access_token');
     const role  = sessionStorage.getItem('role');
+    const isAdmin = (role === 'ADMIN' || role === 'SUPERADMIN');
     let allFaqs = [];
     let currentCategory = null;
 
     if (!token) location.replace('/login');
-    if (role === 'ADMIN' || role === 'SUPERADMIN') {
+    if (isAdmin) {
         document.getElementById('btn-write').style.display = 'flex';
         document.getElementById('admin-menu').style.display = 'flex';
     }
@@ -157,9 +164,32 @@
                 </div>
                 <div class="faq-answer">
                     <p><strong>A.</strong> ${f.answer}</p>
+                    ${isAdmin ? `
+                        <div class="faq-actions">
+                            <button class="btn-mini btn-mini-edit" onclick="event.stopPropagation(); location.href='/static/pages/faq_edit.html?id=${f.faqId}'">수정</button>
+                            <button class="btn-mini btn-mini-delete" onclick="event.stopPropagation(); deleteFaq('${f.faqId}')">삭제</button>
+                        </div>` : ''}
                 </div>`;
             container.appendChild(div);
         });
+    }
+
+    async function deleteFaq(faqId) {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/faqs/${faqId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                showToast('삭제됐습니다.');
+                loadFaqs();
+            } else {
+                showToast('삭제에 실패했습니다.');
+            }
+        } catch {
+            showToast('오류가 발생했습니다.');
+        }
     }
 
     function buildCategoryTabs(faqs) {
@@ -180,13 +210,14 @@
             if (res.status === 401) { location.replace('/login'); return; }
             const data = await res.json();
             allFaqs = data.result || [];
+            document.getElementById('category-tabs').innerHTML = `<button class="tab-btn active" onclick="filterByCategory(null, this)">전체</button>`;
             buildCategoryTabs(allFaqs);
             renderFaqs(allFaqs);
         } catch { showToast('데이터를 불러오지 못했습니다.'); }
     }
 
     async function loadNotifyCount() {
-        if (role !== 'ADMIN' && role !== 'SUPERADMIN') return;
+        if (!isAdmin) return;
         try {
             const res = await fetch('/api/tickets/notify/count', {
                 headers: { 'Authorization': 'Bearer ' + token }

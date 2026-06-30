@@ -65,6 +65,15 @@ class TicketService:
         ticket.status = status
         db.session.commit()
         return ticket
+    
+    def assign(self, ticket_id: str, assigned_to: str):
+        """티켓 담당자 배정 (관리자)"""
+        ticket = Ticket.query.get(ticket_id)
+        if ticket is None:
+            raise ValueError("존재하지 않는 티켓입니다.")
+        ticket.assigned_to = assigned_to
+        db.session.commit()
+        return ticket
 
     def delete(self, ticket_id: str):
         """티켓 삭제"""

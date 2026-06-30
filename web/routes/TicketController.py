@@ -13,16 +13,17 @@ _service = TicketService()
 
 def _ticket_to_dict(ticket):
     return {
-        "ticketId":   ticket.id,
-        "ticketNo":   ticket.ticket_no,
-        "memberId":   ticket.member_id,
-        "assignedTo": ticket.assigned_to,
-        "title":      ticket.title,
-        "content":    ticket.content,
-        "status":     ticket.status,
-        "priority":   ticket.priority,
-        "createdAt":  ticket.created_at.isoformat(),
-        "updatedAt":  ticket.updated_at.isoformat(),
+        "ticketId":     ticket.id,
+        "ticketNo":     ticket.ticket_no,
+        "memberId":     ticket.member_id,
+        "assignedTo":   ticket.assigned_to,
+        "assigneeName": ticket.assignee.name_ko if ticket.assignee else None,
+        "title":        ticket.title,
+        "content":      ticket.content,
+        "status":       ticket.status,
+        "priority":     ticket.priority,
+        "createdAt":    ticket.created_at.isoformat(),
+        "updatedAt":    ticket.updated_at.isoformat(),
     }
 
 
@@ -95,6 +96,27 @@ def update_ticket_status(ticket_id):
 
     try:
         ticket = _service.update_status(ticket_id, status)
+        return ApiResponse.on_success(SuccessStatus._OK, _ticket_to_dict(ticket))
+    except ValueError as e:
+        return ApiResponse.on_failure(ErrorStatus._NOT_FOUND, str(e))
+
+
+@ticket_bp.route("/<ticket_id>/assign", methods=["PUT"])
+@jwt_required()
+def assign_ticket(ticket_id):
+    """티켓 담당자 배정 (관리자만)"""
+    claims = get_jwt()
+    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
+        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
+
+    data = request.get_json(silent=True) or {}
+    assigned_to = data.get("assignedTo", "").strip()
+
+    if not assigned_to:
+        return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "담당자를 입력해주세요.")
+
+    try:
+        ticket = _service.assign(ticket_id, assigned_to)
         return ApiResponse.on_success(SuccessStatus._OK, _ticket_to_dict(ticket))
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._NOT_FOUND, str(e))
