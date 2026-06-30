@@ -501,13 +501,13 @@ function openMembersModal() {
     list.innerHTML = currentRoom.members.map(m => {
         const isMe = m.account_id === myAccountId;
         const roleBadge = (isGroup && m.room_role === 'ADMIN')
-            ? '<span style="font-size:.7rem;color:var(--primary);font-weight:600;margin-left:.3rem">관리자</span>'
+            ? '<span class="admin-badge">관리자</span>'
             : '';
         const kickBtn = (isGroup && isAdmin && !isMe)
             ? '<button class="btn btn-ghost" style="margin-left:auto;font-size:.75rem;color:var(--danger);padding:.15rem .5rem" data-kick="' + m.member_id + '">추방</button>'
             : '';
         return '<div style="display:flex;align-items:center;padding:.3rem 0;font-size:.875rem">' +
-            esc(m.name_ko) + roleBadge + kickBtn +
+            roleBadge + esc(m.name_ko) + kickBtn +
         '</div>';
     }).join('');
 
@@ -617,9 +617,58 @@ document.getElementById('btnDoInvite').addEventListener('click', async () => {
 document.getElementById('btnNewChat').addEventListener('click', openCreateModal);
 
 document.getElementById('btnLeaveRoom').addEventListener('click', async () => {
-    if (!confirm('채팅방을 나가시겠습니까?')) return;
-    const data = await apiJSON('/api/chat/rooms/' + roomId + '/leave', { method: 'POST' });
-    if (!data || !data.isSuccess) { showToast('나가기에 실패했습니다.', 'error'); return; }
+    if (!currentRoom) return;
+    const isAdmin = currentRoom.members.some(
+        m => m.account_id === myAccountId && m.room_role === 'ADMIN'
+    );
+    const otherActive = currentRoom.members.filter(m => m.account_id !== myAccountId);
+
+    if (isAdmin && otherActive.length > 0) {
+        openTransferModal(otherActive);
+    } else {
+        if (!confirm('채팅방을 나가시겠습니까?')) return;
+        const data = await apiJSON('/api/chat/rooms/' + roomId + '/leave', { method: 'POST' });
+        if (!data || !data.isSuccess) { showToast('나가기에 실패했습니다.', 'error'); return; }
+        window.location.href = '/chat';
+    }
+});
+
+// ── Admin transfer modal ──────────────────────────────────────
+let transferSelectedId = null;
+
+function openTransferModal(candidates) {
+    transferSelectedId = null;
+    document.getElementById('transferErr').textContent = '';
+    const list = document.getElementById('transferPickList');
+    list.innerHTML = candidates.map(m =>
+        '<label class="member-pick-item">' +
+            '<input type="radio" name="transferMember" value="' + m.member_id + '">' +
+            '<div><div class="member-pick-name">' + esc(m.name_ko) + '</div>' +
+            '<div class="member-pick-sub">' + esc(m.account_id) + '</div></div>' +
+        '</label>'
+    ).join('');
+    list.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('change', () => {
+            transferSelectedId = inp.value;
+            list.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+            inp.closest('label').classList.add('selected');
+        });
+    });
+    document.getElementById('transferModal').hidden = false;
+}
+
+document.getElementById('btnDoTransfer').addEventListener('click', async () => {
+    const err = document.getElementById('transferErr');
+    err.textContent = '';
+    if (!transferSelectedId) { err.textContent = '새 관리자를 선택해주세요.'; return; }
+    const btn = document.getElementById('btnDoTransfer');
+    btn.disabled = true;
+    const data = await apiJSON('/api/chat/rooms/' + roomId + '/leave', {
+        method: 'POST',
+        body: JSON.stringify({ newAdminId: transferSelectedId }),
+    });
+    btn.disabled = false;
+    if (!data || !data.isSuccess) { err.textContent = (data && data.message) || '이양에 실패했습니다.'; return; }
     window.location.href = '/chat';
 });
 

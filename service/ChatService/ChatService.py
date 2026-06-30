@@ -152,12 +152,34 @@ class ChatService:
 
     # ── 방 나가기 ────────────────────────────────────────────────
 
-    def leave_room(self, room_id: str, member_id: str) -> None:
+    def leave_room(self, room_id: str, member_id: str, new_admin_id: str = None) -> None:
+        room = ChatRoom.query.get(room_id)
+        if not room:
+            raise ValueError("CHAT_ROOM_NOT_FOUND")
+
         ms = self._get_membership(room_id, member_id)
-        name = ms.member.name_ko
+        leaver_name = ms.member.name_ko
+
+        if room.room_type == ChatRoomType.Group and ms.room_role == ChatRoomRole.Admin:
+            other_active = [m for m in room.members if m.is_active and m.member_id != member_id]
+            if other_active:
+                if new_admin_id is None:
+                    raise ValueError("CHAT_ADMIN_MUST_TRANSFER")
+                new_ms = self._get_membership(room_id, new_admin_id)
+                new_admin_name = new_ms.member.name_ko
+                new_ms.room_role = ChatRoomRole.Admin
+                ms.is_active = False
+                db.session.commit()
+                self._publish_notice(
+                    room_id, member_id,
+                    f"{leaver_name}님이 {new_admin_name}님에게 관리자를 이양하고 채팅방에 나갔습니다."
+                )
+                logger.info("admin %s transferred to %s and left room %s", member_id, new_admin_id, room_id)
+                return
+
         ms.is_active = False
         db.session.commit()
-        self._publish_notice(room_id, member_id, f"{name}님이 채팅방에 나갔습니다.")
+        self._publish_notice(room_id, member_id, f"{leaver_name}님이 채팅방에 나갔습니다.")
         logger.info("member %s left room %s", member_id, room_id)
 
     # ── 멤버 관리 ────────────────────────────────────────────────

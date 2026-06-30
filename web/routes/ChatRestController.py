@@ -11,6 +11,7 @@ from service.ChatService.ChatService import ChatService
 from web.dto.ChatRequestDTO import (
     AddRoomMembersRequestDTO,
     CreateRoomRequestDTO,
+    LeaveRoomRequestDTO,
     SendMessageRequestDTO,
 )
 
@@ -30,6 +31,7 @@ _ERR_MAP = {
     "CHAT_ALREADY_A_MEMBER":      ErrorStatus.CHAT_ALREADY_A_MEMBER,
     "CHAT_DIRECT_ALREADY_EXISTS": ErrorStatus.CHAT_DIRECT_ALREADY_EXISTS,
     "CHAT_PERMISSION_DENIED":     ErrorStatus.CHAT_PERMISSION_DENIED,
+    "CHAT_ADMIN_MUST_TRANSFER":   ErrorStatus.CHAT_ADMIN_MUST_TRANSFER,
     "CHAT_MESSAGE_NOT_FOUND":     ErrorStatus.CHAT_MESSAGE_NOT_FOUND,
 }
 
@@ -103,7 +105,12 @@ def get_room(room_id: str):
 def leave_room(room_id: str):
     try:
         member_id = _current_member_id()
-        _service.leave_room(room_id, member_id)
+    except ValueError as e:
+        return _handle(e)
+    data = request.get_json(silent=True) or {}
+    new_admin_id = data.get("newAdminId") or None
+    try:
+        _service.leave_room(room_id, member_id, new_admin_id)
         return ApiResponse.on_success(SuccessStatus.CHAT_ROOM_LEAVE)
     except ValueError as e:
         return _handle(e)

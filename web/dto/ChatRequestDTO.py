@@ -38,3 +38,8 @@ class AddRoomMembersRequestDTO:
     def __post_init__(self):
         if not isinstance(self.member_ids, list) or len(self.member_ids) == 0:
             raise ValueError("memberIds는 비어있지 않은 배열이어야 합니다.")
+
+
+@dataclass
+class LeaveRoomRequestDTO:
+    new_admin_id: Optional[str] = None

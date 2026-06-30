@@ -48,6 +48,7 @@ class ErrorStatus(Enum):
     CHAT_ALREADY_A_MEMBER      = (HTTPStatus.CONFLICT,   "CHAT4003", "이미 채팅방 멤버입니다.")
     CHAT_DIRECT_ALREADY_EXISTS = (HTTPStatus.CONFLICT,   "CHAT4004", "이미 존재하는 1:1 채팅방입니다.")
     CHAT_PERMISSION_DENIED     = (HTTPStatus.FORBIDDEN,  "CHAT4005", "채팅방 관리 권한이 없습니다.")
+    CHAT_ADMIN_MUST_TRANSFER   = (HTTPStatus.CONFLICT,   "CHAT4006", "관리자는 다른 멤버에게 관리자를 이양 후 나가야 합니다.")
     CHAT_MESSAGE_NOT_FOUND     = (HTTPStatus.NOT_FOUND,  "CHAT4011", "메시지를 찾을 수 없습니다.")
     CHAT_FILE_NOT_FOUND        = (HTTPStatus.NOT_FOUND,  "CHAT4012", "첨부 파일을 찾을 수 없습니다.")
     CHAT_FILE_UPLOAD_FAILED    = (HTTPStatus.INTERNAL_SERVER_ERROR, "CHAT5001", "파일 업로드에 실패했습니다.")

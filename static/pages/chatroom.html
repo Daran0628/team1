@@ -144,6 +144,27 @@
     </div>
 </div>
 
+<!-- ══ 관리자 이양 모달 ════════════════════════════════════════ -->
+<div class="modal-overlay" id="transferModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>관리자 이양</h2>
+            <button class="btn-x" data-close="transferModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">
+                나가기 전에 새 관리자를 선택해주세요.
+            </p>
+            <div id="transferPickList" class="member-pick-list"></div>
+            <div class="form-error" id="transferErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="transferModal">취소</button>
+            <button class="btn btn-primary" id="btnDoTransfer">이양 후 나가기</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ══ 이미지 라이트박스 ════════════════════════════════════════ -->
