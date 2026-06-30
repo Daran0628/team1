@@ -60,6 +60,7 @@ class SuccessStatus(Enum):
     MAIL_SEND_SUCCESS    = (HTTPStatus.OK,      "MAIL2003", "메일이 발송되었습니다.")
     MAIL_DELETE_SUCCESS  = (HTTPStatus.OK,      "MAIL2004", "메일이 삭제되었습니다.")
     MAIL_MAILBOX_CREATE  = (HTTPStatus.CREATED, "MAIL2005", "메일박스가 생성되었습니다.")
+    MAIL_SENT_SUCCESS    = (HTTPStatus.OK,      "MAIL2006", "보낸 편지함 조회에 성공했습니다.")
 
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)

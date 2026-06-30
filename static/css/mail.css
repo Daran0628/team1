@@ -150,6 +150,23 @@ body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; height: 100vh; 
 .detail-header h3 { font-size: 18px; color: #222; margin-bottom: 8px; }
 .detail-meta { font-size: 12px; color: #888; display: flex; gap: 16px; margin-bottom: 10px; }
 
+.detail-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-reply {
+    background: none;
+    border: 1px solid #89b4fa;
+    color: #89b4fa;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+.btn-reply:hover { background: #eff3ff; }
+
 .btn-delete {
     background: none;
     border: 1px solid #ffb3b3;

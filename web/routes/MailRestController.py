@@ -70,3 +70,36 @@ def delete_message(uid):
         return ApiResponse.on_success(SuccessStatus.MAIL_DELETE_SUCCESS)
     except Exception as e:
         return ApiResponse.on_failure(ErrorStatus._INTERNAL_SERVER_ERROR, str(e))
+
+
+@mail_bp.route("/sent", methods=["GET"])
+@jwt_required()
+def get_sent():
+    account_id = get_jwt_identity()
+    try:
+        messages = _service.get_sent(account_id)
+        return ApiResponse.on_success(SuccessStatus.MAIL_SENT_SUCCESS, messages)
+    except Exception as e:
+        return ApiResponse.on_failure(ErrorStatus._INTERNAL_SERVER_ERROR, str(e))
+
+
+@mail_bp.route("/sent/<uid>", methods=["GET"])
+@jwt_required()
+def get_sent_message(uid):
+    account_id = get_jwt_identity()
+    try:
+        message = _service.get_sent_message(account_id, uid)
+        return ApiResponse.on_success(SuccessStatus.MAIL_MESSAGE_SUCCESS, message)
+    except Exception as e:
+        return ApiResponse.on_failure(ErrorStatus._INTERNAL_SERVER_ERROR, str(e))
+
+
+@mail_bp.route("/sent/<uid>", methods=["DELETE"])
+@jwt_required()
+def delete_sent_message(uid):
+    account_id = get_jwt_identity()
+    try:
+        _service.delete_sent_message(account_id, uid)
+        return ApiResponse.on_success(SuccessStatus.MAIL_DELETE_SUCCESS)
+    except Exception as e:
+        return ApiResponse.on_failure(ErrorStatus._INTERNAL_SERVER_ERROR, str(e))

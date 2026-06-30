@@ -18,6 +18,9 @@
                 <span class="folder-icon">📥</span> 받은 편지함
                 <span class="badge" id="unreadBadge"></span>
             </li>
+            <li class="folder-item" data-folder="sent">
+                <span class="folder-icon">📤</span> 보낸 편지함
+            </li>
         </ul>
         <div class="sidebar-account" id="sidebarAccount"></div>
     </aside>
@@ -25,7 +28,7 @@
     <!-- 메일 목록 -->
     <section class="mail-list-panel">
         <div class="panel-header">
-            <h2>받은 편지함</h2>
+            <h2 id="panelTitle">받은 편지함</h2>
             <button class="btn-refresh" id="btnRefresh" title="새로고침">↻</button>
         </div>
         <ul class="mail-list" id="mailList">
@@ -49,7 +52,10 @@
                     <span id="detailFrom"></span>
                     <span id="detailDate"></span>
                 </div>
-                <button class="btn-delete" id="btnDelete">🗑 삭제</button>
+                <div class="detail-actions">
+                    <button class="btn-reply" id="btnReply">↩ 답장</button>
+                    <button class="btn-delete" id="btnDelete">🗑 삭제</button>
+                </div>
             </div>
             <div class="detail-body" id="detailBody"></div>
         </div>

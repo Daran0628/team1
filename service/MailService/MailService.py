@@ -3,6 +3,7 @@ import imaplib
 import os
 import smtplib
 import ssl
+import time
 from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -143,6 +144,82 @@ class MailService:
             smtp.login(f"{from_account_id}@{MAIL_DOMAIN}", _mail_password(from_account_id))
             smtp.sendmail(msg["From"], [to], msg.as_string())
 
+        self._save_to_sent(from_account_id, msg)
+        return True
+
+    def _save_to_sent(self, account_id: str, msg) -> None:
+        try:
+            with imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, ssl_context=_imap_context()) as imap:
+                imap.login(f"{account_id}@{MAIL_DOMAIN}", _mail_password(account_id))
+                status, _ = imap.select("Sent")
+                if status != "OK":
+                    imap.create("Sent")
+                    imap.subscribe("Sent")
+                    imap.select("Sent")
+                imap.append("Sent", "\\Seen", imaplib.Time2Internaldate(time.time()), msg.as_bytes())
+        except Exception:
+            pass
+
+    def get_sent(self, account_id: str) -> list:
+        with imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, ssl_context=_imap_context()) as imap:
+            imap.login(f"{account_id}@{MAIL_DOMAIN}", _mail_password(account_id))
+            status, _ = imap.select("Sent")
+            if status != "OK":
+                return []
+
+            _, data = imap.search(None, "ALL")
+            uids = data[0].split()
+            uids = uids[-30:] if len(uids) > 30 else uids
+
+            messages = []
+            for uid in reversed(uids):
+                _, msg_data = imap.fetch(uid, "(RFC822.HEADER)")
+                raw_header = msg_data[0][1]
+                msg = email.message_from_bytes(raw_header)
+                messages.append({
+                    "uid":     uid.decode(),
+                    "subject": _decode_str(msg.get("Subject", "(제목 없음)")),
+                    "to":      _decode_str(msg.get("To", "")),
+                    "date":    msg.get("Date", ""),
+                })
+
+        return messages
+
+    def get_sent_message(self, account_id: str, uid: str) -> dict:
+        with imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, ssl_context=_imap_context()) as imap:
+            imap.login(f"{account_id}@{MAIL_DOMAIN}", _mail_password(account_id))
+            imap.select("Sent")
+
+            _, msg_data = imap.fetch(uid.encode(), "(RFC822)")
+            msg = email.message_from_bytes(msg_data[0][1])
+
+            body = ""
+            if msg.is_multipart():
+                for part in msg.walk():
+                    ct = part.get_content_type()
+                    if ct == "text/plain":
+                        body = part.get_payload(decode=True).decode("utf-8", errors="replace")
+                        break
+                    if ct == "text/html" and not body:
+                        body = part.get_payload(decode=True).decode("utf-8", errors="replace")
+            else:
+                body = msg.get_payload(decode=True).decode("utf-8", errors="replace")
+
+            return {
+                "uid":     uid,
+                "subject": _decode_str(msg.get("Subject", "(제목 없음)")),
+                "from":    _decode_str(msg.get("From", "")),
+                "to":      _decode_str(msg.get("To", "")),
+                "date":    msg.get("Date", ""),
+                "body":    body,
+            }
+
+    def delete_sent_message(self, account_id: str, uid: str) -> bool:
+        with imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT, ssl_context=_imap_context()) as imap:
+            imap.login(f"{account_id}@{MAIL_DOMAIN}", _mail_password(account_id))
+            imap.select("Sent")
+            imap.store(uid.encode(), "+FLAGS", "\\Deleted")
+            imap.expunge()
         return True
 
     def delete_message(self, account_id: str, uid: str) -> bool:
