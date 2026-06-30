@@ -318,6 +318,7 @@ async function loadVdi() {
     vdiData = v;
     updateHeader();
     hidePlaceholder();
+    if (vdiData.status === 'RUNNING') openTerminal();
   } catch (e) {
     setPlaceholder('⚠️', e.message);
   }
