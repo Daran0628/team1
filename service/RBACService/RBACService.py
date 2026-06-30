@@ -90,10 +90,11 @@ class RBACService:
                 perm_type=dto.type,
                 action=action,
             )
-            for rid in (dto.resource_ids or []):
+            for res in (dto.resources or []):
                 perm._resources.append(PermissionResource(
                     permission_id=perm_id,
-                    resource_id=rid,
+                    resource_type=res['resourceType'],
+                    resource_id=res['resourceId'],
                 ))
             db.session.add(perm)
             perms.append(perm)

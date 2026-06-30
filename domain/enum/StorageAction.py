@@ -4,9 +4,7 @@ from enum import Enum
 class StorageAction(Enum):
     READ     = "READ"
     DOWNLOAD = "DOWNLOAD"
+    SHARE = "SHARE"
     UPLOAD   = "UPLOAD"
     DELETE   = "DELETE"
-    RENAME   = "RENAME"
-    MOVE     = "MOVE"
-    SHARE    = "SHARE"
     MANAGE   = "MANAGE"

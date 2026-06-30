@@ -12,7 +12,8 @@ class PermissionResource(db.Model):
         db.ForeignKey('tb_permission.permission_id', ondelete='CASCADE'),
         primary_key=True,
     )
-    resource_id = db.Column(db.String(36), primary_key=True)
+    resource_type = db.Column(db.String(10), nullable=False, primary_key=True)  # BUCKET | OBJECT
+    resource_id   = db.Column(db.String(36), nullable=False, primary_key=True)
 
 
 class Permission(db.Model):
@@ -28,6 +29,14 @@ class Permission(db.Model):
     @property
     def resource_ids(self) -> list[str]:
         return [r.resource_id for r in self._resources]
+
+    @property
+    def bucket_ids(self) -> list[str]:
+        return [r.resource_id for r in self._resources if r.resource_type == 'BUCKET']
+
+    @property
+    def object_ids(self) -> list[str]:
+        return [r.resource_id for r in self._resources if r.resource_type == 'OBJECT']
 
     def __repr__(self) -> str:
         return f"<Permission {self.perm_type}:{self.action}>"

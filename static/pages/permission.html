@@ -82,14 +82,21 @@
                     <span class="no-perms">Type을 먼저 선택하세요</span>
                 </div>
             </div>
-            <!-- Resource ID 목록 (RBAC 타입이면 숨김) -->
-            <div class="field" id="resourceIdsSection">
-                <label>Resource IDs</label>
-                <div class="res-input-row">
-                    <input type="text" id="inputResId" placeholder="resource UUID 입력 후 Add 클릭">
-                    <button type="button" class="btn btn-ghost" id="btnAddResId">Add</button>
+            <!-- Resources (STORAGE 타입일 때만 표시) -->
+            <div id="resourceIdsSection" hidden>
+                <div class="field">
+                    <label>Buckets <small style="font-weight:normal;color:#888">(선택 안 하면 전체 허용)</small></label>
+                    <div class="perm-grid" id="permBucketList"></div>
                 </div>
-                <div class="res-id-list" id="resIdList"></div>
+                <div class="field">
+                    <label style="display:flex;align-items:center;gap:8px">
+                        Objects
+                        <select id="permBucketFilter" class="search-input" style="width:auto;height:28px;padding:2px 8px;font-size:13px">
+                            <option value="">모든 버킷</option>
+                        </select>
+                    </label>
+                    <div class="perm-grid" id="permObjectList"></div>
+                </div>
             </div>
             <div class="form-error" id="addPermModalErr"></div>
         </div>
