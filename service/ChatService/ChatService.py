@@ -231,20 +231,23 @@ class ChatService:
             raise ValueError("CHAT_ROOM_NOT_FOUND")
         self._assert_member(room_id, member_id)
 
-        query = (
-            ChatMessage.query
-            .filter_by(room_id=room_id)
-            .order_by(ChatMessage.created_at.asc())
-        )
+        query = ChatMessage.query.filter_by(room_id=room_id)
+
         if since:
             try:
                 since_dt = datetime.fromisoformat(since)
                 query = query.filter(ChatMessage.created_at > since_dt)
             except ValueError:
-                raise ValueError("CHAT_MESSAGE_NOT_FOUND")
+                pass  # since 파싱 실패 시 무시하고 최신 N개 반환
 
-        messages = query.limit(min(limit, 100)).all()
-        return [_to_message_dto(m) for m in messages]
+        # DESC로 최신 N개 먼저 뽑은 뒤 뒤집어서 시간순으로 반환
+        messages = (
+            query
+            .order_by(ChatMessage.created_at.desc())
+            .limit(min(limit, 100))
+            .all()
+        )
+        return [_to_message_dto(m) for m in reversed(messages)]
 
     def mark_read(self, room_id: str, member_id: str) -> None:
         ms = self._get_membership(room_id, member_id)

@@ -176,21 +176,34 @@ async function loadRoom() {
 async function loadMessages() {
     const area = document.getElementById('messagesArea');
 
-    const member = currentRoom && currentRoom.members.find(m => m.account_id === myAccountId);
-    const since  = member && member.last_read_at ? '?since=' + encodeURIComponent(member.last_read_at) : '';
-
-    // 오프라인 중 밀린 메시지 fetch
-    const data = await apiJSON('/api/chat/rooms/' + roomId + '/messages' + since + (since ? '&limit=100' : '?limit=100'));
-    if (!data || !data.isSuccess) { area.innerHTML = '<div class="state-cell">메시지를 불러오지 못했습니다.</div>'; return; }
+    // 항상 최신 50개를 불러온다. 서비스가 DESC→reverse로 시간순 반환
+    const data = await apiJSON('/api/chat/rooms/' + roomId + '/messages?limit=50');
+    if (!data || !data.isSuccess) {
+        area.innerHTML = '<div class="state-cell">메시지를 불러오지 못했습니다.</div>';
+        return;
+    }
 
     area.innerHTML = '';
     lastMsgSenderId = null;
     lastMsgDate     = null;
     (data.result || []).forEach(appendMessage);
     scrollToBottom();
-
-    // 읽음 처리
     markRead();
+}
+
+// SSE 재연결 후 놓친 메시지를 DB에서 보완
+async function fetchMissedMessages(sinceIso) {
+    if (!sinceIso) return;
+    const data = await apiJSON(
+        '/api/chat/rooms/' + roomId + '/messages?since=' + encodeURIComponent(sinceIso) + '&limit=100'
+    );
+    if (!data || !data.isSuccess) return;
+    (data.result || []).forEach(msg => {
+        if (!document.querySelector('[data-message-id="' + msg.message_id + '"]')) {
+            appendMessage(msg);
+        }
+    });
+    scrollToBottom();
 }
 
 function appendMessage(msg) {
@@ -265,6 +278,8 @@ async function markRead() {
 }
 
 // ── SSE ───────────────────────────────────────────────────────
+let _sseDisconnectedAt = null;
+
 function subscribeSSE() {
     if (sseSource) sseSource.close();
     sseSource = new EventSource('/stream?channel=room:' + roomId);
@@ -272,7 +287,6 @@ function subscribeSSE() {
     sseSource.addEventListener('message', e => {
         try {
             const msg = JSON.parse(e.data);
-            // 서버가 publish한 형태 → ChatMessageResponseDTO 형태로 변환
             const normalized = {
                 message_id:   msg.messageId   || msg.message_id,
                 room_id:      msg.roomId       || msg.room_id,
@@ -291,20 +305,29 @@ function subscribeSSE() {
                 }] : [],
             };
 
-            // 이미 렌더된 메시지면 스킵
             if (normalized.message_id &&
                 document.querySelector('[data-message-id="' + normalized.message_id + '"]')) return;
 
             appendMessage(normalized);
             scrollToBottom();
 
-            // 자신이 보낸 메시지가 아닐 때만 읽음 처리
             if (!myMemberId || normalized.sender_id !== myMemberId) markRead();
         } catch (_) {}
     });
 
+    sseSource.addEventListener('open', () => {
+        // 재연결 시 끊겼던 동안 놓친 메시지를 DB에서 보완
+        if (_sseDisconnectedAt) {
+            fetchMissedMessages(_sseDisconnectedAt);
+            _sseDisconnectedAt = null;
+        }
+    });
+
     sseSource.onerror = () => {
-        // 연결 끊김 시 EventSource가 자동 재연결하므로 별도 처리 불필요
+        // 끊긴 시각 기록 — 재연결 후 fetchMissedMessages에서 사용
+        if (!_sseDisconnectedAt) {
+            _sseDisconnectedAt = new Date().toISOString();
+        }
     };
 }
 
