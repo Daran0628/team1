@@ -9,8 +9,12 @@ function getToken() {
 }
 
 async function apiFetch(url, options) {
-    const token = getToken();
-    if (!token) { window.location.replace('/login'); return null; }
+    let token = getToken();
+    if (!token) {
+        const ok = await tryRefresh();
+        if (!ok) { window.location.replace('/login'); return null; }
+        token = getToken();
+    }
 
     const isFormData = options && options.body instanceof FormData;
     const headers = Object.assign(
@@ -35,7 +39,7 @@ async function tryRefresh() {
         const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
         if (!res.ok) return false;
         const json = await res.json();
-        const t = json && json.result && json.result.accessToken;
+        const t = json && json.result && json.result.access_token;
         if (!t) return false;
         sessionStorage.setItem('access_token', t);
         return true;

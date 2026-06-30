@@ -10,7 +10,11 @@ function getToken() {
 
 async function apiFetch(url, options) {
     var token = getToken();
-    if (!token) { window.location.replace('/login'); return null; }
+    if (!token) {
+        var silentRefresh = await tryRefresh();
+        if (!silentRefresh) { window.location.replace('/login'); return null; }
+        token = getToken();
+    }
 
     var headers = Object.assign({ 'Content-Type': 'application/json',
                                    'Authorization': 'Bearer ' + token },
@@ -31,7 +35,7 @@ async function tryRefresh() {
         var res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
         if (!res.ok) return false;
         var json = await res.json();
-        var token = json && json.result && json.result.accessToken;
+        var token = json && json.result && json.result.access_token;
         if (!token) return false;
         sessionStorage.setItem('access_token', token);
         return true;

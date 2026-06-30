@@ -9,8 +9,12 @@ function getToken() {
 }
 
 async function apiFetch(url, options) {
-    const token = getToken();
-    if (!token) { window.location.replace('/login'); return null; }
+    let token = getToken();
+    if (!token) {
+        const refreshed = await tryRefresh();
+        if (!refreshed) { window.location.replace('/login'); return null; }
+        token = getToken();
+    }
 
     const headers = Object.assign({ 'Content-Type': 'application/json',
                                     'Authorization': 'Bearer ' + token },
@@ -20,8 +24,7 @@ async function apiFetch(url, options) {
     if (res.status === 401) {
         const refreshed = await tryRefresh();
         if (!refreshed) { window.location.replace('/login'); return null; }
-        const newToken = getToken();
-        headers['Authorization'] = 'Bearer ' + newToken;
+        headers['Authorization'] = 'Bearer ' + getToken();
         return fetch(url, Object.assign({}, options, { headers: headers }));
     }
     return res;
@@ -32,7 +35,7 @@ async function tryRefresh() {
         const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
         if (!res.ok) return false;
         const json = await res.json();
-        const token = json && json.result && json.result.accessToken;
+        const token = json && json.result && json.result.access_token;
         if (!token) return false;
         sessionStorage.setItem('access_token', token);
         return true;
