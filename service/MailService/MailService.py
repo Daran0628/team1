@@ -13,12 +13,12 @@ import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-MAILCOW_API_URL = os.getenv("MAILCOW_API_URL", "https://192.168.56.102:8443/api/v1")
+MAILCOW_API_URL = os.getenv("MAILCOW_API_URL", "https://192.168.38.246:8443/api/v1")
 MAILCOW_API_KEY = os.getenv("MAILCOW_API_KEY", "")
 MAIL_DOMAIN     = os.getenv("MAIL_DOMAIN", "1mail.local")
-IMAP_HOST       = os.getenv("IMAP_HOST", "192.168.56.102")
+IMAP_HOST       = os.getenv("IMAP_HOST", "192.168.38.246")
 IMAP_PORT       = int(os.getenv("IMAP_PORT", "993"))
-SMTP_HOST       = os.getenv("SMTP_HOST", "192.168.56.102")
+SMTP_HOST       = os.getenv("SMTP_HOST", "192.168.38.246")
 SMTP_PORT       = int(os.getenv("SMTP_PORT", "587"))
 
 
