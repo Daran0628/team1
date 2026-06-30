@@ -34,9 +34,10 @@ class UpdateRoleRequestDTO:
 
 @dataclass
 class CreatePermissionRequestDTO:
-    type:      str
-    actions:   List[str]
-    resources: List[dict] = field(default_factory=list)
+    type:        str
+    actions:     List[str]
+    resources:   List[dict] = field(default_factory=list)
+    description: Optional[str] = None
     # resources 항목 형식: {"resourceType": "BUCKET"|"OBJECT", "resourceId": "<uuid>"}
 
     _VALID_RESOURCE_TYPES = {'BUCKET', 'OBJECT'}

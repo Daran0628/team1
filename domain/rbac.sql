@@ -13,16 +13,22 @@ CREATE TABLE IF NOT EXISTS tb_role (
 
 -- ============================================================
 -- Permission
--- type   : STORAGE / VDI / RBAC
--- action : StorageAction / VdiAction / RbacAction 값
+-- type        : STORAGE / VDI / RBAC
+-- action      : 콤마 구분 복수 액션 "READ,DOWNLOAD,SHARE"
+-- description : 사람이 읽을 수 있는 설명 (optional)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tb_permission (
     permission_id   CHAR(36)        NOT NULL,
     type            VARCHAR(30)     NOT NULL,
-    action          VARCHAR(30)     NOT NULL,
+    action          TEXT            NOT NULL,
+    description     TEXT            NULL,
 
     PRIMARY KEY (permission_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Migration (기존 DB):
+--   ALTER TABLE tb_permission MODIFY COLUMN action TEXT NOT NULL;
+--   ALTER TABLE tb_permission ADD COLUMN description TEXT NULL AFTER action;
 
 
 -- ============================================================

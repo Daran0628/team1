@@ -21,10 +21,15 @@ class Permission(db.Model):
 
     permission_id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     perm_type     = db.Column('type',   db.String(30), nullable=False)
-    action        = db.Column(db.String(30), nullable=False)
+    action        = db.Column(db.Text, nullable=False)   # comma-separated: "READ,DOWNLOAD,SHARE"
+    description   = db.Column(db.Text, nullable=True)
 
     _resources = db.relationship('PermissionResource', lazy='select', cascade='all, delete-orphan')
     roles = db.relationship("Role", secondary=role_permission_table, back_populates="permissions")
+
+    @property
+    def action_list(self) -> list[str]:
+        return [a.strip() for a in self.action.split(',') if a.strip()]
 
     @property
     def resource_ids(self) -> list[str]:

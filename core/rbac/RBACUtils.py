@@ -59,9 +59,9 @@ def check_rbac_level() -> str | None:
             return 'MANAGE'
         for perm in role.permissions:
             if perm.perm_type == 'RBAC':
-                if perm.action == 'MANAGE':
+                if 'MANAGE' in perm.action_list:
                     return 'MANAGE'
-                if perm.action == 'READ':
+                if 'READ' in perm.action_list:
                     best = 'READ'
     return best
 
@@ -161,7 +161,7 @@ def check_storage_action(required_action: str) -> bool:
         for perm in role.permissions:
             if perm.perm_type != 'STORAGE':
                 continue
-            if perm.action not in ('MANAGE', required_action):
+            if required_action not in perm.action_list and 'MANAGE' not in perm.action_list:
                 continue
 
             # 버킷/오브젝트 지정 없는 메타 요청 (전체 버킷 목록, 리소스 목록 등)
@@ -197,7 +197,7 @@ def get_accessible_object_keys(bucket_name: str) -> list[str] | None:
         for perm in role.permissions:
             if perm.perm_type != 'STORAGE':
                 continue
-            if perm.action not in ('MANAGE', 'READ'):
+            if not any(a in perm.action_list for a in ('MANAGE', 'READ')):
                 continue
 
             # 전체 허용 (리소스 제한 없음)

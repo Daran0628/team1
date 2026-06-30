@@ -126,6 +126,7 @@ def create_permission():
             type=data.get("type", ""),
             actions=data.get("actions") or [],
             resources=data.get("resources") or [],
+            description=data.get("description") or None,
         )
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, str(e))

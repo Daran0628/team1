@@ -150,6 +150,9 @@ with app.app_context():
     # db.session.commit()
 
     # ── VDI 더미 데이터 ─────────────────────────────────────────
+    hong1  = Member.query.filter_by(account_id="hong1").first()
+    admin1 = Member.query.filter_by(account_id="admin1").first()
+
     VDI_DATA = [
         {
             "container_name": "hong1-desktop",
