@@ -35,6 +35,9 @@ with app.app_context():
     from domain.model.Vdi import Vdi, VdiSnapshot
     from domain.model.Group import Group, tb_group_member
     from domain.model.Department import Department
+    from domain.model.ChatRoom import ChatRoom, ChatRoomMember
+    from domain.model.ChatMessage import ChatMessage
+    from domain.model.ChatFile import ChatFile
     db.create_all()
 
 @app.route('/')
