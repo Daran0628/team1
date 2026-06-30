@@ -11,8 +11,10 @@ from typing import List, Optional
 class PermissionResponseDTO:
     permission_id: str
     type:          str
-    action:        str
-    resource_ids:  List[str] = field(default_factory=list)
+    actions:       List[str]
+    description:   Optional[str] = None
+    resources:     List[dict] = field(default_factory=list)
+    # resources 항목: {"resourceType": "BUCKET"|"OBJECT", "resourceId": "<uuid>", "resourceName": "<name>"}
 
 
 # ──────────────────────────────────────────────

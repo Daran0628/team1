@@ -81,24 +81,23 @@ class RBACService:
 
     # ── Permission ────────────────────────────────────────────
 
-    def create_permission(self, dto: CreatePermissionRequestDTO) -> list[PermissionResponseDTO]:
-        perms = []
-        for action in dto.actions:
-            perm_id = str(uuid.uuid4())
-            perm = Permission(
+    def create_permission(self, dto: CreatePermissionRequestDTO) -> PermissionResponseDTO:
+        perm_id = str(uuid.uuid4())
+        perm = Permission(
+            permission_id=perm_id,
+            perm_type=dto.type,
+            action=','.join(dto.actions),
+            description=dto.description or None,
+        )
+        for res in (dto.resources or []):
+            perm._resources.append(PermissionResource(
                 permission_id=perm_id,
-                perm_type=dto.type,
-                action=action,
-            )
-            for rid in (dto.resource_ids or []):
-                perm._resources.append(PermissionResource(
-                    permission_id=perm_id,
-                    resource_id=rid,
-                ))
-            db.session.add(perm)
-            perms.append(perm)
+                resource_type=res['resourceType'],
+                resource_id=res['resourceId'],
+            ))
+        db.session.add(perm)
         db.session.commit()
-        return [RBACConverter.to_permission_dto(p) for p in perms]
+        return RBACConverter.to_permission_dto(perm)
 
     def get_all_permissions(self, type_: str | None = None) -> list[PermissionResponseDTO]:
         q = Permission.query

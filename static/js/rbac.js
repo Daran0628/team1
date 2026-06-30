@@ -9,8 +9,12 @@ function getToken() {
 }
 
 async function apiFetch(url, options) {
-    const token = getToken();
-    if (!token) { window.location.replace('/login'); return null; }
+    let token = getToken();
+    if (!token) {
+        const refreshed = await tryRefresh();
+        if (!refreshed) { window.location.replace('/login'); return null; }
+        token = getToken();
+    }
 
     const headers = Object.assign({ 'Content-Type': 'application/json',
                                     'Authorization': 'Bearer ' + token },
@@ -20,8 +24,7 @@ async function apiFetch(url, options) {
     if (res.status === 401) {
         const refreshed = await tryRefresh();
         if (!refreshed) { window.location.replace('/login'); return null; }
-        const newToken = getToken();
-        headers['Authorization'] = 'Bearer ' + newToken;
+        headers['Authorization'] = 'Bearer ' + getToken();
         return fetch(url, Object.assign({}, options, { headers: headers }));
     }
     return res;
@@ -32,7 +35,7 @@ async function tryRefresh() {
         const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
         if (!res.ok) return false;
         const json = await res.json();
-        const token = json && json.result && json.result.accessToken;
+        const token = json && json.result && json.result.access_token;
         if (!token) return false;
         sessionStorage.setItem('access_token', token);
         return true;
@@ -67,6 +70,9 @@ var state = {
     bindingSubjectType: 'MEMBER',
     bindingSelectedId:  null,
     deleteRoleId:       null,
+    createPermType:     'STORAGE',
+    storageBuckets:     [],
+    storageObjects:     [],
 };
 
 // ── API calls ─────────────────────────────────────────────────
@@ -139,6 +145,28 @@ async function revokeBinding(subjectType, subjectId) {
              '&subjectId='   + encodeURIComponent(subjectId);
     return apiJSON('/api/rbac/rolebinding' + qs, { method: 'DELETE' });
 }
+
+async function fetchBucketsMeta() {
+    return apiJSON('/api/storage/buckets-meta', { method: 'GET' });
+}
+
+async function fetchDbResources(bucketName) {
+    var qs = bucketName ? '?bucketName=' + encodeURIComponent(bucketName) : '';
+    return apiJSON('/api/storage/resources' + qs, { method: 'GET' });
+}
+
+async function createPermission(type, actions, resources, description) {
+    return apiJSON('/api/rbac/permission', {
+        method: 'POST',
+        body: JSON.stringify({ type: type, actions: actions, resources: resources, description: description || null }),
+    });
+}
+
+var ACTIONS_BY_TYPE = {
+    STORAGE: ['READ', 'DOWNLOAD', 'SHARE', 'UPLOAD', 'DELETE', 'MANAGE'],
+    VDI:     ['READ', 'MANAGE'],
+    RBAC:    ['READ', 'MANAGE'],
+};
 
 // ── Render helpers ────────────────────────────────────────────
 
@@ -293,14 +321,51 @@ function renderTable() {
                 perms.forEach(function(p) {
                     var tag = document.createElement('span');
                     tag.className = 'perm-tag';
-                    tag.innerHTML = renderBadge(p.type) + ' ';
-                    tag.appendChild(document.createTextNode(p.action));
+                    tag.style.cssText = 'display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;padding:4px 6px';
+
+                    // 첫 줄: type badge + action badges
+                    var topRow = document.createElement('span');
+                    topRow.style.cssText = 'display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap';
+                    topRow.innerHTML = renderBadge(p.type) + ' ';
+                    (p.actions || []).forEach(function(a) {
+                        var ab = document.createElement('span');
+                        ab.className = 'perm-action-badge';
+                        ab.textContent = a;
+                        topRow.appendChild(ab);
+                    });
+                    tag.appendChild(topRow);
+
+                    // 두 번째 줄: description (있을 때)
+                    if (p.description) {
+                        var descSpan = document.createElement('span');
+                        descSpan.style.cssText = 'font-size:11px;color:#6b7280;font-style:italic';
+                        descSpan.textContent = p.description;
+                        tag.appendChild(descSpan);
+                    }
+
+                    // 세 번째 줄: 리소스 이름
+                    if (p.resources && p.resources.length > 0) {
+                        var resRow = document.createElement('span');
+                        resRow.style.cssText = 'font-size:11px;color:#2563eb';
+                        var rParts = p.resources.map(function(r) {
+                            return (r.resourceType === 'BUCKET' ? '🪣 ' : '📄 ') + (r.resourceName || r.resourceId.slice(0, 8) + '…');
+                        });
+                        resRow.textContent = '▸ ' + rParts.join(', ');
+                        tag.appendChild(resRow);
+                    } else {
+                        var allSpan = document.createElement('span');
+                        allSpan.style.cssText = 'font-size:11px;color:#9ca3af';
+                        allSpan.textContent = '▸ 전체';
+                        tag.appendChild(allSpan);
+                    }
+
                     var xBtn = document.createElement('button');
                     xBtn.className = 'revoke-x';
                     xBtn.title = '권한 해제';
                     xBtn.textContent = '✕';
+                    xBtn.style.cssText = 'align-self:flex-start';
                     xBtn.addEventListener('click', function() { doRevoke(rid, p.permission_id, role.role_name, p); });
-                    tag.appendChild(xBtn);
+                    topRow.appendChild(xBtn);
                     tagsWrap.appendChild(tag);
                 });
             }
@@ -586,16 +651,43 @@ async function loadPermGrid(role) {
             var info = document.createElement('div');
             info.className = 'perm-item-info';
 
-            var strong = document.createElement('strong');
-            strong.textContent = p.action;
-
+            // type badge + action badges
+            var topRow = document.createElement('div');
+            topRow.style.cssText = 'display:flex;align-items:center;gap:4px;flex-wrap:wrap';
             var badge = document.createElement('span');
             badge.className = 'badge badge-' + p.type;
             badge.textContent = p.type;
+            topRow.appendChild(badge);
+            (p.actions || []).forEach(function(a) {
+                var ab = document.createElement('span');
+                ab.className = 'perm-action-badge';
+                ab.textContent = a;
+                topRow.appendChild(ab);
+            });
+            info.appendChild(topRow);
 
-            info.appendChild(badge);
-            info.appendChild(document.createTextNode(' '));
-            info.appendChild(strong);
+            // description
+            if (p.description) {
+                var descDiv = document.createElement('div');
+                descDiv.style.cssText = 'font-size:11px;color:#6b7280;font-style:italic;margin-top:2px';
+                descDiv.textContent = p.description;
+                info.appendChild(descDiv);
+            }
+
+            // resources by name
+            var resInfo = document.createElement('div');
+            resInfo.style.cssText = 'font-size:11px;margin-top:2px';
+            if (p.resources && p.resources.length > 0) {
+                var rParts = p.resources.map(function(r) {
+                    return (r.resourceType === 'BUCKET' ? '🪣 ' : '📄 ') + (r.resourceName || r.resourceId.slice(0, 8) + '…');
+                });
+                resInfo.textContent = '▸ ' + rParts.join(', ');
+                resInfo.style.color = '#2563eb';
+            } else {
+                resInfo.textContent = '▸ 전체';
+                resInfo.style.color = '#9ca3af';
+            }
+            info.appendChild(resInfo);
             item.appendChild(cb);
             item.appendChild(info);
             grid.appendChild(item);
@@ -637,13 +729,179 @@ async function confirmAssign() {
 // ── Revoke permission (expanded row) ─────────────────────────
 
 async function doRevoke(roleId, permId, roleName, perm) {
-    var label = perm.resource + ':' + perm.action;
+    var label = perm.type + ':' + (perm.actions || []).join('+');
+    if (perm.description) label += ' (' + perm.description + ')';
     if (!confirm('"' + roleName + '" 에서 [' + label + '] 권한을 해제하시겠습니까?')) return;
     try {
         await revokePermission(roleId, permId);
         await loadRoles();
     } catch (e) {
         alert('해제 실패: ' + e.message);
+    }
+}
+
+// ── Create Permission modal ───────────────────────────────────
+
+async function openCreatePermModal() {
+    state.createPermType = 'STORAGE';
+    document.getElementById('createPermErr').textContent = '';
+    document.getElementById('btnCreatePermConfirm').disabled = false;
+    var descEl = document.getElementById('createPermDesc');
+    if (descEl) descEl.value = '';
+
+    document.querySelectorAll('#permTypeTabs .tab-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.type === 'STORAGE');
+    });
+    renderActionCheckboxes('STORAGE');
+    document.getElementById('storageResourceSection').hidden = false;
+
+    openModal('createPermModal');
+    await Promise.all([loadPermBucketList(), loadPermObjectList('')]);
+}
+
+function renderActionCheckboxes(type) {
+    var group = document.getElementById('actionCheckGroup');
+    group.innerHTML = '';
+    (ACTIONS_BY_TYPE[type] || []).forEach(function(action) {
+        var label = document.createElement('label');
+        label.className = 'perm-item';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = action;
+        var info = document.createElement('div');
+        info.className = 'perm-item-info';
+        var strong = document.createElement('strong');
+        strong.textContent = action;
+        info.appendChild(strong);
+        label.appendChild(cb);
+        label.appendChild(info);
+        group.appendChild(label);
+    });
+}
+
+async function loadPermBucketList() {
+    var listEl    = document.getElementById('permBucketList');
+    var filterSel = document.getElementById('permBucketFilter');
+    listEl.textContent = '불러오는 중...';
+    try {
+        var buckets = await fetchBucketsMeta();
+        state.storageBuckets = Array.isArray(buckets) ? buckets : [];
+
+        filterSel.innerHTML = '<option value="">모든 버킷</option>';
+        state.storageBuckets.forEach(function(b) {
+            var opt = document.createElement('option');
+            opt.value = b.bucketName;
+            opt.textContent = b.bucketName;
+            filterSel.appendChild(opt);
+        });
+
+        listEl.innerHTML = '';
+        if (state.storageBuckets.length === 0) {
+            listEl.innerHTML = '<span style="color:#888;font-size:13px">버킷이 없습니다.</span>';
+            return;
+        }
+        state.storageBuckets.forEach(function(b) {
+            var label = document.createElement('label');
+            label.className = 'perm-item';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = b.bucketId;
+            var info = document.createElement('div');
+            info.className = 'perm-item-info';
+            var strong = document.createElement('strong');
+            strong.textContent = b.bucketName;
+            var sub = document.createElement('div');
+            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.textContent = b.bucketId;
+            info.appendChild(strong);
+            info.appendChild(sub);
+            label.appendChild(cb);
+            label.appendChild(info);
+            listEl.appendChild(label);
+        });
+    } catch (e) {
+        listEl.textContent = '불러오기 실패: ' + e.message;
+    }
+}
+
+async function loadPermObjectList(bucketName) {
+    var listEl = document.getElementById('permObjectList');
+    listEl.textContent = '불러오는 중...';
+    try {
+        var objects = await fetchDbResources(bucketName || '');
+        state.storageObjects = Array.isArray(objects) ? objects : [];
+
+        listEl.innerHTML = '';
+        if (state.storageObjects.length === 0) {
+            listEl.innerHTML = '<span style="color:#888;font-size:13px">오브젝트가 없습니다.</span>';
+            return;
+        }
+        state.storageObjects.forEach(function(r) {
+            var label = document.createElement('label');
+            label.className = 'perm-item';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = r.resourceId;
+            var info = document.createElement('div');
+            info.className = 'perm-item-info';
+            var strong = document.createElement('strong');
+            strong.textContent = r.resourceName;
+            var sub = document.createElement('div');
+            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.textContent = r.bucketName + ' / ' + r.s3Key;
+            info.appendChild(strong);
+            info.appendChild(sub);
+            label.appendChild(cb);
+            label.appendChild(info);
+            listEl.appendChild(label);
+        });
+    } catch (e) {
+        listEl.textContent = '불러오기 실패: ' + e.message;
+    }
+}
+
+async function submitCreatePerm() {
+    var errEl = document.getElementById('createPermErr');
+    var btn   = document.getElementById('btnCreatePermConfirm');
+    errEl.textContent = '';
+
+    var type = state.createPermType;
+    var actions = [];
+    document.querySelectorAll('#actionCheckGroup input:checked').forEach(function(cb) {
+        actions.push(cb.value);
+    });
+
+    if (actions.length === 0) {
+        errEl.textContent = '최소 1개 이상의 Action을 선택하세요.';
+        return;
+    }
+
+    var resources = [];
+    if (type === 'STORAGE') {
+        document.querySelectorAll('#permBucketList input:checked').forEach(function(cb) {
+            resources.push({ resourceType: 'BUCKET', resourceId: cb.value });
+        });
+        document.querySelectorAll('#permObjectList input:checked').forEach(function(cb) {
+            resources.push({ resourceType: 'OBJECT', resourceId: cb.value });
+        });
+    }
+
+    var desc = (document.getElementById('createPermDesc') || {}).value;
+    desc = desc ? desc.trim() : '';
+
+    btn.disabled = true;
+    try {
+        await createPermission(type, actions, resources, desc || null);
+        closeModal('createPermModal');
+        // Assign modal이 열려있으면 perm grid 갱신
+        var assignModal = document.getElementById('assignModal');
+        if (!assignModal.hasAttribute('hidden') && state.assignRoleId) {
+            var role = state.allRoles.find(function(r) { return r.role_id === state.assignRoleId; });
+            if (role) await loadPermGrid(role);
+        }
+    } catch (e) {
+        errEl.textContent = e.message;
+        btn.disabled = false;
     }
 }
 
@@ -872,6 +1130,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Delete modal
     document.getElementById('btnConfirmDelete').addEventListener('click', confirmDelete);
+
+    // Create Permission modal — open trigger (from Assign modal)
+    document.getElementById('btnOpenCreatePerm').addEventListener('click', openCreatePermModal);
+
+    // Create Permission modal — type tabs
+    document.querySelectorAll('#permTypeTabs .tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            state.createPermType = btn.dataset.type;
+            document.querySelectorAll('#permTypeTabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            renderActionCheckboxes(btn.dataset.type);
+            document.getElementById('storageResourceSection').hidden = (btn.dataset.type !== 'STORAGE');
+        });
+    });
+
+    // Create Permission modal — bucket filter → reload objects
+    document.getElementById('permBucketFilter').addEventListener('change', function() {
+        loadPermObjectList(this.value);
+    });
+
+    // Create Permission modal — confirm
+    document.getElementById('btnCreatePermConfirm').addEventListener('click', submitCreatePerm);
 
     // Close buttons (data-close attribute)
     document.querySelectorAll('[data-close]').forEach(function(btn) {

@@ -228,6 +228,22 @@ body {
     letter-spacing: 0.04em;
     color: #fff;
 }
+/* permission.js / rbac.js 공용 — 개별 액션 뱃지 */
+.perm-action-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.perm-action-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #ede9fe;
+    color: #5b21b6;
+    border: 1px solid #c4b5fd;
+}
 .badge-STORAGE { background: var(--badge-STORAGE); }
 .badge-VDI     { background: var(--badge-VDI); }
 .revoke-x {
@@ -433,6 +449,17 @@ body {
 .subject-item-sub  { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
 .subject-empty { text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.875rem; }
 
+.field-input {
+    width: 100%;
+    padding: 0.45rem 0.65rem;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: #fff;
+    color: var(--text-main);
+    box-sizing: border-box;
+}
+.field-input:focus { border-color: var(--primary); outline: none; }
 .field-select {
     width: 100%;
     border: 1.5px solid var(--border);

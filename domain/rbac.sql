@@ -13,28 +13,41 @@ CREATE TABLE IF NOT EXISTS tb_role (
 
 -- ============================================================
 -- Permission
--- type   : STORAGE / VDI / RBAC
--- action : StorageAction / VdiAction / RbacAction 값
+-- type        : STORAGE / VDI / RBAC
+-- action      : 콤마 구분 복수 액션 "READ,DOWNLOAD,SHARE"
+-- description : 사람이 읽을 수 있는 설명 (optional)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tb_permission (
     permission_id   CHAR(36)        NOT NULL,
     type            VARCHAR(30)     NOT NULL,
-    action          VARCHAR(30)     NOT NULL,
+    action          TEXT            NOT NULL,
+    description     TEXT            NULL,
 
     PRIMARY KEY (permission_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Migration (기존 DB):
+--   ALTER TABLE tb_permission MODIFY COLUMN action TEXT NOT NULL;
+--   ALTER TABLE tb_permission ADD COLUMN description TEXT NULL AFTER action;
 
 
 -- ============================================================
 -- Permission -> Resource  (M:N)
 -- RBAC 타입은 리소스 불필요, STORAGE/VDI 타입은 리소스 UUID 목록
--- resource_id : tb_storage_resource.resource_id 또는 VDI UUID
+-- resource_type : BUCKET | OBJECT
+-- resource_id   : tb_storage_bucket.bucket_id 또는 tb_storage_resource.resource_id
+-- Migration (기존 DB):
+--   ALTER TABLE tb_permission_resource
+--       DROP PRIMARY KEY,
+--       ADD COLUMN resource_type VARCHAR(10) NOT NULL DEFAULT 'OBJECT',
+--       ADD PRIMARY KEY (permission_id, resource_type, resource_id);
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tb_permission_resource (
     permission_id   CHAR(36)        NOT NULL,
+    resource_type   VARCHAR(10)     NOT NULL DEFAULT 'OBJECT',
     resource_id     CHAR(36)        NOT NULL,
 
-    PRIMARY KEY (permission_id, resource_id),
+    PRIMARY KEY (permission_id, resource_type, resource_id),
 
     CONSTRAINT fk_perm_resource_perm
         FOREIGN KEY (permission_id)

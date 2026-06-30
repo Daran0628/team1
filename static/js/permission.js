@@ -10,7 +10,11 @@ function getToken() {
 
 async function apiFetch(url, options) {
     var token = getToken();
-    if (!token) { window.location.replace('/login'); return null; }
+    if (!token) {
+        var silentRefresh = await tryRefresh();
+        if (!silentRefresh) { window.location.replace('/login'); return null; }
+        token = getToken();
+    }
 
     var headers = Object.assign({ 'Content-Type': 'application/json',
                                    'Authorization': 'Bearer ' + token },
@@ -31,7 +35,7 @@ async function tryRefresh() {
         var res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
         if (!res.ok) return false;
         var json = await res.json();
-        var token = json && json.result && json.result.accessToken;
+        var token = json && json.result && json.result.access_token;
         if (!token) return false;
         sessionStorage.setItem('access_token', token);
         return true;
@@ -51,20 +55,21 @@ async function apiJSON(url, options) {
 // ── Action definitions per type ───────────────────────────────
 
 var ACTIONS_BY_TYPE = {
-    STORAGE: ['READ', 'DOWNLOAD', 'UPLOAD', 'DELETE', 'RENAME', 'MOVE', 'SHARE', 'MANAGE'],
     VDI:     ['CONNECT', 'DISCONNECT', 'POWER_ON', 'POWER_OFF', 'REBOOT', 'SNAPSHOT', 'RESTORE', 'ASSIGN', 'REVOKE', 'MONITOR', 'MANAGE'],
+    STORAGE: ['READ', 'DOWNLOAD', 'SHARE', 'UPLOAD', 'DELETE', 'MANAGE'],
     RBAC:    ['READ', 'MANAGE'],
 };
 
 // ── State ─────────────────────────────────────────────────────
 
 var state = {
-    allPerms:    [],
-    filtered:    [],
-    pageSize:    20,
-    page:        1,
-    deleteId:    null,
-    pendingResIds: [],   // resource UUIDs staged in the add modal
+    allPerms:      [],
+    filtered:      [],
+    pageSize:      20,
+    page:          1,
+    deleteId:      null,
+    storageBuckets: [],
+    storageObjects: [],
 };
 
 // ── API calls ─────────────────────────────────────────────────
@@ -74,15 +79,24 @@ async function fetchPermissions(type_) {
     return apiJSON('/api/rbac/permission' + qs, { method: 'GET' });
 }
 
-async function createPermission(type_, actions, resourceIds) {
+async function createPermission(type_, actions, resources, description) {
     return apiJSON('/api/rbac/permission', {
         method: 'POST',
-        body: JSON.stringify({ type: type_, actions: actions, resourceIds: resourceIds }),
+        body: JSON.stringify({ type: type_, actions: actions, resources: resources, description: description || null }),
     });
 }
 
 async function deletePermission(id) {
     return apiJSON('/api/rbac/permission/' + encodeURIComponent(id), { method: 'DELETE' });
+}
+
+async function fetchBucketsMeta() {
+    return apiJSON('/api/storage/buckets-meta', { method: 'GET' });
+}
+
+async function fetchDbResources(bucketName) {
+    var qs = bucketName ? '?bucketName=' + encodeURIComponent(bucketName) : '';
+    return apiJSON('/api/storage/resources' + qs, { method: 'GET' });
 }
 
 // ── Search / filter ───────────────────────────────────────────
@@ -92,8 +106,9 @@ function applyFilter() {
     var type = document.getElementById('typeFilter').value;
     state.filtered = state.allPerms.filter(function(p) {
         var matchType = !type || p.type === type;
-        var matchQ    = !q || p.action.toLowerCase().includes(q) ||
-                        p.type.toLowerCase().includes(q);
+        var actions   = (p.actions || []).join(' ').toLowerCase();
+        var desc      = (p.description || '').toLowerCase();
+        var matchQ    = !q || actions.includes(q) || p.type.toLowerCase().includes(q) || desc.includes(q);
         return matchType && matchQ;
     });
     state.page = 1;
@@ -140,38 +155,56 @@ function renderTable() {
         badge.textContent = p.type;
         tdType.appendChild(badge);
 
-        // Action
+        // Actions + Description
         var tdAction = document.createElement('td');
-        var nameDiv = document.createElement('div');
-        nameDiv.className = 'role-name';
-        nameDiv.textContent = p.action;
-        tdAction.appendChild(nameDiv);
+        var actionsWrap = document.createElement('div');
+        actionsWrap.className = 'perm-action-badges';
+        (p.actions || []).forEach(function(a) {
+            var badge = document.createElement('span');
+            badge.className = 'perm-action-badge';
+            badge.textContent = a;
+            actionsWrap.appendChild(badge);
+        });
+        tdAction.appendChild(actionsWrap);
+        if (p.description) {
+            var descDiv = document.createElement('div');
+            descDiv.className = 'role-desc';
+            descDiv.textContent = p.description;
+            tdAction.appendChild(descDiv);
+        }
 
-        // Resource IDs
+        // Resources column
         var tdRes = document.createElement('td');
-        if (p.type === 'RBAC' || !p.resource_ids || p.resource_ids.length === 0) {
-            var noRes = document.createElement('span');
-            noRes.className = 'no-perms';
-            noRes.textContent = p.type === 'RBAC' ? '—' : '없음';
-            tdRes.appendChild(noRes);
+        var resources = p.resources || [];
+        if (p.type === 'RBAC') {
+            var dash = document.createElement('span');
+            dash.className = 'no-perms';
+            dash.textContent = '—';
+            tdRes.appendChild(dash);
+        } else if (resources.length === 0) {
+            var allSpan = document.createElement('span');
+            allSpan.className = 'no-perms';
+            allSpan.textContent = '전체';
+            tdRes.appendChild(allSpan);
         } else {
             var resWrap = document.createElement('div');
             resWrap.className = 'perm-tags';
-            var showCount = Math.min(p.resource_ids.length, 3);
-            for (var i = 0; i < showCount; i++) {
+            resources.forEach(function(r) {
                 var chip = document.createElement('span');
                 chip.className = 'perm-tag';
-                chip.title = p.resource_ids[i];
-                chip.textContent = p.resource_ids[i].slice(0, 8) + '…';
+                if (r.resourceType === 'BUCKET') {
+                    chip.style.background = '#dbeafe';
+                    chip.style.color = '#1d4ed8';
+                    chip.textContent = '🪣 ' + (r.resourceName || resolveBucketName(r.resourceId));
+                    chip.title = r.resourceId;
+                } else {
+                    chip.style.background = '#dcfce7';
+                    chip.style.color = '#15803d';
+                    chip.textContent = '📄 ' + (r.resourceName || resolveObjectName(r.resourceId));
+                    chip.title = r.resourceId;
+                }
                 resWrap.appendChild(chip);
-            }
-            if (p.resource_ids.length > 3) {
-                var more = document.createElement('span');
-                more.className = 'perm-tag';
-                more.style.color = 'var(--muted)';
-                more.textContent = '+' + (p.resource_ids.length - 3) + ' more';
-                resWrap.appendChild(more);
-            }
+            });
             tdRes.appendChild(resWrap);
         }
 
@@ -262,13 +295,29 @@ async function loadPermissions() {
     var tbody = document.getElementById('permBody');
     tbody.innerHTML = '<tr><td colspan="4" class="state-cell">불러오는 중...</td></tr>';
     try {
-        var data = await fetchPermissions(null);
-        state.allPerms = Array.isArray(data) ? data : [];
+        var results = await Promise.allSettled([
+            fetchPermissions(null),
+            fetchBucketsMeta(),
+            fetchDbResources(''),
+        ]);
+        state.allPerms      = Array.isArray(results[0].value) ? results[0].value : [];
+        state.storageBuckets = Array.isArray(results[1].value) ? results[1].value : [];
+        state.storageObjects = Array.isArray(results[2].value) ? results[2].value : [];
         applyFilter();
         renderTable();
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="4" class="state-cell">불러오기 실패: ' + escText(e.message) + '</td></tr>';
     }
+}
+
+function resolveBucketName(bucketId) {
+    var b = state.storageBuckets.find(function(b) { return b.bucketId === bucketId; });
+    return b ? b.bucketName : bucketId.slice(0, 8) + '…';
+}
+
+function resolveObjectName(resourceId) {
+    var r = state.storageObjects.find(function(r) { return r.resourceId === resourceId; });
+    return r ? r.resourceName + ' (' + r.bucketName + ')' : resourceId.slice(0, 8) + '…';
 }
 
 // ── Modal helpers ─────────────────────────────────────────────
@@ -295,7 +344,7 @@ function updateActionGrid() {
 
     var actions = ACTIONS_BY_TYPE[type] || [];
 
-    // ── "* 전체" 체크박스 ─────────────────────────────────────
+    // "* 전체" 체크박스
     var allLbl = document.createElement('label');
     allLbl.className = 'action-item action-item-all';
 
@@ -316,7 +365,6 @@ function updateActionGrid() {
     allLbl.appendChild(allSpan);
     grid.appendChild(allLbl);
 
-    // ── 개별 action 체크박스 ──────────────────────────────────
     actions.forEach(function(a) {
         var lbl = document.createElement('label');
         lbl.className = 'action-item';
@@ -327,9 +375,8 @@ function updateActionGrid() {
         cb.name = 'actionCheck';
         cb.addEventListener('change', function() {
             lbl.classList.toggle('is-checked', cb.checked);
-            // 전체 체크박스 동기화
-            var all     = grid.querySelectorAll('input[name=actionCheck]');
-            var cnt     = grid.querySelectorAll('input[name=actionCheck]:checked').length;
+            var all = grid.querySelectorAll('input[name=actionCheck]');
+            var cnt = grid.querySelectorAll('input[name=actionCheck]:checked').length;
             allCb.checked       = (cnt === all.length);
             allCb.indeterminate = (cnt > 0 && cnt < all.length);
             allLbl.classList.toggle('is-checked', allCb.checked);
@@ -343,60 +390,112 @@ function updateActionGrid() {
         grid.appendChild(lbl);
     });
 
-    resSection.hidden = (type === 'RBAC');
-}
-
-function renderResIdList() {
-    var list = document.getElementById('resIdList');
-    list.innerHTML = '';
-    state.pendingResIds.forEach(function(rid, idx) {
-        var chip = document.createElement('span');
-        chip.className = 'res-id-chip';
-        chip.title = rid;
-        chip.textContent = rid.slice(0, 16) + '…';
-
-        var xBtn = document.createElement('button');
-        xBtn.type = 'button';
-        xBtn.className = 'revoke-x';
-        xBtn.textContent = '✕';
-        xBtn.addEventListener('click', function() {
-            state.pendingResIds.splice(idx, 1);
-            renderResIdList();
-        });
-        chip.appendChild(xBtn);
-        list.appendChild(chip);
-    });
-}
-
-function addResId() {
-    var input = document.getElementById('inputResId');
-    var rid   = input.value.trim();
-    if (!rid) return;
-    if (state.pendingResIds.includes(rid)) {
-        document.getElementById('addPermModalErr').textContent = '이미 추가된 Resource ID입니다.';
-        return;
+    // STORAGE만 리소스 선택 가능
+    resSection.hidden = (type !== 'STORAGE');
+    if (type === 'STORAGE') {
+        loadPermBucketList();
+        loadPermObjectList('');
     }
-    state.pendingResIds.push(rid);
-    input.value = '';
-    document.getElementById('addPermModalErr').textContent = '';
-    renderResIdList();
+}
+
+async function loadPermBucketList() {
+    var listEl    = document.getElementById('permBucketList');
+    var filterSel = document.getElementById('permBucketFilter');
+    listEl.textContent = '불러오는 중...';
+    try {
+        var buckets = await fetchBucketsMeta();
+        state.storageBuckets = Array.isArray(buckets) ? buckets : [];
+
+        filterSel.innerHTML = '<option value="">모든 버킷</option>';
+        state.storageBuckets.forEach(function(b) {
+            var opt = document.createElement('option');
+            opt.value = b.bucketName;
+            opt.textContent = b.bucketName;
+            filterSel.appendChild(opt);
+        });
+
+        listEl.innerHTML = '';
+        if (state.storageBuckets.length === 0) {
+            listEl.innerHTML = '<span style="color:#888;font-size:13px">버킷이 없습니다.</span>';
+            return;
+        }
+        state.storageBuckets.forEach(function(b) {
+            var label = document.createElement('label');
+            label.className = 'perm-item';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = b.bucketId;
+            var info = document.createElement('div');
+            info.className = 'perm-item-info';
+            var strong = document.createElement('strong');
+            strong.textContent = b.bucketName;
+            var sub = document.createElement('div');
+            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.textContent = b.bucketId;
+            info.appendChild(strong);
+            info.appendChild(sub);
+            label.appendChild(cb);
+            label.appendChild(info);
+            listEl.appendChild(label);
+        });
+    } catch (e) {
+        listEl.textContent = '불러오기 실패: ' + e.message;
+    }
+}
+
+async function loadPermObjectList(bucketName) {
+    var listEl = document.getElementById('permObjectList');
+    listEl.textContent = '불러오는 중...';
+    try {
+        var objects = await fetchDbResources(bucketName || '');
+        state.storageObjects = Array.isArray(objects) ? objects : [];
+
+        listEl.innerHTML = '';
+        if (state.storageObjects.length === 0) {
+            listEl.innerHTML = '<span style="color:#888;font-size:13px">오브젝트가 없습니다.</span>';
+            return;
+        }
+        state.storageObjects.forEach(function(r) {
+            var label = document.createElement('label');
+            label.className = 'perm-item';
+            var cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = r.resourceId;
+            var info = document.createElement('div');
+            info.className = 'perm-item-info';
+            var strong = document.createElement('strong');
+            strong.textContent = r.resourceName;
+            var sub = document.createElement('div');
+            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.textContent = r.bucketName + ' / ' + r.s3Key;
+            info.appendChild(strong);
+            info.appendChild(sub);
+            label.appendChild(cb);
+            label.appendChild(info);
+            listEl.appendChild(label);
+        });
+    } catch (e) {
+        listEl.textContent = '불러오기 실패: ' + e.message;
+    }
 }
 
 function openAddModal() {
-    state.pendingResIds = [];
-    document.getElementById('inputType').value  = '';
-    document.getElementById('inputResId').value = '';
+    document.getElementById('inputType').value = '';
+    document.getElementById('inputPermDesc').value = '';
     document.getElementById('addPermModalErr').textContent = '';
     document.getElementById('btnSavePerm').disabled = false;
+    document.getElementById('permBucketList').innerHTML = '';
+    document.getElementById('permObjectList').innerHTML = '';
+    document.getElementById('permBucketFilter').innerHTML = '<option value="">모든 버킷</option>';
     updateActionGrid();
-    renderResIdList();
     openModal('addPermModal');
     document.getElementById('inputType').focus();
 }
 
 async function savePerm() {
     var type_   = document.getElementById('inputType').value;
-    var checked = document.querySelectorAll('#actionGrid input[type=checkbox]:checked');
+    var desc    = document.getElementById('inputPermDesc').value.trim();
+    var checked = document.querySelectorAll('#actionGrid input[name=actionCheck]:checked');
     var actions = [];
     checked.forEach(function(cb) { actions.push(cb.value); });
 
@@ -404,12 +503,22 @@ async function savePerm() {
     var btn   = document.getElementById('btnSavePerm');
 
     errEl.textContent = '';
-    if (!type_)           { errEl.textContent = 'Type을 선택하세요.'; return; }
+    if (!type_)               { errEl.textContent = 'Type을 선택하세요.'; return; }
     if (actions.length === 0) { errEl.textContent = 'Action을 하나 이상 선택하세요.'; return; }
+
+    var resources = [];
+    if (type_ === 'STORAGE') {
+        document.querySelectorAll('#permBucketList input:checked').forEach(function(cb) {
+            resources.push({ resourceType: 'BUCKET', resourceId: cb.value });
+        });
+        document.querySelectorAll('#permObjectList input:checked').forEach(function(cb) {
+            resources.push({ resourceType: 'OBJECT', resourceId: cb.value });
+        });
+    }
 
     btn.disabled = true;
     try {
-        await createPermission(type_, actions, state.pendingResIds.slice());
+        await createPermission(type_, actions, resources, desc || null);
         closeModal('addPermModal');
         await loadPermissions();
     } catch (e) {
@@ -425,7 +534,9 @@ function openDeleteModal(perm) {
     var msg = document.getElementById('deletePermMsg');
     msg.textContent = '';
     var strong = document.createElement('strong');
-    strong.textContent = perm.type + ':' + perm.action;
+    var label = perm.type + ':' + (perm.actions || []).join('+');
+    if (perm.description) label += ' (' + perm.description + ')';
+    strong.textContent = label;
     msg.appendChild(document.createTextNode('권한 '));
     msg.appendChild(strong);
     msg.appendChild(document.createTextNode(' 을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'));
@@ -464,15 +575,10 @@ document.addEventListener('DOMContentLoaded', function() {
         renderTable();
     });
 
-    // Modal: type change → update action checkbox grid
-    document.getElementById('inputType').addEventListener('change', function() {
-        updateActionGrid();
-    });
+    document.getElementById('inputType').addEventListener('change', updateActionGrid);
 
-    // Resource ID add
-    document.getElementById('btnAddResId').addEventListener('click', addResId);
-    document.getElementById('inputResId').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); addResId(); }
+    document.getElementById('permBucketFilter').addEventListener('change', function() {
+        loadPermObjectList(this.value);
     });
 
     document.getElementById('btnSavePerm').addEventListener('click', savePerm);

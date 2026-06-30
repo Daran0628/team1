@@ -15,12 +15,32 @@ from web.dto.RBACResponseDTO import (
 class RBACConverter:
 
     @staticmethod
+    def _resolve_resource_name(resource_type: str, resource_id: str) -> str | None:
+        from domain.model.StorageBucket import StorageBucket
+        from domain.model.StorageResource import StorageResource
+        if resource_type == 'BUCKET':
+            b = StorageBucket.query.filter_by(bucket_id=resource_id).first()
+            return b.bucket_name if b else None
+        if resource_type == 'OBJECT':
+            r = StorageResource.query.filter_by(resource_id=resource_id).first()
+            return (f"{r.resource_name} ({r.bucket_name})") if r else None
+        return None
+
+    @staticmethod
     def to_permission_dto(permission: Permission) -> PermissionResponseDTO:
         return PermissionResponseDTO(
             permission_id=permission.permission_id,
             type=permission.perm_type,
-            action=permission.action,
-            resource_ids=permission.resource_ids,
+            actions=permission.action_list,
+            description=permission.description,
+            resources=[
+                {
+                    "resourceType": r.resource_type,
+                    "resourceId":   r.resource_id,
+                    "resourceName": RBACConverter._resolve_resource_name(r.resource_type, r.resource_id),
+                }
+                for r in permission._resources
+            ],
         )
 
     @staticmethod
