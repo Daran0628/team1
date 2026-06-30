@@ -157,7 +157,7 @@ async function openCreateModal() {
     document.getElementById('createModal').hidden = false;
 
     if (!allMembers.length) {
-        const data = await apiJSON('/api/group/members');
+        const data = await apiJSON('/api/chat/members');
         allMembers = (data && data.result) || [];
     }
     renderMemberPick('');

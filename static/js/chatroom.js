@@ -543,7 +543,7 @@ document.getElementById('btnInviteMember').addEventListener('click', () => {
 
 async function openInviteModal() {
     if (!allMembers.length) {
-        const data = await apiJSON('/api/group/members');
+        const data = await apiJSON('/api/chat/members');
         allMembers = (data && data.result) || [];
     }
     const existingIds = new Set(currentRoom.members.map(m => m.member_id));
@@ -684,7 +684,7 @@ async function openCreateModal() {
     document.getElementById('createModal').hidden = false;
 
     if (!allMembers.length) {
-        const data = await apiJSON('/api/group/members');
+        const data = await apiJSON('/api/chat/members');
         allMembers = (data && data.result) || [];
     }
     renderMemberPick('');

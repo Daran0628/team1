@@ -53,6 +53,20 @@ def _current_member_id() -> str:
     return member.id
 
 
+# ── 멤버 전체 목록 (채팅 피커용 — RBAC 불필요) ───────────────────
+
+@chat_bp.route("/members", methods=["GET"])
+@jwt_required()
+def get_chat_members():
+    """채팅방 생성/초대 피커용 전체 멤버 목록. JWT 인증만 요구한다."""
+    members = Member.query.order_by(Member.name_ko).all()
+    result = [
+        {"member_id": m.id, "account_id": m.account_id, "name_ko": m.name_ko}
+        for m in members
+    ]
+    return ApiResponse.on_success(SuccessStatus.CHAT_ROOM_READ, result)
+
+
 # ── 채팅방 CRUD ─────────────────────────────────────────────────
 
 @chat_bp.route("/rooms", methods=["POST"])
