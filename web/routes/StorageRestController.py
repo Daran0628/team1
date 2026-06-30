@@ -18,6 +18,7 @@ from service.StorageService.StorageService import (
     upload_object,
     stat_object,
     presigned_download_url,
+    presigned_share_url,
     delete_object,
     copy_object,
     get_object_tags,
@@ -186,6 +187,25 @@ def api_presigned_url(bucket_name: str):
             return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
         result = presigned_download_url(bucket_name, object_name, expires_seconds=expires)
         return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_URL, result)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/objects/share-url', methods=['GET'])
+@jwt_required()
+@storage_required('SHARE')
+def api_share_url(bucket_name: str):
+    object_name = request.args.get('objectName', '')
+    days    = max(0, int(request.args.get('days',    0)))
+    hours   = max(0, int(request.args.get('hours',  12)))
+    minutes = max(0, int(request.args.get('minutes', 0)))
+    expires = days * 86400 + hours * 3600 + minutes * 60
+    if expires <= 0:
+        expires = 43200
+    def work():
+        if not object_name:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
+        result = presigned_share_url(bucket_name, object_name, expires_seconds=expires)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_SHARE_URL, result)
     return _handle(work)
 
 

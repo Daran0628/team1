@@ -186,6 +186,22 @@ def presigned_download_url(bucket_name: str, object_name: str,
     return PresignedUrlDTO(url=url, expires_in=expires_seconds)
 
 
+def presigned_share_url(bucket_name: str, object_name: str,
+                        expires_seconds: int = 43200) -> PresignedUrlDTO:
+    _get_bucket_or_raise(bucket_name)
+    client = _minio()
+    try:
+        url = client.presigned_get_object(
+            bucket_name=bucket_name,
+            object_name=object_name,
+            expires=timedelta(seconds=expires_seconds),
+        )
+    except S3Error:
+        raise StorageException(ErrorStatus.STORAGE_OBJECT_NOT_FOUND)
+
+    return PresignedUrlDTO(url=url, expires_in=expires_seconds)
+
+
 def delete_object(bucket_name: str, object_name: str) -> None:
     _get_bucket_or_raise(bucket_name)
     client = _minio()

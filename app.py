@@ -82,5 +82,13 @@ def mypage():
 
 
 
+@app.route('/objstorage')
+def objstorage_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'objstorage.html'
+    )
+
+
 if __name__ == '__main__':
     app.run(debug=True)
