@@ -7,8 +7,12 @@
 function getToken() { return sessionStorage.getItem('access_token'); }
 
 async function apiFetch(url, options) {
-    const token = getToken();
-    if (!token) { window.location.replace('/login'); return null; }
+    let token = getToken();
+    if (!token) {
+        const ok = await tryRefresh();
+        if (!ok) { window.location.replace('/login'); return null; }
+        token = getToken();
+    }
     const headers = Object.assign(
         { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         (options && options.headers) || {}

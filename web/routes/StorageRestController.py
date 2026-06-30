@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from core.rbac.RBACUtils import storage_required
+from core.rbac.RBACUtils import storage_required, get_accessible_object_keys
 from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
@@ -143,6 +143,19 @@ def api_list_objects(bucket_name: str):
     recursive = request.args.get('recursive', 'false').lower() == 'true'
     def work():
         result = list_objects(bucket_name, prefix=prefix, recursive=recursive)
+
+        # OBJECT 레벨 권한이면 허용된 오브젝트만 필터링
+        # None → 버킷 전체 허용, list → 해당 s3_key만 허용
+        allowed_keys = get_accessible_object_keys(bucket_name)
+        if allowed_keys is not None:
+            allowed_set = set(allowed_keys)
+            # 디렉터리 항목(가상 폴더)은 내비게이션용으로 유지,
+            # 실제 파일은 허용된 것만 표시
+            result = [
+                obj for obj in result
+                if obj.is_dir or obj.object_name in allowed_set
+            ]
+
         return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_LIST, result)
     return _handle(work)
 

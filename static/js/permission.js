@@ -10,7 +10,11 @@ function getToken() {
 
 async function apiFetch(url, options) {
     var token = getToken();
-    if (!token) { window.location.replace('/login'); return null; }
+    if (!token) {
+        var silentRefresh = await tryRefresh();
+        if (!silentRefresh) { window.location.replace('/login'); return null; }
+        token = getToken();
+    }
 
     var headers = Object.assign({ 'Content-Type': 'application/json',
                                    'Authorization': 'Bearer ' + token },
@@ -31,7 +35,7 @@ async function tryRefresh() {
         var res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
         if (!res.ok) return false;
         var json = await res.json();
-        var token = json && json.result && json.result.accessToken;
+        var token = json && json.result && json.result.access_token;
         if (!token) return false;
         sessionStorage.setItem('access_token', token);
         return true;
@@ -52,7 +56,7 @@ async function apiJSON(url, options) {
 
 var ACTIONS_BY_TYPE = {
     VDI:     ['CONNECT', 'DISCONNECT', 'POWER_ON', 'POWER_OFF', 'REBOOT', 'SNAPSHOT', 'RESTORE', 'ASSIGN', 'REVOKE', 'MONITOR', 'MANAGE'],
-    STORAGE: ['READ', 'DOWNLOAD', 'UPLOAD', 'DELETE', 'MANAGE'],
+    STORAGE: ['READ', 'DOWNLOAD', 'SHARE', 'UPLOAD', 'DELETE', 'MANAGE'],
     RBAC:    ['READ', 'MANAGE'],
 };
 
@@ -75,10 +79,10 @@ async function fetchPermissions(type_) {
     return apiJSON('/api/rbac/permission' + qs, { method: 'GET' });
 }
 
-async function createPermission(type_, actions, resources) {
+async function createPermission(type_, actions, resources, description) {
     return apiJSON('/api/rbac/permission', {
         method: 'POST',
-        body: JSON.stringify({ type: type_, actions: actions, resources: resources }),
+        body: JSON.stringify({ type: type_, actions: actions, resources: resources, description: description || null }),
     });
 }
 
@@ -102,8 +106,9 @@ function applyFilter() {
     var type = document.getElementById('typeFilter').value;
     state.filtered = state.allPerms.filter(function(p) {
         var matchType = !type || p.type === type;
-        var matchQ    = !q || p.action.toLowerCase().includes(q) ||
-                        p.type.toLowerCase().includes(q);
+        var actions   = (p.actions || []).join(' ').toLowerCase();
+        var desc      = (p.description || '').toLowerCase();
+        var matchQ    = !q || actions.includes(q) || p.type.toLowerCase().includes(q) || desc.includes(q);
         return matchType && matchQ;
     });
     state.page = 1;
@@ -150,12 +155,23 @@ function renderTable() {
         badge.textContent = p.type;
         tdType.appendChild(badge);
 
-        // Action
+        // Actions + Description
         var tdAction = document.createElement('td');
-        var nameDiv = document.createElement('div');
-        nameDiv.className = 'role-name';
-        nameDiv.textContent = p.action;
-        tdAction.appendChild(nameDiv);
+        var actionsWrap = document.createElement('div');
+        actionsWrap.className = 'perm-action-badges';
+        (p.actions || []).forEach(function(a) {
+            var badge = document.createElement('span');
+            badge.className = 'perm-action-badge';
+            badge.textContent = a;
+            actionsWrap.appendChild(badge);
+        });
+        tdAction.appendChild(actionsWrap);
+        if (p.description) {
+            var descDiv = document.createElement('div');
+            descDiv.className = 'role-desc';
+            descDiv.textContent = p.description;
+            tdAction.appendChild(descDiv);
+        }
 
         // Resources column
         var tdRes = document.createElement('td');
@@ -465,6 +481,7 @@ async function loadPermObjectList(bucketName) {
 
 function openAddModal() {
     document.getElementById('inputType').value = '';
+    document.getElementById('inputPermDesc').value = '';
     document.getElementById('addPermModalErr').textContent = '';
     document.getElementById('btnSavePerm').disabled = false;
     document.getElementById('permBucketList').innerHTML = '';
@@ -477,6 +494,7 @@ function openAddModal() {
 
 async function savePerm() {
     var type_   = document.getElementById('inputType').value;
+    var desc    = document.getElementById('inputPermDesc').value.trim();
     var checked = document.querySelectorAll('#actionGrid input[name=actionCheck]:checked');
     var actions = [];
     checked.forEach(function(cb) { actions.push(cb.value); });
@@ -500,7 +518,7 @@ async function savePerm() {
 
     btn.disabled = true;
     try {
-        await createPermission(type_, actions, resources);
+        await createPermission(type_, actions, resources, desc || null);
         closeModal('addPermModal');
         await loadPermissions();
     } catch (e) {
@@ -516,7 +534,9 @@ function openDeleteModal(perm) {
     var msg = document.getElementById('deletePermMsg');
     msg.textContent = '';
     var strong = document.createElement('strong');
-    strong.textContent = perm.type + ':' + perm.action;
+    var label = perm.type + ':' + (perm.actions || []).join('+');
+    if (perm.description) label += ' (' + perm.description + ')';
+    strong.textContent = label;
     msg.appendChild(document.createTextNode('권한 '));
     msg.appendChild(strong);
     msg.appendChild(document.createTextNode(' 을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.'));

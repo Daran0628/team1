@@ -52,21 +52,28 @@ def login_page():
     )
 
 
-@app.route('/role')
+@app.route('/iam')
+def iam_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'iam.html'
+    )
+
+@app.route('/iam/roles')
 def rbac_page():
     return send_from_directory(
         os.path.join(os.path.dirname(__file__), 'static', 'pages'),
         'rbac.html'
     )
 
-@app.route('/group')
+@app.route('/iam/groups')
 def group_page():
     return send_from_directory(
         os.path.join(os.path.dirname(__file__), 'static', 'pages'),
         'group.html'
     )
 
-@app.route('/permission')
+@app.route('/iam/permissions')
 def permission_page():
     return send_from_directory(
         os.path.join(os.path.dirname(__file__), 'static', 'pages'),

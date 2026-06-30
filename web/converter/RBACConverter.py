@@ -31,7 +31,8 @@ class RBACConverter:
         return PermissionResponseDTO(
             permission_id=permission.permission_id,
             type=permission.perm_type,
-            action=permission.action,
+            actions=permission.action_list,
+            description=permission.description,
             resources=[
                 {
                     "resourceType": r.resource_type,
