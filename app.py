@@ -4,7 +4,9 @@ load_dotenv()
 import os
 
 from flask import Flask, send_from_directory
+from flask_sse import sse
 from extensions import db, init_extensions
+from core.config.RedisConfig import REDIS_HOST, REDIS_PORT, REDIS_DB, REDIS_PASSWD
 from domain.model.Member import Member
 from domain.model.Department import Department
 from web.routes.AuthenticationRestController import auth_bp
@@ -13,9 +15,14 @@ from web.routes.RBACRestController import rbac_bp
 from web.routes.Todo import todo_bp
 from web.routes.MemberRestController import member_bp
 from web.routes.StorageRestController import storage_bp
+from web.routes.ChatRestController import chat_bp
+from service.ChatService.ChatService import ensure_chat_bucket
 
 app = Flask(__name__)
 init_extensions(app)
+
+_redis_pw = f":{REDIS_PASSWD}@" if REDIS_PASSWD else ""
+app.config["REDIS_URL"] = f"redis://{_redis_pw}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(rbac_bp)
@@ -23,6 +30,8 @@ app.register_blueprint(group_bp)
 app.register_blueprint(todo_bp)
 app.register_blueprint(member_bp)
 app.register_blueprint(storage_bp)
+app.register_blueprint(chat_bp)
+app.register_blueprint(sse, url_prefix="/stream")
 
 with app.app_context():
     from domain.model.Member import Member
@@ -39,6 +48,7 @@ with app.app_context():
     from domain.model.ChatMessage import ChatMessage
     from domain.model.ChatFile import ChatFile
     db.create_all()
+    ensure_chat_bucket()
 
 @app.route('/')
 def index():
@@ -101,4 +111,4 @@ def objstorage_page():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)
