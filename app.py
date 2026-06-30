@@ -91,6 +91,13 @@ def mypage():
 
 
 
+@app.route('/vdi/list')
+def vdi_list_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'vdi-list.html'
+    )
+
 @app.route('/vdi')
 def vdi_page():
     return send_from_directory(
