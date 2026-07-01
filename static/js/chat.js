@@ -82,7 +82,7 @@ function renderRooms(rooms) {
         const name = r.room_type === 'DIRECT'
             ? (r.members.find(m => m.account_id !== getMyAccountId()) || r.members[0] || {name_ko: '?'}).name_ko
             : (r.room_name || '그룹 채팅');
-        const time = r.created_at ? fmtTime(r.created_at) : '';
+        const time = fmtTime(r.last_message_at || r.created_at);
         return '<a class="room-card" href="/chat/' + r.room_id + '">' +
             '<div class="room-card-icon">' + initials + '</div>' +
             '<div class="room-card-body">' +

@@ -19,8 +19,9 @@ class ChatRoomResponseDTO:
     room_name:  Optional[str]
     created_by: str
     created_at: str
-    members:      List[RoomMemberDTO] = field(default_factory=list)
-    unread_count: int = 0
+    members:         List[RoomMemberDTO] = field(default_factory=list)
+    unread_count:    int = 0
+    last_message_at: Optional[str] = None
 
 
 @dataclass
