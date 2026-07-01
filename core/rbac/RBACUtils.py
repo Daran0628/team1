@@ -227,6 +227,55 @@ def get_accessible_object_keys(bucket_name: str) -> list[str] | None:
     return [r.s3_key for r in resources]
 
 
+def get_accessible_bucket_names() -> set[str] | None:
+    """
+    현재 로그인 유저가 접근 가능한 버킷 이름 집합 반환.
+    None  → 전체 허용 (admin 또는 리소스 제한 없는 READ/MANAGE 권한)
+    set   → 접근 가능한 bucket_name 집합 (빈 set = 접근 가능 버킷 없음)
+    """
+    if get_jwt().get('role', '') in _ADMIN_ACCOUNT_TYPES:
+        return None
+
+    member = _get_member()
+    if not member:
+        return set()
+
+    accessible: set[str] = set()
+
+    for binding in _collect_all_bindings(member):
+        role = binding.role
+        if role.role_name in _ADMIN_ROLE_NAMES:
+            return None
+        for perm in role.permissions:
+            if perm.perm_type != 'STORAGE':
+                continue
+            if not any(a in perm.action_list for a in ('READ', 'MANAGE')):
+                continue
+
+            # 리소스 제한 없음 → 전체 허용
+            if not perm._resources:
+                return None
+
+            # BUCKET 레벨 권한 → 해당 버킷 이름 추가
+            if perm.bucket_ids:
+                from domain.model.StorageBucket import StorageBucket
+                for b in StorageBucket.query.filter(
+                    StorageBucket.bucket_id.in_(perm.bucket_ids)
+                ).all():
+                    accessible.add(b.bucket_name)
+
+            # OBJECT 레벨 권한 → 해당 오브젝트가 속한 버킷 이름 추가
+            if perm.object_ids:
+                from domain.model.StorageResource import StorageResource
+                for r in StorageResource.query.filter(
+                    StorageResource.resource_id.in_(perm.object_ids),
+                    StorageResource.is_deleted == False,
+                ).all():
+                    accessible.add(r.bucket_name)
+
+    return accessible
+
+
 def storage_required(action: str):
     """
     action: StorageAction 값 (READ / DOWNLOAD / UPLOAD / DELETE / MANAGE)
@@ -236,6 +285,67 @@ def storage_required(action: str):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             if not check_storage_action(action):
+                return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+# ── VDI 접근 권한 확인 ────────────────────────────────────────
+
+# 자신의 VDI에 대해 권한 없이 허용하는 기본 액션
+_VDI_SELF_ALLOWED = {'CONNECT', 'POWER_ON', 'POWER_OFF', 'REBOOT', 'SNAPSHOT'}
+
+
+def check_vdi_action(required_action: str, vdi_assigned_to: str | None = None) -> bool:
+    """
+    required_action: VdiAction 값 (CONNECT / POWER_ON / POWER_OFF / REBOOT / SNAPSHOT / MANAGE 등)
+    vdi_assigned_to: VDI에 할당된 member_id — 현재 유저와 같으면 기본 액션 자동 허용.
+    """
+    if get_jwt().get('role', '') in _ADMIN_ACCOUNT_TYPES:
+        return True
+
+    member = _get_member()
+    if not member:
+        return False
+
+    # 자신의 VDI에 대한 기본 작업은 Role 없이 허용
+    if vdi_assigned_to and str(member.id) == str(vdi_assigned_to):
+        if required_action in _VDI_SELF_ALLOWED:
+            return True
+
+    for binding in _collect_all_bindings(member):
+        role = binding.role
+        if role.role_name in _ADMIN_ROLE_NAMES:
+            return True
+        for perm in role.permissions:
+            if perm.perm_type != 'VDI':
+                continue
+            if required_action in perm.action_list or 'MANAGE' in perm.action_list:
+                return True
+
+    return False
+
+
+def vdi_required(action: str):
+    """
+    action: VdiAction 값
+    vdi_assigned_to는 view_args에서 vdi_id를 통해 DB 조회로 확인.
+    @jwt_required() 아래에 붙여서 사용.
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            from flask import request
+            from domain.model.Vdi import Vdi
+
+            vdi_id = (request.view_args or {}).get('vdi_id')
+            assigned_to = None
+            if vdi_id:
+                vdi = Vdi.query.get(vdi_id)
+                assigned_to = vdi.assigned_to if vdi else None
+
+            if not check_vdi_action(action, assigned_to):
                 return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
             return fn(*args, **kwargs)
         return wrapper

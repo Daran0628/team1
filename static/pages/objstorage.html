@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>Object Storage</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/objstorage.css">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/objstorage" class="nav-item active"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" id="logout-link"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>Storage</span> <span>›</span>
+        <span>Object Browser</span>
+    </nav>
+    <h1>Object Storage</h1>
+</header>
+
+<!-- ══ Browser Layout ══════════════════════════════════════════ -->
+<div class="browser-layout">
+
+    <!-- Bucket Sidebar -->
+    <aside class="bucket-sidebar">
+        <div class="sidebar-header">
+            <span>Buckets</span>
+            <button id="btnNewBucket" class="btn-new-bucket" title="새 버킷 생성">+</button>
+        </div>
+        <ul class="bucket-list" id="bucketList">
+            <li class="empty-buckets">불러오는 중...</li>
+        </ul>
+    </aside>
+
+    <!-- Object Panel -->
+    <div class="object-panel">
+
+        <!-- No bucket selected -->
+        <div class="welcome-state" id="welcomeState">
+            <span class="welcome-icon">🗄</span>
+            <span>왼쪽에서 버킷을 선택하세요</span>
+        </div>
+
+        <!-- Object Browser (shown after bucket selection) -->
+        <div id="objectBrowser" hidden>
+
+            <!-- Path + Toolbar -->
+            <div class="path-bar">
+                <nav class="path-breadcrumb" id="pathBreadcrumb"></nav>
+                <div class="path-toolbar">
+                    <input type="search" id="searchInput" class="search-input obj-search" placeholder="파일 검색...">
+                    <button id="btnUpload" class="btn btn-primary">⬆ Upload</button>
+                    <input type="file" id="fileInput" multiple hidden>
+                    <button id="btnCreateFolder" class="btn btn-ghost">📁 New Folder</button>
+                    <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+                    <button id="btnDeleteSelected" class="btn btn-danger" hidden>🗑 Delete</button>
+                    <button id="btnDeleteBucket" class="btn btn-danger">🗑 Delete Bucket</button>
+                </div>
+            </div>
+
+            <!-- Meta bar -->
+            <div class="object-meta">
+                <span id="objectCount" class="items-count"></span>
+                <div id="uploadProgress" class="upload-progress" hidden>
+                    <span class="spinner"></span> 업로드 중...
+                </div>
+            </div>
+
+            <!-- Object Table -->
+            <div class="table-scroll">
+                <div class="table-wrap">
+                    <table class="data-table obj-table">
+                        <thead>
+                            <tr>
+                                <th class="col-check"><input type="checkbox" id="checkAll"></th>
+                                <th>Name</th>
+                                <th class="col-modified">Last Modified</th>
+                                <th class="col-size">Size</th>
+                                <th class="col-obj-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="objectBody">
+                            <tr><td colspan="5" class="state-cell">버킷을 선택하세요.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /#objectBrowser -->
+    </div><!-- /.object-panel -->
+
+</div><!-- /.browser-layout -->
+
+</div><!-- /.main -->
+
+<!-- ══ Share Modal ════════════════════════════════════════════ -->
+<div class="modal-overlay" id="shareModal" hidden>
+    <div class="modal">
+        <div class="modal-head">
+            <h2>🔗 Share File</h2>
+            <button class="btn-x" data-close-modal="shareModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p class="share-filename" id="shareFileName"></p>
+            <div class="field" style="margin-top:1rem;">
+                <label>Active for</label>
+                <div class="expiry-picker">
+                    <div class="expiry-unit">
+                        <input type="number" id="shareDays" class="expiry-input" value="0" min="0" max="7">
+                        <span class="expiry-label">Days</span>
+                    </div>
+                    <div class="expiry-unit">
+                        <input type="number" id="shareHours" class="expiry-input" value="12" min="0" max="23">
+                        <span class="expiry-label">Hours</span>
+                    </div>
+                    <div class="expiry-unit">
+                        <input type="number" id="shareMinutes" class="expiry-input" value="0" min="0" max="59">
+                        <span class="expiry-label">Minutes</span>
+                    </div>
+                </div>
+            </div>
+            <div id="shareUrlWrap" hidden>
+                <div class="share-url-wrap">
+                    <input type="text" id="shareUrlInput" class="share-url-input" readonly>
+                    <button id="btnCopyShareUrl" class="btn btn-ghost">Copy</button>
+                </div>
+                <p id="shareExpiry" class="share-expiry-text"></p>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close-modal="shareModal">Cancel</button>
+            <button id="btnGenerateShareUrl" class="btn btn-primary">Generate URL</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Create Bucket Modal ════════════════════════════════════ -->
+<div class="modal-overlay" id="createBucketModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>새 버킷 생성</h2>
+            <button class="btn-x" data-close-modal="createBucketModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputBucketName">버킷 이름 <span class="req">*</span></label>
+                <input type="text" id="inputBucketName" placeholder="my-bucket" autocomplete="off">
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close-modal="createBucketModal">취소</button>
+            <button id="btnSubmitBucket" class="btn btn-primary">생성</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Create Folder Modal ═══════════════════════════════════ -->
+<div class="modal-overlay" id="createFolderModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>새 폴더 생성</h2>
+            <button class="btn-x" data-close-modal="createFolderModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputFolderName">폴더 이름 <span class="req">*</span></label>
+                <input type="text" id="inputFolderName" placeholder="folder-name" autocomplete="off">
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close-modal="createFolderModal">취소</button>
+            <button id="btnSubmitFolder" class="btn btn-primary">생성</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Delete Confirm Modal ══════════════════════════════════ -->
+<div class="modal-overlay" id="deleteModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>삭제 확인</h2>
+            <button class="btn-x" data-close-modal="deleteModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p class="delete-msg">
+                <strong id="deleteTargetName"></strong>을(를) 삭제하시겠습니까?<br>
+                이 작업은 되돌릴 수 없습니다.
+            </p>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close-modal="deleteModal">취소</button>
+            <button id="btnConfirmDelete" class="btn btn-danger">삭제</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/objstorage.js"></script>
+<script src="/static/js/sidebar_auth.js"></script>
+</body>
+</html>

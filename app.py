@@ -15,6 +15,7 @@ from web.routes.TicketController import ticket_bp  # ← 추가
 from web.routes.RBACRestController import rbac_bp  # ← 추가 (IAM/RBAC)
 from web.routes.GroupRestController import group_bp  # ← 추가 (IAM/RBAC)
 from web.routes.MailRestController import mail_bp
+from web.routes.StorageRestController import storage_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -27,6 +28,7 @@ app.register_blueprint(ticket_bp)  # ← 추가
 app.register_blueprint(rbac_bp)  # ← 추가 (IAM/RBAC)
 app.register_blueprint(group_bp)  # ← 추가 (IAM/RBAC)
 app.register_blueprint(mail_bp)
+app.register_blueprint(storage_bp)
 
 
 
@@ -39,6 +41,8 @@ with app.app_context():
     from domain.model.Permission import Permission, PermissionResource  # ← 추가 (IAM/RBAC)
     from domain.model.Role import Role  # ← 추가 (IAM/RBAC)
     from domain.model.RoleBinding import RoleBinding  # ← 추가 (IAM/RBAC)
+    from domain.model.StorageBucket import StorageBucket
+    from domain.model.StorageResource import StorageResource
     db.create_all()                         # 없는 테이블만 자동 생성
 
 @app.route('/')
@@ -79,6 +83,13 @@ def mail_page():
     return send_from_directory(
         os.path.join(os.path.dirname(__file__), 'static', 'pages'),
         'mail.html'
+    )
+
+@app.route('/objstorage')
+def objstorage_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'objstorage.html'
     )
 
 if __name__ == '__main__':
