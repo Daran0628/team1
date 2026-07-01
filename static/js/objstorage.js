@@ -83,6 +83,7 @@ function setupEventListeners() {
         else if (action === 'download') downloadObject(name);
         else if (action === 'share') openShareModal(name);
         else if (action === 'delete') confirmDelete(name);
+        else if (action === 'delete-folder') confirmDeleteFolder(name);
     });
     tbody.addEventListener('change', e => {
         if (e.target.classList.contains('row-check')) syncDeleteButton();
@@ -102,7 +103,15 @@ function setupEventListeners() {
     document.getElementById('btnCopyShareUrl').addEventListener('click', copyShareUrl);
 
     // Delete confirm
-    document.getElementById('btnConfirmDelete').addEventListener('click', executeDelete);
+    document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+        const btn = document.getElementById('btnConfirmDelete');
+        if (btn.dataset.folder === '1') {
+            delete btn.dataset.folder;
+            executeDeleteFolder();
+        } else {
+            executeDelete();
+        }
+    });
 
     // Close buttons (data-close-modal)
     document.querySelectorAll('[data-close-modal]').forEach(btn => {
@@ -230,7 +239,7 @@ function renderObjects(objects) {
             : `<span class="file-icon">${icon}</span><span>${esc(displayName)}</span>`;
 
         const actionBtns = isDir
-            ? '<span class="no-actions">—</span>'
+            ? `<button class="btn-action btn-danger-action" title="폴더 삭제" data-action="delete-folder" data-name="${esc(obj.object_name)}">🗑</button>`
             : `<button class="btn-action" title="다운로드" data-action="download" data-name="${esc(obj.object_name)}">⬇</button>`
               + ` <button class="btn-action btn-share" title="공유 링크" data-action="share" data-name="${esc(obj.object_name)}">🔗</button>`
               + ` <button class="btn-action btn-danger-action" title="삭제" data-action="delete" data-name="${esc(obj.object_name)}">🗑</button>`;
@@ -414,6 +423,30 @@ async function executeDelete() {
         );
         closeModal('deleteModal');
         showToast('오브젝트가 삭제되었습니다.', 'success');
+        await loadObjects();
+    } catch (err) {
+        showToast('삭제 실패: ' + err.message, 'error');
+    }
+    deleteTarget = null;
+}
+
+function confirmDeleteFolder(prefix) {
+    deleteTarget = prefix;
+    document.getElementById('deleteTargetName')
+        .textContent = getDisplayName(prefix.replace(/\/$/, '')) + '/';
+    document.getElementById('btnConfirmDelete').dataset.folder = '1';
+    openModal('deleteModal');
+}
+
+async function executeDeleteFolder() {
+    if (!currentBucket || !deleteTarget) return;
+    try {
+        await apiJSON(
+            `/api/storage/buckets/${enc(currentBucket)}/folders?prefix=${enc(deleteTarget)}`,
+            { method: 'DELETE' }
+        );
+        closeModal('deleteModal');
+        showToast('폴더가 삭제되었습니다.', 'success');
         await loadObjects();
     } catch (err) {
         showToast('삭제 실패: ' + err.message, 'error');

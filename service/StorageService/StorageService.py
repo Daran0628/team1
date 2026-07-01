@@ -246,6 +246,38 @@ def delete_object(bucket_name: str, object_name: str) -> None:
         db.session.commit()
 
 
+def delete_folder(bucket_name: str, prefix: str) -> None:
+    _get_bucket_or_raise(bucket_name)
+    client = _minio()
+
+    if not prefix.endswith('/'):
+        prefix += '/'
+
+    try:
+        objects = list(client.list_objects(bucket_name, prefix=prefix, recursive=True))
+    except S3Error as e:
+        raise StorageException(ErrorStatus.STORAGE_OPERATION_FAILED) from e
+
+    marker_key = prefix + '.keep'
+    if any(obj.object_name != marker_key for obj in objects):
+        raise StorageException(ErrorStatus.STORAGE_FOLDER_NOT_EMPTY)
+
+    try:
+        client.stat_object(bucket_name, marker_key)
+        client.remove_object(bucket_name, marker_key)
+    except S3Error:
+        pass  # 마커 없는 가상 prefix
+
+    resource = StorageResource.query.filter_by(
+        bucket_name=bucket_name,
+        s3_key=marker_key,
+        is_deleted=False,
+    ).first()
+    if resource:
+        resource.is_deleted = True
+        db.session.commit()
+
+
 def copy_object(bucket_name: str, dto: CopyObjectRequestDTO) -> None:
     _get_bucket_or_raise(bucket_name)
     _get_bucket_or_raise(dto.dest_bucket)

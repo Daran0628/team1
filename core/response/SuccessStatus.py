@@ -45,6 +45,7 @@ class SuccessStatus(Enum):
     STORAGE_OBJECT_TAGS_GET    = (HTTPStatus.OK,  "STORAGE2021", "태그 조회에 성공했습니다.")
     STORAGE_OBJECT_TAGS_SET    = (HTTPStatus.OK,  "STORAGE2022", "태그가 설정되었습니다.")
     STORAGE_OBJECT_TAGS_DELETE = (HTTPStatus.OK,  "STORAGE2023", "태그가 삭제되었습니다.")
+    STORAGE_FOLDER_DELETE      = (HTTPStatus.OK,  "STORAGE2018", "폴더가 삭제되었습니다.")
 
     # Group (커스텀 그룹)
     GROUP_CREATE        = (HTTPStatus.CREATED, "GROUP2001", "그룹이 생성되었습니다.")

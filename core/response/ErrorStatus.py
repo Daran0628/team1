@@ -34,6 +34,7 @@ class ErrorStatus(Enum):
     STORAGE_BUCKET_ALREADY_EXISTS = (HTTPStatus.CONFLICT,   "STORAGE4002", "이미 존재하는 버켓입니다.")
     STORAGE_BUCKET_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4003", "버켓이 비어있지 않습니다. ?force=true로 강제 삭제하세요.")
     STORAGE_OBJECT_NOT_FOUND      = (HTTPStatus.NOT_FOUND,  "STORAGE4011", "오브젝트를 찾을 수 없습니다.")
+    STORAGE_FOLDER_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4012", "폴더가 비어있지 않습니다.")
     STORAGE_OPERATION_FAILED      = (HTTPStatus.INTERNAL_SERVER_ERROR, "STORAGE5001", "스토리지 작업에 실패했습니다.")
 
     # Group (커스텀 그룹)
