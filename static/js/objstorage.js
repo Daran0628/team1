@@ -216,7 +216,7 @@ async function loadObjects() {
         const url = `/api/storage/buckets/${enc(currentBucket)}/objects`
             + `?prefix=${enc(currentPrefix)}&recursive=false`;
         const result = await apiJSON(url);
-        allObjects = result || [];
+        allObjects = (result || []).filter(o => !o.object_name.endsWith('/.keep'));
         renderObjects(allObjects);
         updateObjectCount();
     } catch (err) {
