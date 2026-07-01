@@ -168,6 +168,7 @@ class ChatService:
                 new_ms = self._get_membership(room_id, new_admin_id)
                 new_admin_name = new_ms.member.name_ko
                 new_ms.room_role = ChatRoomRole.Admin
+                ms.room_role = ChatRoomRole.Member
                 ms.is_active = False
                 db.session.commit()
                 self._publish_notice(
@@ -201,6 +202,7 @@ class ChatService:
             inactive = ChatRoomMember.query.filter_by(room_id=room_id, member_id=member.id).first()
             if inactive:
                 inactive.is_active = True
+                inactive.room_role = ChatRoomRole.Member  # 재초대 시 항상 일반 멤버로 리셋
             else:
                 db.session.add(ChatRoomMember(room_id=room_id, member_id=member.id))
 
