@@ -314,7 +314,7 @@ html, body { height: 100%; }
     color: var(--muted);
     padding: 0 2px;
 }
-.msg-row.mine .msg-meta { color: rgba(255,255,255,0.55); }
+.msg-row.mine .msg-meta { color: var(--muted); }
 
 /* 시스템 공지 메시지 */
 .notice-msg {
