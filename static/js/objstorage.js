@@ -102,10 +102,18 @@ function setupEventListeners() {
     document.getElementById('btnGenerateShareUrl').addEventListener('click', generateShareUrl);
     document.getElementById('btnCopyShareUrl').addEventListener('click', copyShareUrl);
 
+    // Delete bucket button
+    document.getElementById('btnDeleteBucket').addEventListener('click', () => {
+        if (currentBucket) confirmDeleteBucket(currentBucket);
+    });
+
     // Delete confirm
     document.getElementById('btnConfirmDelete').addEventListener('click', () => {
         const btn = document.getElementById('btnConfirmDelete');
-        if (btn.dataset.folder === '1') {
+        if (btn.dataset.bucket === '1') {
+            delete btn.dataset.bucket;
+            executeDeleteBucket();
+        } else if (btn.dataset.folder === '1') {
             delete btn.dataset.folder;
             executeDeleteFolder();
         } else {
@@ -428,6 +436,34 @@ async function executeDelete() {
         showToast('삭제 실패: ' + err.message, 'error');
     }
     deleteTarget = null;
+}
+
+function confirmDeleteBucket(name) {
+    deleteTarget = name;
+    document.getElementById('deleteTargetName').textContent = name;
+    document.getElementById('btnConfirmDelete').dataset.bucket = '1';
+    openModal('deleteModal');
+}
+
+async function executeDeleteBucket() {
+    if (!deleteTarget) return;
+    const name = deleteTarget;
+    deleteTarget = null;
+    try {
+        await apiJSON(
+            `/api/storage/buckets/${enc(name)}`,
+            { method: 'DELETE' }
+        );
+        closeModal('deleteModal');
+        showToast(`버킷 "${name}"이 삭제되었습니다.`, 'success');
+        currentBucket = null;
+        currentPrefix = '';
+        document.getElementById('objectBrowser').hidden = true;
+        document.getElementById('welcomeState').hidden = false;
+        await loadBuckets();
+    } catch (err) {
+        showToast('삭제 실패: ' + err.message, 'error');
+    }
 }
 
 function confirmDeleteFolder(prefix) {
