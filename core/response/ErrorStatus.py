@@ -43,6 +43,13 @@ class ErrorStatus(Enum):
     GROUP_MEMBER_NOT_FOUND           = (HTTPStatus.NOT_FOUND,   "GROUP4003", "그룹에서 해당 멤버를 찾을 수 없습니다.")
     GROUP_MEMBER_ALREADY_EXISTS      = (HTTPStatus.CONFLICT,    "GROUP4004", "이미 그룹에 속한 멤버입니다.")
 
+    # VDI (가상 데스크탑)
+    VDI_NOT_FOUND              = (HTTPStatus.NOT_FOUND,            "VDI4001", "VDI 인스턴스를 찾을 수 없습니다.")
+    VDI_ALREADY_EXISTS         = (HTTPStatus.CONFLICT,             "VDI4002", "이미 존재하는 컨테이너 이름입니다.")
+    VDI_MEMBER_ALREADY_HAS_VDI = (HTTPStatus.CONFLICT,             "VDI4003", "이미 VDI가 할당된 사용자입니다.")
+    VDI_CREATE_FAILED          = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5001", "컨테이너 생성에 실패했습니다.")
+    VDI_OPERATION_FAILED       = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5002", "컨테이너 작업에 실패했습니다.")
+    
     # Chat
     CHAT_ROOM_NOT_FOUND        = (HTTPStatus.NOT_FOUND,  "CHAT4001", "채팅방을 찾을 수 없습니다.")
     CHAT_NOT_A_MEMBER          = (HTTPStatus.FORBIDDEN,  "CHAT4002", "채팅방 멤버가 아닙니다.")

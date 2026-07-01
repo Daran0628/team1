@@ -6,6 +6,7 @@ flask-bcrypt
 flask-sqlalchemy
 redis
 minio
+flask-sock
 flask-sse
 gunicorn
 gevent
