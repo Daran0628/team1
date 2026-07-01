@@ -8,3 +8,6 @@ redis
 requests
 minio
 flask-sock
+flask-sse
+gunicorn
+gevent

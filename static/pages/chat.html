@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>채팅</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/chat.css">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item active"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" id="logout-link"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>채팅</span>
+    </nav>
+    <h1>채팅</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnNewRoom" class="btn btn-primary">＋ 새 채팅</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+        </div>
+        <div class="toolbar-right">
+            <span id="roomCount" class="items-count"></span>
+            <input type="search" id="searchInput" class="search-input" placeholder="채팅방 검색...">
+        </div>
+    </div>
+
+    <div id="roomList" class="room-card-list">
+        <div class="state-cell">불러오는 중...</div>
+    </div>
+
+</main>
+
+</div><!-- /.main -->
+
+<!-- ══ 새 채팅방 모달 ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="createModal" hidden>
+    <div class="modal">
+        <div class="modal-head">
+            <h2>새 채팅방</h2>
+            <button class="btn-x" data-close="createModal">✕</button>
+        </div>
+        <div class="modal-body">
+
+            <div class="create-room-tabs">
+                <button class="create-room-tab active" data-type="DIRECT">1:1 채팅</button>
+                <button class="create-room-tab" data-type="GROUP">그룹 채팅</button>
+            </div>
+
+            <div id="groupNameField" class="field" hidden>
+                <label for="inputRoomName">채팅방 이름 <span class="req">*</span></label>
+                <input type="text" id="inputRoomName" maxlength="100" placeholder="예: 개발팀">
+            </div>
+
+            <div class="field">
+                <label>멤버 선택 <span class="req">*</span></label>
+                <input type="search" id="memberSearch" class="search-input member-search"
+                       placeholder="이름 또는 계정 검색...">
+                <div id="memberPickList" class="member-pick-list">
+                    <div class="pick-empty">불러오는 중...</div>
+                </div>
+            </div>
+
+            <div class="form-error" id="createErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="createModal">취소</button>
+            <button class="btn btn-primary" id="btnCreateRoom">만들기</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/chat.js"></script>
+<script src="/static/js/sidebar_auth.js"></script>
+</body>
+</html>
