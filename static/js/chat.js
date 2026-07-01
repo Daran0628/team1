@@ -91,6 +91,7 @@ function renderRooms(rooms) {
             '</div>' +
             '<div class="room-card-right">' +
                 '<span class="room-card-time">' + time + '</span>' +
+                (r.unread_count > 0 ? '<span class="unread-badge">' + (r.unread_count > 99 ? '99+' : r.unread_count) + '</span>' : '') +
             '</div>' +
         '</a>';
     }).join('');

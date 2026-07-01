@@ -73,8 +73,18 @@ def _to_room_member_dto(membership: ChatRoomMember) -> RoomMemberDTO:
     )
 
 
-def _to_room_dto(room: ChatRoom) -> ChatRoomResponseDTO:
+def _to_room_dto(room: ChatRoom, membership: ChatRoomMember = None) -> ChatRoomResponseDTO:
     active_members = [ms for ms in room.members if ms.is_active]
+
+    unread_count = 0
+    if membership:
+        cutoff = membership.last_read_at or membership.joined_at
+        unread_count = ChatMessage.query.filter(
+            ChatMessage.room_id == room.id,
+            ChatMessage.created_at > cutoff,
+            ChatMessage.is_deleted == False,
+        ).count()
+
     return ChatRoomResponseDTO(
         room_id=room.id,
         room_type=room.room_type.value,
@@ -82,6 +92,7 @@ def _to_room_dto(room: ChatRoom) -> ChatRoomResponseDTO:
         created_by=room.created_by,
         created_at=room.created_at.isoformat(),
         members=[_to_room_member_dto(ms) for ms in active_members],
+        unread_count=unread_count,
     )
 
 
@@ -141,7 +152,7 @@ class ChatService:
             .filter_by(member_id=member_id, is_active=True)
             .all()
         )
-        return [_to_room_dto(ms.room) for ms in memberships]
+        return [_to_room_dto(ms.room, ms) for ms in memberships]
 
     def get_room(self, room_id: str, member_id: str) -> ChatRoomResponseDTO:
         room = ChatRoom.query.get(room_id)
