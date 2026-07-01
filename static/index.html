@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; style-src 'self'; script-src 'self'">
+          content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
     <title>대시보드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/css/layout.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
 </head>
@@ -13,12 +14,13 @@
 
 <div class="app-shell">
     <div id="shellSlot"></div>
-    <main class="app-main" id="appMain">
+    <div class="app-main" id="appMain">
+      <div class="dashboard-body">
 
         <div class="dash-row-top">
             <section class="card">
                 <div class="welcome-top">
-                    <div class="avatar-circle">👤</div>
+                    <div class="avatar-circle"><i class="fa-solid fa-user"></i></div>
                     <div>
                         <h2 id="welcomeName">-님, 환영합니다!</h2>
                         <p class="muted">오늘도 좋은 하루 되세요.</p>
@@ -35,16 +37,16 @@
             <section class="card">
                 <div class="card-head"><h3>바로가기</h3></div>
                 <div class="shortcut-grid">
-                    <a class="shortcut-item" href="#"><span class="shortcut-icon">🎧</span>헬프데스크</a>
-                    <a class="shortcut-item" href="/mail"><span class="shortcut-icon">✉️</span>메일</a>
-                    <a class="shortcut-item" href="#"><span class="shortcut-icon">📢</span>공지사항</a>
-                    <a class="shortcut-item" href="#"><span class="shortcut-icon">❓</span>FAQ</a>
-                    <a class="shortcut-item" href="/chat"><span class="shortcut-icon">💬</span>Chatting</a>
-                    <a class="shortcut-item" href="/objstorage"><span class="shortcut-icon">🗂️</span>공유 스토리지</a>
-                    <a class="shortcut-item" href="/vdi/list"><span class="shortcut-icon">🖥️</span>VDI</a>
-                    <a class="shortcut-item" href="#"><span class="shortcut-icon">⌨️</span>코딩테스트</a>
-                    <a class="shortcut-item" href="/person"><span class="shortcut-icon">🔍</span>인물 검색</a>
-                    <a class="shortcut-item" href="/mypage"><span class="shortcut-icon">👤</span>마이페이지</a>
+                    <a class="shortcut-item" href="#"><span class="shortcut-icon"><i class="fa-solid fa-headset"></i></span>헬프데스크</a>
+                    <a class="shortcut-item" href="/mail"><span class="shortcut-icon"><i class="fa-solid fa-envelope"></i></span>메일</a>
+                    <a class="shortcut-item" href="#"><span class="shortcut-icon"><i class="fa-solid fa-bullhorn"></i></span>공지사항</a>
+                    <a class="shortcut-item" href="#"><span class="shortcut-icon"><i class="fa-solid fa-circle-question"></i></span>FAQ</a>
+                    <a class="shortcut-item" href="/chat"><span class="shortcut-icon"><i class="fa-solid fa-comment-dots"></i></span>Chatting</a>
+                    <a class="shortcut-item" href="/objstorage"><span class="shortcut-icon"><i class="fa-solid fa-box-archive"></i></span>공유 스토리지</a>
+                    <a class="shortcut-item" href="/vdi/list"><span class="shortcut-icon"><i class="fa-solid fa-display"></i></span>VDI</a>
+                    <a class="shortcut-item" href="#"><span class="shortcut-icon"><i class="fa-solid fa-code"></i></span>코딩테스트</a>
+                    <a class="shortcut-item" href="/person"><span class="shortcut-icon"><i class="fa-solid fa-magnifying-glass"></i></span>인물 검색</a>
+                    <a class="shortcut-item" href="/mypage"><span class="shortcut-icon"><i class="fa-solid fa-user"></i></span>마이페이지</a>
                 </div>
             </section>
         </div>
@@ -94,7 +96,8 @@
             </section>
         </div>
 
-    </main>
+      </div>
+    </div>
 </div>
 
 <script src="/static/js/api.js"></script>

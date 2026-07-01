@@ -5,18 +5,18 @@
  */
 
 const SIDEBAR_MENU = [
-    { label: '대시보드',         icon: '🏠', href: '/' },
-    { label: '헬프데스크(티켓)', icon: '🎧', href: null },
-    { label: 'FAQ',              icon: '❓', href: null },
-    { label: '공지사항',         icon: '📢', href: null },
-    { label: '메일 서비스',      icon: '✉️', href: '/mail' },
-    { label: 'Chatting',         icon: '💬', href: '/chat' },
-    { label: '공유 스토리지',    icon: '🗂️', href: '/objstorage' },
-    { label: 'VDI',              icon: '🖥️', href: '/vdi/list' },
-    { label: '코딩테스트',       icon: '⌨️', href: null },
-    { label: '인물 검색',        icon: '🔍', href: '/person' },
-    { label: '마이페이지',       icon: '👤', href: '/mypage' },
-    { label: '관리자 페이지',    icon: '⚙️', href: '/iam' },
+    { label: '대시보드',         icon: 'fa-solid fa-house',            href: '/' },
+    { label: '헬프데스크(티켓)', icon: 'fa-solid fa-headset',          href: null },
+    { label: 'FAQ',              icon: 'fa-solid fa-circle-question',  href: null },
+    { label: '공지사항',         icon: 'fa-solid fa-bullhorn',         href: null },
+    { label: '메일 서비스',      icon: 'fa-solid fa-envelope',         href: '/mail' },
+    { label: 'Chatting',         icon: 'fa-solid fa-comment-dots',     href: '/chat' },
+    { label: '공유 스토리지',    icon: 'fa-solid fa-box-archive',      href: '/objstorage' },
+    { label: 'VDI',              icon: 'fa-solid fa-display',          href: '/vdi/list' },
+    { label: '코딩테스트',       icon: 'fa-solid fa-code',             href: null },
+    { label: '인물 검색',        icon: 'fa-solid fa-magnifying-glass', href: '/person' },
+    { label: '마이페이지',       icon: 'fa-solid fa-user',             href: '/mypage' },
+    { label: '관리자 페이지',    icon: 'fa-solid fa-gear',             href: '/iam' },
 ];
 
 function _layoutParseJwt(t) {
@@ -29,7 +29,7 @@ function _buildSidebarNav() {
         const href = item.href || '#';
         const cls = 'nav-item' + (disabled ? ' disabled' : '');
         return `<a class="${cls}" href="${href}" data-href="${item.href || ''}">` +
-               `<span class="nav-icon">${item.icon}</span>` +
+               `<span class="nav-icon"><i class="${item.icon}"></i></span>` +
                `<span class="nav-label">${esc(item.label)}${disabled ? ' (준비중)' : ''}</span>` +
                `</a>`;
     }).join('');
@@ -59,7 +59,7 @@ function initLayoutShell() {
             </div>
             <div class="topbar-user" id="topbarUser">
                 <span id="topbarUserName">${esc(payload.sub || '')}</span>
-                <span class="caret">⌄</span>
+                <span class="caret"><i class="fa-solid fa-chevron-down"></i></span>
                 <div class="user-dropdown" id="userDropdown" hidden>
                     <a href="/mypage">마이페이지</a>
                     <button id="btnShellLogout" type="button">로그아웃</button>
@@ -70,7 +70,7 @@ function initLayoutShell() {
             <nav class="sidebar-nav">${_buildSidebarNav()}</nav>
             <div class="sidebar-footer">
                 <button class="nav-logout" id="btnSidebarLogout" type="button">
-                    <span class="nav-icon">⎋</span><span class="nav-label">로그아웃</span>
+                    <span class="nav-icon"><i class="fa-solid fa-right-from-bracket"></i></span><span class="nav-label">로그아웃</span>
                 </button>
             </div>
         </aside>

@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VDI 관리</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/css/rbac.css">
     <link rel="stylesheet" href="/static/css/vdi-list.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
 </head>
 <body>
+
+<div class="app-shell">
+<div id="shellSlot"></div>
+<div class="app-main">
 
 <header class="page-header">
     <nav class="breadcrumb">
@@ -131,6 +137,11 @@
 <!-- Toast -->
 <div id="toast" class="vdi-toast"></div>
 
+</div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/layout.js"></script>
 <script src="/static/js/vdi-list.js"></script>
 </body>
 </html>

@@ -13,8 +13,10 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
     background: #f0f2f5;
-    min-height: 100vh;
-    display: flex;
+}
+
+/* 셸 안에서는 body 대신 .app-main을 카드 중앙 정렬 컨테이너로 사용 */
+.app-main {
     align-items: center;
     justify-content: center;
     padding: 1rem;

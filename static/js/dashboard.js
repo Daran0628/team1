@@ -94,7 +94,7 @@ async function loadRecentChats() {
                 : '';
             return `
                 <div class="chat-row">
-                    <div class="chat-avatar">${isGroup ? '👥' : '👤'}</div>
+                    <div class="chat-avatar"><i class="fa-solid ${isGroup ? 'fa-user-group' : 'fa-user'}"></i></div>
                     <div class="chat-body">
                         <div class="chat-name">${esc(name)}</div>
                         <div class="chat-msg">${esc(memberNames)}</div>

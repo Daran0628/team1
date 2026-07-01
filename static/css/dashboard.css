@@ -1,5 +1,9 @@
 /* dashboard.css — 대시보드 정적 틀 (wireflame.png 기준, 아직 더미 텍스트) */
 
+.dashboard-body {
+    padding: 1.5rem 5% 3rem;
+}
+
 .dash-row-top {
     display: grid;
     grid-template-columns: 2fr 1fr;
