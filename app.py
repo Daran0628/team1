@@ -14,6 +14,7 @@ from domain.model.Ticket import Ticket  # ← 추가
 from web.routes.TicketController import ticket_bp  # ← 추가
 from web.routes.RBACRestController import rbac_bp  # ← 추가 (IAM/RBAC)
 from web.routes.GroupRestController import group_bp  # ← 추가 (IAM/RBAC)
+from web.routes.MailRestController import mail_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -25,6 +26,7 @@ app.register_blueprint(faq_bp)  # ← 추가
 app.register_blueprint(ticket_bp)  # ← 추가
 app.register_blueprint(rbac_bp)  # ← 추가 (IAM/RBAC)
 app.register_blueprint(group_bp)  # ← 추가 (IAM/RBAC)
+app.register_blueprint(mail_bp)
 
 
 
@@ -71,6 +73,13 @@ def iam_groups_page():
 @app.route('/iam/permissions')
 def iam_permissions_page():
     return send_from_directory(_PAGES_DIR, 'permission.html')
+
+@app.route('/mail')
+def mail_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'mail.html'
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)

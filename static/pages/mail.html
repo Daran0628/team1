@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메일</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <link rel="stylesheet" href="/static/css/mail.css">
+    <style>
+        .mail-layout { margin-left: 240px; flex: 1; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/mail" class="nav-item active"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="mail-layout">
+
+    <!-- 사이드바 -->
+    <aside class="mail-sidebar">
+        <button class="btn-compose" id="btnCompose">+ 편지 쓰기</button>
+        <ul class="folder-list">
+            <li class="folder-item active" data-folder="inbox">
+                <span class="folder-icon">📥</span> 받은 편지함
+                <span class="badge" id="unreadBadge"></span>
+            </li>
+            <li class="folder-item" data-folder="sent">
+                <span class="folder-icon">📤</span> 보낸 편지함
+            </li>
+        </ul>
+        <div class="sidebar-account" id="sidebarAccount"></div>
+    </aside>
+
+    <!-- 메일 목록 -->
+    <section class="mail-list-panel">
+        <div class="panel-header">
+            <h2 id="panelTitle">받은 편지함</h2>
+            <button class="btn-refresh" id="btnRefresh" title="새로고침">↻</button>
+        </div>
+        <ul class="mail-list" id="mailList">
+            <li class="mail-empty">불러오는 중...</li>
+        </ul>
+    </section>
+
+    <!-- 메일 본문 / 편지쓰기 -->
+    <section class="mail-view-panel" id="mailViewPanel">
+
+        <!-- 빈 상태 -->
+        <div class="view-empty" id="viewEmpty">
+            <div class="view-empty-icon">✉️</div>
+            <span>메일을 선택하세요</span>
+        </div>
+
+        <!-- 본문 뷰 -->
+        <div class="mail-detail" id="mailDetail" hidden>
+            <div class="detail-header">
+                <h3 id="detailSubject"></h3>
+                <div class="detail-meta">
+                    <span id="detailFrom"></span>
+                    <span id="detailDate"></span>
+                </div>
+                <div class="detail-actions">
+                    <button class="btn-reply" id="btnReply">↩ 답장</button>
+                    <button class="btn-delete" id="btnDelete">🗑 삭제</button>
+                </div>
+            </div>
+            <div class="detail-body" id="detailBody"></div>
+        </div>
+
+        <!-- 편지 쓰기 -->
+        <div class="mail-compose" id="mailCompose" hidden>
+            <div class="compose-header">
+                <h3>편지 쓰기</h3>
+                <button class="btn-close-compose" id="btnCloseCompose">✕</button>
+            </div>
+            <div class="compose-form">
+                <div class="form-row">
+                    <label>받는 사람</label>
+                    <input type="text" id="composeTo" placeholder="account@1mail.local">
+                </div>
+                <div class="form-row">
+                    <label>제목</label>
+                    <input type="text" id="composeSubject" placeholder="제목을 입력하세요">
+                </div>
+                <div class="form-row">
+                    <label>내용</label>
+                    <textarea id="composeBody" rows="12" placeholder="내용을 입력하세요"></textarea>
+                </div>
+                <div class="compose-actions">
+                    <button class="btn-send" id="btnSend">📤 발송</button>
+                </div>
+                <div class="compose-msg" id="composeMsg"></div>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+<script src="/static/js/mail.js"></script>
+</body>
+</html>

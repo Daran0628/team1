@@ -67,3 +67,12 @@ class SuccessStatus(Enum):
 
     def get_reason_http_status(self) -> ReasonDTO:
         return ReasonDTO(is_success=True, code=self.code, message=self.message, http_status=self.http_status)
+
+# Mail
+    MAIL_INBOX_SUCCESS   = (HTTPStatus.OK,      "MAIL2001", "받은 편지함 조회에 성공했습니다.")
+    MAIL_MESSAGE_SUCCESS = (HTTPStatus.OK,      "MAIL2002", "메일 조회에 성공했습니다.")
+    MAIL_SEND_SUCCESS    = (HTTPStatus.OK,      "MAIL2003", "메일이 발송되었습니다.")
+    MAIL_DELETE_SUCCESS  = (HTTPStatus.OK,      "MAIL2004", "메일이 삭제되었습니다.")
+    MAIL_MAILBOX_CREATE  = (HTTPStatus.CREATED, "MAIL2005", "메일박스가 생성되었습니다.")
+    MAIL_SENT_SUCCESS    = (HTTPStatus.OK,      "MAIL2006", "보낸 편지함 조회에 성공했습니다.")
+    
