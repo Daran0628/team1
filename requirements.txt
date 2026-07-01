@@ -7,3 +7,7 @@ flask-sqlalchemy
 redis
 minio
 flask-sock
+flask-sse
+gunicorn
+gevent
+requests

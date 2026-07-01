@@ -78,7 +78,24 @@
     color: #fff;
 }
 .bucket-icon { font-size: 0.9rem; flex-shrink: 0; }
-.bucket-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bucket-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.btn-delete-bucket {
+    margin-left: auto;
+    flex-shrink: 0;
+    opacity: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    color: var(--danger);
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+.bucket-item:hover .btn-delete-bucket { opacity: 1; pointer-events: auto; }
+.bucket-item.active .btn-delete-bucket { opacity: 1; pointer-events: auto; color: #ffb3b3; }
+.bucket-item.active .btn-delete-bucket:hover { color: #fff; background: rgba(255,255,255,0.2); }
 .empty-buckets {
     padding: 1.25rem 1rem;
     font-size: 0.8rem;

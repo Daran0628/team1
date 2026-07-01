@@ -20,6 +20,7 @@ from service.StorageService.StorageService import (
     presigned_download_url,
     presigned_share_url,
     delete_object,
+    delete_folder,
     copy_object,
     get_object_tags,
     set_object_tags,
@@ -232,6 +233,19 @@ def api_delete_object(bucket_name: str):
             return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "objectName 쿼리 파라미터가 필요합니다.")
         delete_object(bucket_name, object_name)
         return ApiResponse.on_success(SuccessStatus.STORAGE_OBJECT_DELETE)
+    return _handle(work)
+
+
+@storage_bp.route('/buckets/<bucket_name>/folders', methods=['DELETE'])
+@jwt_required()
+@storage_required('DELETE')
+def api_delete_folder(bucket_name: str):
+    prefix = request.args.get('prefix', '')
+    def work():
+        if not prefix:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "prefix 쿼리 파라미터가 필요합니다.")
+        delete_folder(bucket_name, prefix)
+        return ApiResponse.on_success(SuccessStatus.STORAGE_FOLDER_DELETE)
     return _handle(work)
 
 
