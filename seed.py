@@ -4,6 +4,7 @@ load_dotenv()
 from app import app, db
 from flask_bcrypt import generate_password_hash
 from domain.model.Member import Member
+from domain.model.Department import Department
 from domain.enum.AccountType import AccountType
 from domain.enum.EnrollmentStatus import EnrollmentStatus
 from domain.enum.WorkType import WorkType
@@ -12,6 +13,11 @@ from domain.enum.WorkType import WorkType
 
 DEV_DEPT_ID   = "00000000-0000-0000-0000-000000000001"
 ADMIN_DEPT_ID = "00000000-0000-0000-0000-000000000002"
+
+DEPARTMENTS = [
+    {"id": DEV_DEPT_ID,   "department_name": "개발팀"},
+    {"id": ADMIN_DEPT_ID, "department_name": "관리팀"},
+]
 
 TEST_USERS = [
     {
@@ -41,6 +47,14 @@ TEST_USERS = [
 ]
 
 with app.app_context():
+    # ── 부서 시드 (Member FK가 참조하므로 반드시 먼저 생성) ─────────
+    for dept in DEPARTMENTS:
+        exists = Department.query.filter_by(id=dept["id"]).first()
+        if exists:
+            continue
+        db.session.add(Department(id=dept["id"], department_name=dept["department_name"]))
+    db.session.commit()
+
     for data in TEST_USERS:
         exists = Member.query.filter_by(account_id=data["account_id"]).first()
         if exists:

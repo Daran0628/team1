@@ -74,7 +74,11 @@
             const token = data.result?.access_token;
             if (typeof token === 'string' && token.length > 0) {
                 sessionStorage.setItem('access_token', token);
-                sessionStorage.setItem('role', data.result?.account_type);
+            }
+
+            const accountType = data.result?.account_type;
+            if (typeof accountType === 'string' && accountType.length > 0) {
+                sessionStorage.setItem('role', accountType);
             }
 
             // 히스토리에 로그인 페이지 남기지 않음
