@@ -17,6 +17,7 @@ from web.routes.GroupRestController import group_bp  # ← 추가 (IAM/RBAC)
 from web.routes.MailRestController import mail_bp
 from web.routes.StorageRestController import storage_bp
 from web.routes.MemberRestController import member_bp
+from web.routes.VdiRestController import vdi_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -31,6 +32,7 @@ app.register_blueprint(group_bp)  # ← 추가 (IAM/RBAC)
 app.register_blueprint(mail_bp)
 app.register_blueprint(storage_bp)
 app.register_blueprint(member_bp)
+app.register_blueprint(vdi_bp)
 
 
 
@@ -45,6 +47,7 @@ with app.app_context():
     from domain.model.RoleBinding import RoleBinding  # ← 추가 (IAM/RBAC)
     from domain.model.StorageBucket import StorageBucket
     from domain.model.StorageResource import StorageResource
+    from domain.model.Vdi import Vdi, VdiSnapshot
     db.create_all()                         # 없는 테이블만 자동 생성
 
 @app.route('/')
@@ -94,5 +97,19 @@ def objstorage_page():
         'objstorage.html'
     )
 
+@app.route('/vdi/list')
+def vdi_list_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'vdi-list.html'
+    )
+
+@app.route('/vdi')
+def vdi_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'vdi.html'
+    )    
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0') 

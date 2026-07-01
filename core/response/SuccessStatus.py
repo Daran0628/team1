@@ -56,6 +56,16 @@ class SuccessStatus(Enum):
     GROUP_MEMBER_ADD    = (HTTPStatus.OK,      "GROUP2005", "그룹에 멤버가 추가되었습니다.")
     GROUP_MEMBER_REMOVE = (HTTPStatus.OK,      "GROUP2006", "그룹에서 멤버가 제거되었습니다.")
 
+    # VDI (가상 데스크탑)
+    VDI_CREATE          = (HTTPStatus.CREATED, "VDI2001", "VDI 인스턴스가 생성되었습니다.")
+    VDI_READ            = (HTTPStatus.OK,      "VDI2002", "VDI 조회에 성공했습니다.")
+    VDI_DELETE          = (HTTPStatus.OK,      "VDI2003", "VDI 인스턴스가 삭제되었습니다.")
+    VDI_START           = (HTTPStatus.OK,      "VDI2004", "VDI가 시작되었습니다.")
+    VDI_STOP            = (HTTPStatus.OK,      "VDI2005", "VDI가 중지되었습니다.")
+    VDI_REBOOT          = (HTTPStatus.OK,      "VDI2006", "VDI가 재부팅되었습니다.")
+    VDI_SNAPSHOT_CREATE = (HTTPStatus.CREATED, "VDI2007", "스냅샷이 생성되었습니다.")
+    VDI_SNAPSHOT_READ   = (HTTPStatus.OK,      "VDI2008", "스냅샷 조회에 성공했습니다.")
+
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
         obj._value_ = code

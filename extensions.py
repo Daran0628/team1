@@ -5,6 +5,7 @@ from flask import jsonify
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
+from flask_sock import Sock
 
 from core.config.MySqlConfig import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS
 from core.config.RedisConfig import redis_client as _redis_client
@@ -12,6 +13,7 @@ from core.config.RedisConfig import redis_client as _redis_client
 bcrypt = Bcrypt()
 jwt = JWTManager()
 db = SQLAlchemy()
+sock = Sock()
 redis_client = _redis_client
 
 
@@ -30,6 +32,7 @@ def init_extensions(app):
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    sock.init_app(app)
 
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
