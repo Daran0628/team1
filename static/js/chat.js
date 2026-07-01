@@ -108,12 +108,15 @@ function getMyAccountId() {
 
 function fmtTime(iso) {
     if (!iso) return '';
-    const d = new Date(iso);
-    const now = new Date();
-    if (d.toDateString() === now.toDateString()) {
-        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    // 서버가 UTC로 저장하지만 timezone suffix 없이 반환하므로 Z를 붙여 UTC로 명시 파싱
+    const d = new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z');
+    const KST = { timeZone: 'Asia/Seoul' };
+    const sameDay = d.toLocaleDateString('ko-KR', KST) === new Date().toLocaleDateString('ko-KR', KST);
+    if (sameDay) {
+        return d.toLocaleTimeString('ko-KR', { ...KST, hour: '2-digit', minute: '2-digit', hour12: false });
     }
-    return (d.getMonth()+1) + '/' + d.getDate();
+    return d.toLocaleDateString('ko-KR', { ...KST, month: 'numeric', day: 'numeric' })
+            .replace('월 ', '/').replace('일', '').trim();
 }
 
 function esc(s) {
