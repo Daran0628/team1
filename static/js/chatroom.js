@@ -69,8 +69,8 @@ function getMyAccountId() {
 
 function fmtTime(iso) {
     if (!iso) return '';
-    const d = new Date(iso);
-    return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    const d = new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z');
+    return d.toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
 function fmtDate(iso) {
@@ -277,13 +277,27 @@ function appendMessage(rawMsg) {
         bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + '">' + esc(msg.content || '') + '</div>';
     }
 
+    const currTime = fmtTime(msg.created_at);
+
     row.innerHTML =
         '<div class="msg-avatar">' + initials + '</div>' +
         '<div class="msg-content">' +
             (!sameSender && !mine ? '<div class="msg-sender">' + esc(msg.sender_name) + '</div>' : '') +
             bubbleHTML +
-            '<div class="msg-meta">' + fmtTime(msg.created_at) + '</div>' +
+            '<div class="msg-meta">' + currTime + '</div>' +
         '</div>';
+
+    row.dataset.senderId = msg.sender_id;
+    row.dataset.msgTime  = currTime;
+
+    // 이전 row가 같은 발신자 + 같은 분이면 이전 시간 숨김 (마지막 메시지에만 표시)
+    const prevEl = area.lastElementChild;
+    if (prevEl && prevEl.classList.contains('msg-row') &&
+        prevEl.dataset.senderId === msg.sender_id &&
+        prevEl.dataset.msgTime  === currTime) {
+        const prevMeta = prevEl.querySelector('.msg-meta');
+        if (prevMeta) prevMeta.style.display = 'none';
+    }
 
     // 파일 클릭 → presigned URL 새 탭
     const fileBubble = row.querySelector('.file-bubble');

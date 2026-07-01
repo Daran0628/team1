@@ -250,7 +250,7 @@ html, body { height: 100%; }
     font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    align-self: flex-end;
+    align-self: flex-start;
 }
 .msg-row.mine .msg-avatar { display: none; }
 .msg-row.same-sender:not(.mine) .msg-avatar { visibility: hidden; }
