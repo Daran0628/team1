@@ -27,7 +27,7 @@ Step 3. .env 파일 생성
 
   # ── Mailcow 메일 서버 ──────────────────────────
   MAILCOW_API_URL=https://192.168.38.246:8443/api/v1
-  MAILCOW_API_KEY=D49216-917CF4-8B1927-3924B3-744207
+  MAILCOW_API_KEY=
   MAIL_DOMAIN=1mail.local
   IMAP_HOST=192.168.38.246
   IMAP_PORT=993
