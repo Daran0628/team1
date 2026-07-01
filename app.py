@@ -15,7 +15,7 @@ from web.routes.RBACRestController import rbac_bp
 from web.routes.Todo import todo_bp
 from web.routes.MemberRestController import member_bp
 from web.routes.StorageRestController import storage_bp
-from web.routes.VdiRestController import vdi_bp
+# from web.routes.VdiRestController import vdi_bp
 from web.routes.ChatRestController import chat_bp
 from service.ChatService.ChatService import ensure_chat_bucket
 from web.routes.MailRestController import mail_bp
@@ -32,7 +32,7 @@ app.register_blueprint(group_bp)
 app.register_blueprint(todo_bp)
 app.register_blueprint(member_bp)
 app.register_blueprint(storage_bp)
-app.register_blueprint(vdi_bp)
+# app.register_blueprint(vdi_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(sse, url_prefix="/stream")
 app.register_blueprint(mail_bp)

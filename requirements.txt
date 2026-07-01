@@ -11,3 +11,4 @@ flask-sse
 gunicorn
 gevent
 requests
+fcntl

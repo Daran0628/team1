@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>Team Portal</title>
+    <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body>
+
+<!-- ══ Topbar ══════════════════════════════════════════════ -->
+<header class="topbar">
+    <div class="brand">
+        <span class="brand-logo">🏢</span>
+        <span>Team Portal</span>
+    </div>
+
+    <div class="topbar-search">
+        <span>🔍</span>
+        <input type="text" placeholder="메일, 파일, 채팅 검색..." readonly>
+    </div>
+
+    <div class="topbar-right">
+        <button class="btn-notif" title="알림">
+            🔔
+            <span class="notif-badge" id="notifBadge" hidden>0</span>
+        </button>
+        <a href="/mypage" class="user-chip">
+            <div class="avatar" id="topAvatar">—</div>
+            <span class="user-chip-name" id="userName">—</span>
+        </a>
+    </div>
+</header>
+
+<!-- ══ Sidebar ═════════════════════════════════════════════ -->
+<aside class="sidebar">
+    <nav class="sidebar-nav">
+        <span class="nav-section-label">메뉴</span>
+
+        <a href="/" class="nav-item active">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">홈</span>
+        </a>
+        <a href="/mail" class="nav-item">
+            <span class="nav-icon">✉️</span>
+            <span class="nav-label">메일</span>
+            <span class="nav-badge" id="mailBadge" hidden>0</span>
+        </a>
+        <a href="/chat" class="nav-item">
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">채팅</span>
+            <span class="nav-badge" id="chatBadge" hidden>0</span>
+        </a>
+        <a href="/objstorage" class="nav-item">
+            <span class="nav-icon">🪣</span>
+            <span class="nav-label">스토리지</span>
+        </a>
+        <a href="/vdi" class="nav-item">
+            <span class="nav-icon">🖥️</span>
+            <span class="nav-label">VDI</span>
+        </a>
+
+        <div class="nav-divider"></div>
+        <span class="nav-section-label">관리</span>
+
+        <a href="/iam" class="nav-item">
+            <span class="nav-icon">🛡️</span>
+            <span class="nav-label">IAM</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <a href="/mypage" class="nav-item">
+            <div class="sidebar-avatar" id="sidebarAvatar">—</div>
+            <span class="nav-label" id="sidebarName">내 정보</span>
+        </a>
+        <button id="btnLogout" class="btn-sidebar-logout" title="로그아웃">⏻</button>
+    </div>
+</aside>
+
+<!-- ══ Main ════════════════════════════════════════════════ -->
+<main class="main">
+
+    <!-- Welcome -->
+    <div class="welcome-bar">
+        <div>
+            <h1 class="welcome-heading">안녕하세요, <span id="welcomeName">—</span>님 👋</h1>
+            <p class="welcome-date" id="welcomeDate"></p>
+        </div>
+        <a href="/mail" class="btn-compose">✉ 메일 쓰기</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--mail">✉️</div>
+            <div class="stat-body">
+                <div class="stat-value" id="statMail">—</div>
+                <div class="stat-label">읽지 않은 메일</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--chat">💬</div>
+            <div class="stat-body">
+                <div class="stat-value" id="statChat">—</div>
+                <div class="stat-label">새 메시지</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--storage">🪣</div>
+            <div class="stat-body">
+                <div class="stat-value" id="statBuckets">—</div>
+                <div class="stat-label">스토리지 버킷</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon stat-icon--vdi">🖥️</div>
+            <div class="stat-body">
+                <div class="stat-value stat-value--status">실행 중</div>
+                <div class="stat-label">VDI 상태</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mail + Chat widgets -->
+    <div class="widget-row">
+
+        <!-- Recent Mail (mockup) -->
+        <div class="widget">
+            <div class="widget-head">
+                <h2 class="widget-title">최근 메일</h2>
+                <a href="/mail" class="widget-more">전체 보기 →</a>
+            </div>
+            <ul class="mail-list">
+                <li><a href="/mail" class="mail-item unread">
+                    <span class="unread-dot"></span>
+                    <div class="mail-avatar">홍</div>
+                    <div class="mail-content">
+                        <div class="mail-top">
+                            <span class="mail-sender">홍길동</span>
+                            <span class="mail-time">오전 9:32</span>
+                        </div>
+                        <div class="mail-subject">프로젝트 최종 배포 일정 확인 부탁드립니다</div>
+                    </div>
+                </a></li>
+                <li><a href="/mail" class="mail-item unread">
+                    <span class="unread-dot"></span>
+                    <div class="mail-avatar">김</div>
+                    <div class="mail-content">
+                        <div class="mail-top">
+                            <span class="mail-sender">김민수</span>
+                            <span class="mail-time">오전 8:15</span>
+                        </div>
+                        <div class="mail-subject">[긴급] 8월 서버 점검 공지</div>
+                    </div>
+                </a></li>
+                <li><a href="/mail" class="mail-item">
+                    <span class="unread-dot"></span>
+                    <div class="mail-avatar">이</div>
+                    <div class="mail-content">
+                        <div class="mail-top">
+                            <span class="mail-sender">이서연</span>
+                            <span class="mail-time">어제</span>
+                        </div>
+                        <div class="mail-subject">주간 업무 보고서 제출 요청</div>
+                    </div>
+                </a></li>
+                <li><a href="/mail" class="mail-item">
+                    <span class="unread-dot"></span>
+                    <div class="mail-avatar">박</div>
+                    <div class="mail-content">
+                        <div class="mail-top">
+                            <span class="mail-sender">박준호</span>
+                            <span class="mail-time">어제</span>
+                        </div>
+                        <div class="mail-subject">팀 워크샵 장소 변경 안내</div>
+                    </div>
+                </a></li>
+            </ul>
+        </div>
+
+        <!-- Active Chats (mockup) -->
+        <div class="widget">
+            <div class="widget-head">
+                <h2 class="widget-title">채팅</h2>
+                <a href="/chat" class="widget-more">전체 보기 →</a>
+            </div>
+            <ul class="chat-list">
+                <li><a href="/chat" class="chat-item">
+                    <div class="chat-icon chat-icon--group">#</div>
+                    <div class="chat-content">
+                        <div class="chat-top">
+                            <span class="chat-name"># 개발팀</span>
+                            <span class="chat-time">5분 전</span>
+                        </div>
+                        <div class="chat-preview">배포는 오늘 오후 6시로 확정됐습니다</div>
+                    </div>
+                    <span class="chat-count">3</span>
+                </a></li>
+                <li><a href="/chat" class="chat-item">
+                    <div class="chat-icon chat-icon--dm">박</div>
+                    <div class="chat-content">
+                        <div class="chat-top">
+                            <span class="chat-name">박지수</span>
+                            <span class="chat-time">23분 전</span>
+                        </div>
+                        <div class="chat-preview">자료 공유 부탁드려요, 오후까지 가능할까요?</div>
+                    </div>
+                    <span class="chat-count">2</span>
+                </a></li>
+                <li><a href="/chat" class="chat-item">
+                    <div class="chat-icon chat-icon--group">#</div>
+                    <div class="chat-content">
+                        <div class="chat-top">
+                            <span class="chat-name"># 전체공지</span>
+                            <span class="chat-time">1시간 전</span>
+                        </div>
+                        <div class="chat-preview">7월 팀 워크샵이 내일로 변경되었습니다</div>
+                    </div>
+                </a></li>
+                <li><a href="/chat" class="chat-item">
+                    <div class="chat-icon chat-icon--group">#</div>
+                    <div class="chat-content">
+                        <div class="chat-top">
+                            <span class="chat-name"># 인프라팀</span>
+                            <span class="chat-time">2시간 전</span>
+                        </div>
+                        <div class="chat-preview">MinIO 스토리지 용량 확인 완료했습니다</div>
+                    </div>
+                </a></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Quick Apps -->
+    <div>
+        <div class="section-header">
+            <span class="section-title">바로가기</span>
+        </div>
+        <div class="apps-grid">
+            <a href="/mail" class="app-card">
+                <div class="app-icon app-icon--mail">✉️</div>
+                <span class="app-name">메일</span>
+            </a>
+            <a href="/chat" class="app-card">
+                <div class="app-icon app-icon--chat">💬</div>
+                <span class="app-name">채팅</span>
+            </a>
+            <a href="/objstorage" class="app-card">
+                <div class="app-icon app-icon--storage">🪣</div>
+                <span class="app-name">스토리지</span>
+            </a>
+            <a href="/vdi" class="app-card">
+                <div class="app-icon app-icon--vdi">🖥️</div>
+                <span class="app-name">VDI</span>
+            </a>
+            <a href="/iam" class="app-card">
+                <div class="app-icon app-icon--iam">🛡️</div>
+                <span class="app-name">IAM</span>
+            </a>
+        </div>
+    </div>
+
+</main>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/index.js"></script>
+</body>
+</html>
