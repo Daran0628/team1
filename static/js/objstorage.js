@@ -2,49 +2,7 @@
    objstorage.js  —  Object Storage Browser
    ────────────────────────────────────────────────────────────── */
 
-// ── Auth helpers ─────────────────────────────────────────────
-
-function getToken() {
-    return sessionStorage.getItem('access_token');
-}
-
-async function apiFetch(url, options) {
-    let token = getToken();
-    if (!token) {
-        const ok = await tryRefresh();
-        if (!ok) { window.location.replace('/login'); return null; }
-        token = getToken();
-    }
-
-    const isFormData = options && options.body instanceof FormData;
-    const headers = Object.assign(
-        isFormData ? {} : { 'Content-Type': 'application/json' },
-        { 'Authorization': 'Bearer ' + token },
-        (options && options.headers) || {}
-    );
-
-    const res = await fetch(url, Object.assign({}, options, { headers }));
-
-    if (res.status === 401) {
-        const ok = await tryRefresh();
-        if (!ok) { window.location.replace('/login'); return null; }
-        headers['Authorization'] = 'Bearer ' + getToken();
-        return fetch(url, Object.assign({}, options, { headers }));
-    }
-    return res;
-}
-
-async function tryRefresh() {
-    try {
-        const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
-        if (!res.ok) return false;
-        const json = await res.json();
-        const t = json && json.result && json.result.access_token;
-        if (!t) return false;
-        sessionStorage.setItem('access_token', t);
-        return true;
-    } catch (_) { return false; }
-}
+// ── Auth helpers: api.js 참조 (getToken, tryRefresh, apiFetch) ─
 
 async function apiJSON(url, options) {
     const res = await apiFetch(url, options);
@@ -516,15 +474,7 @@ function openModal(id)  { document.getElementById(id).hidden = false; }
 function closeModal(id) { document.getElementById(id).hidden = true; }
 
 // ── Utilities ─────────────────────────────────────────────────
-
-function esc(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+// esc: api.js 전역 함수 사용
 
 function enc(str) { return encodeURIComponent(str); }
 
@@ -568,17 +518,4 @@ function formatDate(dateStr) {
     } catch (_) { return String(dateStr); }
 }
 
-// ── Toast ─────────────────────────────────────────────────────
-
-function showToast(message, type) {
-    type = type || 'info';
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    toast.textContent = message;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('toast-out');
-        setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-    }, 3500);
-}
+// showToast: api.js 전역 함수 사용

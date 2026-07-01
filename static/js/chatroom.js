@@ -1,63 +1,14 @@
-/* chatroom.js — 개별 채팅방 페이지 */
+/* chatroom.js — 개별 채팅방 페이지
+ * 의존: api.js (getToken, tryRefresh, apiFetch, showToast, esc)
+ */
 
-// ── Auth helpers ─────────────────────────────────────────────
-function getToken() { return sessionStorage.getItem('access_token'); }
-
-async function tryRefresh() {
-    try {
-        const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
-        if (!res.ok) return false;
-        const json = await res.json();
-        const t = json && json.result && json.result.access_token;
-        if (!t) return false;
-        sessionStorage.setItem('access_token', t);
-        return true;
-    } catch (_) { return false; }
-}
-
-async function apiFetch(url, options) {
-    let token = getToken();
-    if (!token) {
-        const ok = await tryRefresh();
-        if (!ok) { window.location.replace('/login'); return null; }
-        token = getToken();
-    }
-    const isFormData = options && options.body instanceof FormData;
-    const headers = Object.assign(
-        isFormData ? {} : { 'Content-Type': 'application/json' },
-        { 'Authorization': 'Bearer ' + token },
-        (options && options.headers) || {}
-    );
-    const res = await fetch(url, Object.assign({}, options, { headers }));
-    if (res && res.status === 401) {
-        const ok = await tryRefresh();
-        if (!ok) { window.location.replace('/login'); return null; }
-        headers['Authorization'] = 'Bearer ' + getToken();
-        return fetch(url, Object.assign({}, options, { headers }));
-    }
-    return res;
-}
-
-async function apiJSON(url, options) {
-    const res = await apiFetch(url, options);
+// ── 로컬 apiJSON: 전체 envelope { isSuccess, result } 반환 ──
+async function apiJSON(url, opts) {
+    const res = await apiFetch(url, opts);
     return res ? res.json() : null;
 }
 
-// ── Toast ─────────────────────────────────────────────────────
-function showToast(msg, type) {
-    const c = document.getElementById('toastContainer');
-    const t = document.createElement('div');
-    t.className = 'toast toast-' + (type || 'info');
-    t.textContent = msg;
-    c.appendChild(t);
-    setTimeout(() => { t.classList.add('toast-out'); setTimeout(() => t.remove(), 300); }, 3000);
-}
-
 // ── Helpers ───────────────────────────────────────────────────
-function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 function getMyAccountId() {
     try {
         const token = getToken();
@@ -76,13 +27,13 @@ function fmtTime(iso) {
 function fmtDate(iso) {
     if (!iso) return '';
     const d = new Date(iso);
-    return d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+    return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
 }
 
 function fmtSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
-    return (bytes/1048576).toFixed(1) + ' MB';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
 function fileEmoji(mime) {
@@ -98,15 +49,15 @@ function fileEmoji(mime) {
 // ── State ─────────────────────────────────────────────────────
 const roomId      = location.pathname.split('/').filter(Boolean).pop();
 const myAccountId = getMyAccountId();
-let myMemberId    = null;  // UUID, populated after loadRoom()
+let myMemberId    = null;
 let currentRoom   = null;
-let allRooms    = [];
-let allMembers  = [];
-let sseSource   = null;
-let selectedType     = 'DIRECT';
+let allRooms      = [];
+let allMembers    = [];
+let sseSource     = null;
+let selectedType      = 'DIRECT';
 let selectedMemberIds = new Set();
-let lastMsgSenderId  = null;
-let lastMsgDate      = null;
+let lastMsgSenderId   = null;
+let lastMsgDate       = null;
 let inviteSelectedIds = new Set();
 let inviteCandidates  = [];
 
@@ -121,7 +72,7 @@ async function loadSidebarRooms() {
 function renderSidebar(rooms) {
     const list = document.getElementById('sidebarRoomList');
     if (!rooms.length) {
-        list.innerHTML = '<li style="padding:.75rem 1rem;font-size:.8rem;color:var(--muted)">채팅방 없음</li>';
+        list.innerHTML = '<li class="sidebar-empty">채팅방 없음</li>';
         return;
     }
     list.innerHTML = rooms.map(r => {
@@ -129,22 +80,21 @@ function renderSidebar(rooms) {
         const name = r.room_type === 'DIRECT'
             ? (r.members.find(m => m.account_id !== myAccountId) || r.members[0] || {}).name_ko || '?'
             : (r.room_name || '그룹 채팅');
-        const initials = name.slice(0,1);
-        return '<li class="room-item' + (isActive ? ' active' : '') + '" data-id="' + r.room_id + '">' +
-            '<div class="room-item-icon">' + initials + '</div>' +
-            '<div class="room-item-body">' +
-                '<div class="room-item-name">' + esc(name) + '</div>' +
-                '<div class="room-item-sub">' + esc(r.members.length + '명') + '</div>' +
-            '</div>' +
-        '</li>';
+        return `<li class="room-item${isActive ? ' active' : ''}" data-id="${r.room_id}">
+            <div class="room-item-icon">${esc(name.slice(0, 1))}</div>
+            <div class="room-item-body">
+                <div class="room-item-name">${esc(name)}</div>
+                <div class="room-item-sub">${esc(r.members.length + '명')}</div>
+            </div>
+        </li>`;
     }).join('');
-
-    list.querySelectorAll('.room-item').forEach(item => {
-        item.addEventListener('click', () => {
-            if (item.dataset.id !== roomId) window.location.href = '/chat/' + item.dataset.id;
-        });
-    });
 }
+
+// 이벤트 위임: 사이드바 방 목록
+document.getElementById('sidebarRoomList').addEventListener('click', e => {
+    const item = e.target.closest('.room-item');
+    if (item && item.dataset.id !== roomId) window.location.href = '/chat/' + item.dataset.id;
+});
 
 document.getElementById('sidebarSearch').addEventListener('input', function() {
     const q = this.value.trim().toLowerCase();
@@ -160,7 +110,6 @@ async function loadRoom() {
     if (!data || !data.isSuccess) { showToast('채팅방을 불러오지 못했습니다.', 'error'); return; }
     currentRoom = data.result;
 
-    // 내 UUID를 account_id 기준으로 한 번만 추출
     const me = currentRoom.members.find(m => m.account_id === myAccountId);
     if (me) myMemberId = me.member_id;
 
@@ -178,8 +127,6 @@ async function loadRoom() {
 // ── Messages ──────────────────────────────────────────────────
 async function loadMessages() {
     const area = document.getElementById('messagesArea');
-
-    // 항상 최신 50개를 불러온다. 서비스가 DESC→reverse로 시간순 반환
     const data = await apiJSON('/api/chat/rooms/' + roomId + '/messages?limit=50');
     if (!data || !data.isSuccess) {
         area.innerHTML = '<div class="state-cell">메시지를 불러오지 못했습니다.</div>';
@@ -194,7 +141,6 @@ async function loadMessages() {
     markRead();
 }
 
-// SSE 재연결 후 놓친 메시지를 DB에서 보완
 async function fetchMissedMessages(sinceIso) {
     if (!sinceIso) return;
     const data = await apiJSON(
@@ -202,15 +148,12 @@ async function fetchMissedMessages(sinceIso) {
     );
     if (!data || !data.isSuccess) return;
     (data.result || []).forEach(msg => {
-        if (!document.querySelector('[data-message-id="' + msg.message_id + '"]')) {
-            appendMessage(msg);
-        }
+        if (!document.querySelector('[data-message-id="' + msg.message_id + '"]')) appendMessage(msg);
     });
     scrollToBottom();
 }
 
 function appendMessage(rawMsg) {
-    // SSE 경로는 이미 정규화됨. HTTP 경로(loadMessages 등)도 동일하게 처리
     const msg = {
         message_id:   rawMsg.message_id   || rawMsg.messageId,
         sender_id:    rawMsg.sender_id     || rawMsg.senderId,
@@ -222,7 +165,6 @@ function appendMessage(rawMsg) {
     };
     const area = document.getElementById('messagesArea');
 
-    // 날짜 구분선
     const msgDate = fmtDate(msg.created_at);
     if (msgDate !== lastMsgDate) {
         const div = document.createElement('div');
@@ -233,7 +175,6 @@ function appendMessage(rawMsg) {
         lastMsgSenderId = null;
     }
 
-    // NOTICE(시스템 메시지)는 별도 렌더링
     if (msg.message_type === 'NOTICE') {
         const notice = document.createElement('div');
         notice.className = 'notice-msg';
@@ -249,48 +190,43 @@ function appendMessage(rawMsg) {
     lastMsgSenderId = msg.sender_id;
 
     const row = document.createElement('div');
-    row.className = 'msg-row' + (mine ? ' mine' : '') + (sameSender ? ' same-sender' : '');
+    row.className = `msg-row${mine ? ' mine' : ''}${sameSender ? ' same-sender' : ''}`;
     row.dataset.messageId = msg.message_id;
 
-    const initials = (msg.sender_name || '?').slice(0,1);
-
-    // 파일/이미지 버블
     let bubbleHTML;
     if ((msg.message_type === 'FILE' || msg.message_type === 'IMAGE') && msg.files && msg.files.length) {
         const f = msg.files[0];
-        const isImage = f.mime_type && f.mime_type.startsWith('image/');
-        if (isImage) {
-            bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + ' img-bubble"' +
-                ' data-file-id="' + f.file_id + '" data-name="' + esc(f.original_name) + '">' +
-                '<div class="img-wrap"><div class="img-spinner"></div></div>' +
-            '</div>';
+        if (f.mime_type && f.mime_type.startsWith('image/')) {
+            bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'} img-bubble"
+                data-file-id="${f.file_id}" data-name="${esc(f.original_name)}">
+                <div class="img-wrap"><div class="img-spinner"></div></div>
+            </div>`;
         } else {
-            bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + ' file-bubble" data-file-id="' + f.file_id + '">' +
-                '<span class="file-icon-lg">' + fileEmoji(f.mime_type) + '</span>' +
-                '<div class="file-info">' +
-                    '<div class="file-name">' + esc(f.original_name) + '</div>' +
-                    '<div class="file-size">' + fmtSize(f.file_size) + '</div>' +
-                '</div>' +
-            '</div>';
+            bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'} file-bubble" data-file-id="${f.file_id}">
+                <span class="file-icon-lg">${fileEmoji(f.mime_type)}</span>
+                <div class="file-info">
+                    <div class="file-name">${esc(f.original_name)}</div>
+                    <div class="file-size">${fmtSize(f.file_size)}</div>
+                </div>
+            </div>`;
         }
     } else {
-        bubbleHTML = '<div class="bubble ' + (mine ? 'mine' : 'other') + '">' + esc(msg.content || '') + '</div>';
+        bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'}">${esc(msg.content || '')}</div>`;
     }
 
     const currTime = fmtTime(msg.created_at);
 
-    row.innerHTML =
-        '<div class="msg-avatar">' + initials + '</div>' +
-        '<div class="msg-content">' +
-            (!sameSender && !mine ? '<div class="msg-sender">' + esc(msg.sender_name) + '</div>' : '') +
-            bubbleHTML +
-            '<div class="msg-meta">' + currTime + '</div>' +
-        '</div>';
+    row.innerHTML = `
+        <div class="msg-avatar">${esc((msg.sender_name || '?').slice(0, 1))}</div>
+        <div class="msg-content">
+            ${!sameSender && !mine ? `<div class="msg-sender">${esc(msg.sender_name)}</div>` : ''}
+            ${bubbleHTML}
+            <div class="msg-meta">${currTime}</div>
+        </div>`;
 
     row.dataset.senderId = msg.sender_id;
     row.dataset.msgTime  = currTime;
 
-    // 이전 row가 같은 발신자 + 같은 분이면 이전 시간 숨김 (마지막 메시지에만 표시)
     const prevEl = area.lastElementChild;
     if (prevEl && prevEl.classList.contains('msg-row') &&
         prevEl.dataset.senderId === msg.sender_id &&
@@ -299,7 +235,6 @@ function appendMessage(rawMsg) {
         if (prevMeta) prevMeta.style.display = 'none';
     }
 
-    // 파일 클릭 → presigned URL 새 탭
     const fileBubble = row.querySelector('.file-bubble');
     if (fileBubble) {
         fileBubble.addEventListener('click', () => openFileUrl(fileBubble.dataset.fileId));
@@ -307,7 +242,6 @@ function appendMessage(rawMsg) {
 
     area.appendChild(row);
 
-    // 이미지 비동기 로드 (DOM에 붙인 뒤 큐를 통해 순차 실행)
     const imgBubble = row.querySelector('.img-bubble');
     if (imgBubble) enqueueImageLoad(imgBubble);
 }
@@ -371,9 +305,7 @@ document.getElementById('lightboxClose').addEventListener('click', closeLightbox
 document.getElementById('lightbox').addEventListener('click', e => {
     if (e.target === document.getElementById('lightbox')) closeLightbox();
 });
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeLightbox();
-});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 function scrollToBottom() {
     const area = document.getElementById('messagesArea');
@@ -384,12 +316,18 @@ async function markRead() {
     await apiFetch('/api/chat/rooms/' + roomId + '/read', { method: 'PUT' });
 }
 
+let _markTimer;
+function scheduleMarkRead() {
+    clearTimeout(_markTimer);
+    _markTimer = setTimeout(markRead, 300);
+}
+
 // ── SSE ───────────────────────────────────────────────────────
 let _sseDisconnectedAt = null;
 
 function subscribeSSE() {
     if (sseSource) sseSource.close();
-    sseSource = new EventSource('/stream?channel=room:' + roomId);
+    sseSource = new EventSource('/stream?channel=' + encodeURIComponent('room:' + roomId));
 
     sseSource.addEventListener('message', e => {
         try {
@@ -418,12 +356,11 @@ function subscribeSSE() {
             appendMessage(normalized);
             scrollToBottom();
 
-            if (!myMemberId || normalized.sender_id !== myMemberId) markRead();
+            if (!myMemberId || normalized.sender_id !== myMemberId) scheduleMarkRead();
         } catch (_) {}
     });
 
     sseSource.addEventListener('open', () => {
-        // 재연결 시 끊겼던 동안 놓친 메시지를 DB에서 보완
         if (_sseDisconnectedAt) {
             fetchMissedMessages(_sseDisconnectedAt);
             _sseDisconnectedAt = null;
@@ -431,10 +368,7 @@ function subscribeSSE() {
     });
 
     sseSource.onerror = () => {
-        // 끊긴 시각 기록 — 재연결 후 fetchMissedMessages에서 사용
-        if (!_sseDisconnectedAt) {
-            _sseDisconnectedAt = new Date().toISOString();
-        }
+        if (!_sseDisconnectedAt) _sseDisconnectedAt = new Date().toISOString();
     };
 }
 
@@ -484,16 +418,13 @@ document.getElementById('fileInput').addEventListener('change', async function()
     this.value = '';
 
     const bar = document.getElementById('uploadBar');
-    document.getElementById('uploadBarText').textContent = '"' + file.name + '" 업로드 중...';
+    document.getElementById('uploadBarText').textContent = `"${file.name}" 업로드 중...`;
     bar.hidden = false;
 
     const fd = new FormData();
     fd.append('file', file);
 
-    const data = await apiJSON('/api/chat/rooms/' + roomId + '/files', {
-        method: 'POST',
-        body: fd,
-    });
+    const data = await apiJSON('/api/chat/rooms/' + roomId + '/files', { method: 'POST', body: fd });
 
     bar.hidden = true;
     if (!data || !data.isSuccess) { showToast('파일 업로드에 실패했습니다.', 'error'); }
@@ -502,36 +433,29 @@ document.getElementById('fileInput').addEventListener('change', async function()
 // ── Members modal ─────────────────────────────────────────────
 function openMembersModal() {
     if (!currentRoom) return;
-    const isGroup  = currentRoom.room_type === 'GROUP';
-    const isAdmin  = currentRoom.members.some(
-        m => m.account_id === myAccountId && m.room_role === 'ADMIN'
-    );
-    const list     = document.getElementById('membersList');
-    const btnInvite = document.getElementById('btnInviteMember');
+    const isGroup = currentRoom.room_type === 'GROUP';
+    const isAdmin = currentRoom.members.some(m => m.account_id === myAccountId && m.room_role === 'ADMIN');
+    const list    = document.getElementById('membersList');
 
-    // 초대 버튼: 그룹 + 관리자만 표시
-    btnInvite.hidden = !(isGroup && isAdmin);
+    document.getElementById('btnInviteMember').hidden = !(isGroup && isAdmin);
 
     list.innerHTML = currentRoom.members.map(m => {
-        const isMe = m.account_id === myAccountId;
-        const roleBadge = (isGroup && m.room_role === 'ADMIN')
-            ? '<span class="admin-badge">관리자</span>'
+        const isMe      = m.account_id === myAccountId;
+        const roleBadge = (isGroup && m.room_role === 'ADMIN') ? '<span class="admin-badge">관리자</span>' : '';
+        const kickBtn   = (isGroup && isAdmin && !isMe)
+            ? `<button class="btn btn-ghost btn-kick" data-kick="${m.member_id}">추방</button>`
             : '';
-        const kickBtn = (isGroup && isAdmin && !isMe)
-            ? '<button class="btn btn-ghost" style="margin-left:auto;font-size:.75rem;color:var(--danger);padding:.15rem .5rem" data-kick="' + m.member_id + '">추방</button>'
-            : '';
-        return '<div style="display:flex;align-items:center;padding:.3rem 0;font-size:.875rem">' +
-            roleBadge + esc(m.name_ko) + kickBtn +
-        '</div>';
+        return `<div class="member-row">${roleBadge}${esc(m.name_ko)}${kickBtn}</div>`;
     }).join('');
-
-    // 추방 버튼 이벤트
-    list.querySelectorAll('[data-kick]').forEach(btn => {
-        btn.addEventListener('click', () => kickMember(btn.dataset.kick));
-    });
 
     document.getElementById('membersModal').hidden = false;
 }
+
+// 이벤트 위임: 멤버 모달 추방 버튼
+document.getElementById('membersList').addEventListener('click', e => {
+    const btn = e.target.closest('[data-kick]');
+    if (btn) kickMember(btn.dataset.kick);
+});
 
 document.getElementById('btnMembers').addEventListener('click', openMembersModal);
 
@@ -543,13 +467,11 @@ async function kickMember(targetMemberId) {
     );
     if (!data || !data.isSuccess) { showToast('추방에 실패했습니다.', 'error'); return; }
     showToast('멤버를 추방했습니다.', 'success');
-    // 방 정보 갱신 후 모달 다시 렌더
     const roomData = await apiJSON('/api/chat/rooms/' + roomId);
     if (roomData && roomData.isSuccess) currentRoom = roomData.result;
     openMembersModal();
 }
 
-// 초대 버튼 → 멤버 모달 닫고 초대 피커 열기
 document.getElementById('btnInviteMember').addEventListener('click', () => {
     document.getElementById('membersModal').hidden = true;
     openInviteModal();
@@ -579,24 +501,28 @@ function renderInvitePick(query) {
         !query || m.name_ko.toLowerCase().includes(query) || m.account_id.toLowerCase().includes(query)
     );
     if (!filtered.length) {
-        list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:.85rem">멤버가 없습니다.</div>';
+        list.innerHTML = '<div class="pick-empty">멤버가 없습니다.</div>';
         return;
     }
     list.innerHTML = filtered.map(m => {
         const sel = inviteSelectedIds.has(m.member_id);
-        return '<label class="member-pick-item' + (sel ? ' selected' : '') + '">' +
-            '<input type="checkbox" name="inviteMember" value="' + m.member_id + '"' + (sel ? ' checked' : '') + '>' +
-            '<div><div class="member-pick-name">' + esc(m.name_ko) + '</div>' +
-            '<div class="member-pick-sub">' + esc(m.account_id) + '</div></div>' +
-        '</label>';
+        return `<label class="member-pick-item${sel ? ' selected' : ''}">
+            <input type="checkbox" name="inviteMember" value="${m.member_id}"${sel ? ' checked' : ''}>
+            <div>
+                <div class="member-pick-name">${esc(m.name_ko)}</div>
+                <div class="member-pick-sub">${esc(m.account_id)}</div>
+            </div>
+        </label>`;
     }).join('');
-    list.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('change', () => {
-            inp.checked ? inviteSelectedIds.add(inp.value) : inviteSelectedIds.delete(inp.value);
-            inp.closest('label').classList.toggle('selected', inp.checked);
-        });
-    });
 }
+
+// 이벤트 위임: 초대 모달 멤버 선택
+document.getElementById('invitePickList').addEventListener('change', e => {
+    const inp = e.target.closest('input[name="inviteMember"]');
+    if (!inp) return;
+    inp.checked ? inviteSelectedIds.add(inp.value) : inviteSelectedIds.delete(inp.value);
+    inp.closest('label').classList.toggle('selected', inp.checked);
+});
 
 document.getElementById('inviteSearch').addEventListener('input', function() {
     renderInvitePick(this.value.trim().toLowerCase());
@@ -626,15 +552,12 @@ document.getElementById('btnDoInvite').addEventListener('click', async () => {
     if (roomData && roomData.isSuccess) currentRoom = roomData.result;
 });
 
-
 // ── Create room modal (sidebar button) ───────────────────────
 document.getElementById('btnNewChat').addEventListener('click', openCreateModal);
 
 document.getElementById('btnLeaveRoom').addEventListener('click', async () => {
     if (!currentRoom) return;
-    const isAdmin = currentRoom.members.some(
-        m => m.account_id === myAccountId && m.room_role === 'ADMIN'
-    );
+    const isAdmin = currentRoom.members.some(m => m.account_id === myAccountId && m.room_role === 'ADMIN');
     const otherActive = currentRoom.members.filter(m => m.account_id !== myAccountId);
 
     if (isAdmin && otherActive.length > 0) {
@@ -655,21 +578,25 @@ function openTransferModal(candidates) {
     document.getElementById('transferErr').textContent = '';
     const list = document.getElementById('transferPickList');
     list.innerHTML = candidates.map(m =>
-        '<label class="member-pick-item">' +
-            '<input type="radio" name="transferMember" value="' + m.member_id + '">' +
-            '<div><div class="member-pick-name">' + esc(m.name_ko) + '</div>' +
-            '<div class="member-pick-sub">' + esc(m.account_id) + '</div></div>' +
-        '</label>'
+        `<label class="member-pick-item">
+            <input type="radio" name="transferMember" value="${m.member_id}">
+            <div>
+                <div class="member-pick-name">${esc(m.name_ko)}</div>
+                <div class="member-pick-sub">${esc(m.account_id)}</div>
+            </div>
+        </label>`
     ).join('');
-    list.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('change', () => {
-            transferSelectedId = inp.value;
-            list.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
-            inp.closest('label').classList.add('selected');
-        });
-    });
     document.getElementById('transferModal').hidden = false;
 }
+
+// 이벤트 위임: 관리자 이양 모달
+document.getElementById('transferPickList').addEventListener('change', e => {
+    const inp = e.target.closest('input[name="transferMember"]');
+    if (!inp) return;
+    transferSelectedId = inp.value;
+    document.getElementById('transferPickList').querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+    inp.closest('label').classList.add('selected');
+});
 
 document.getElementById('btnDoTransfer').addEventListener('click', async () => {
     const err = document.getElementById('transferErr');
@@ -711,28 +638,31 @@ function renderMemberPick(query) {
         (!query || m.name_ko.toLowerCase().includes(query) || m.account_id.toLowerCase().includes(query))
     );
     if (!filtered.length) {
-        list.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--muted);font-size:.85rem">멤버가 없습니다.</div>';
+        list.innerHTML = '<div class="pick-empty">멤버가 없습니다.</div>';
         return;
     }
     const isGroup = selectedType === 'GROUP';
     list.innerHTML = filtered.map(m => {
         const sel = selectedMemberIds.has(m.member_id);
-        return '<label class="member-pick-item' + (sel ? ' selected' : '') + '">' +
-            '<input type="' + (isGroup ? 'checkbox' : 'radio') + '" name="pickedMember" value="' + m.member_id + '"' + (sel ? ' checked' : '') + '>' +
-            '<div><div class="member-pick-name">' + esc(m.name_ko) + '</div>' +
-            '<div class="member-pick-sub">' + esc(m.account_id) + '</div></div>' +
-        '</label>';
+        return `<label class="member-pick-item${sel ? ' selected' : ''}">
+            <input type="${isGroup ? 'checkbox' : 'radio'}" name="pickedMember" value="${m.member_id}"${sel ? ' checked' : ''}>
+            <div>
+                <div class="member-pick-name">${esc(m.name_ko)}</div>
+                <div class="member-pick-sub">${esc(m.account_id)}</div>
+            </div>
+        </label>`;
     }).join('');
-
-    list.querySelectorAll('input').forEach(inp => {
-        inp.addEventListener('change', () => {
-            if (!inp.checked) { selectedMemberIds.delete(inp.value); return; }
-            if (selectedType === 'DIRECT') selectedMemberIds.clear();
-            selectedMemberIds.add(inp.value);
-            renderMemberPick(document.getElementById('memberSearch').value.trim().toLowerCase());
-        });
-    });
 }
+
+// 이벤트 위임: 방 생성 모달 멤버 선택
+document.getElementById('memberPickList').addEventListener('change', e => {
+    const inp = e.target.closest('input[name="pickedMember"]');
+    if (!inp) return;
+    if (!inp.checked) { selectedMemberIds.delete(inp.value); return; }
+    if (selectedType === 'DIRECT') selectedMemberIds.clear();
+    selectedMemberIds.add(inp.value);
+    renderMemberPick(document.getElementById('memberSearch').value.trim().toLowerCase());
+});
 
 document.querySelectorAll('.create-room-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -780,10 +710,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.hidden = true; });
 });
 
-// 페이지 포커스 시 읽음 처리
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) markRead();
-});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) markRead(); });
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {

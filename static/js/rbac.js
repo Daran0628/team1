@@ -2,45 +2,7 @@
    rbac.js  —  Teleport-style RBAC management UI
    ────────────────────────────────────────────────────────────── */
 
-// ── Auth helpers ─────────────────────────────────────────────
-
-function getToken() {
-    return sessionStorage.getItem('access_token');
-}
-
-async function apiFetch(url, options) {
-    let token = getToken();
-    if (!token) {
-        const refreshed = await tryRefresh();
-        if (!refreshed) { window.location.replace('/login'); return null; }
-        token = getToken();
-    }
-
-    const headers = Object.assign({ 'Content-Type': 'application/json',
-                                    'Authorization': 'Bearer ' + token },
-                                   (options && options.headers) || {});
-    const res = await fetch(url, Object.assign({}, options, { headers: headers }));
-
-    if (res.status === 401) {
-        const refreshed = await tryRefresh();
-        if (!refreshed) { window.location.replace('/login'); return null; }
-        headers['Authorization'] = 'Bearer ' + getToken();
-        return fetch(url, Object.assign({}, options, { headers: headers }));
-    }
-    return res;
-}
-
-async function tryRefresh() {
-    try {
-        const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
-        if (!res.ok) return false;
-        const json = await res.json();
-        const token = json && json.result && json.result.access_token;
-        if (!token) return false;
-        sessionStorage.setItem('access_token', token);
-        return true;
-    } catch (_) { return false; }
-}
+// ── Auth helpers: api.js 참조 (getToken, tryRefresh, apiFetch) ─
 
 async function apiJSON(url, options) {
     const res = await apiFetch(url, options);
@@ -169,12 +131,7 @@ var ACTIONS_BY_TYPE = {
 };
 
 // ── Render helpers ────────────────────────────────────────────
-
-function escText(s) {
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-}
+// escText: api.js 전역 alias 사용
 
 function renderBadge(resource) {
     var span = document.createElement('span');

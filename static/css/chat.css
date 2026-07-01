@@ -623,6 +623,17 @@ html, body { height: 100%; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Shared picker utilities ────────────────────────────────── */
+.member-search { width: 100%; margin-bottom: .5rem; }
+.pick-empty    { text-align: center; padding: 1rem; color: var(--muted); font-size: .85rem; }
+
+/* ── Sidebar empty state ────────────────────────────────────── */
+.sidebar-empty { padding: .75rem 1rem; font-size: .8rem; color: var(--muted); list-style: none; }
+
+/* ── Members modal ──────────────────────────────────────────── */
+.member-row { display: flex; align-items: center; padding: .3rem 0; font-size: .875rem; }
+.btn-kick   { margin-left: auto; font-size: .75rem; color: var(--danger); padding: .15rem .5rem; }
+
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 680px) {
     .chat-sidebar { width: 56px; }
