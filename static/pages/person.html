@@ -8,6 +8,7 @@
     <title>인물 검색</title>
     <link rel="stylesheet" href="/static/css/rbac.css">
     <link rel="stylesheet" href="/static/css/group.css">
+    <link rel="stylesheet" href="/static/css/person.css">
 </head>
 <body>
 
@@ -22,9 +23,11 @@
 <main class="main-content">
 
     <div class="toolbar">
-        <div class="toolbar-left"></div>
         <div class="toolbar-right">
             <span id="itemsCount" class="items-count"></span>
+            <select id="deptFilter">
+                <option value="">전체 부서</option>
+            </select>
             <input type="search" id="searchInput" class="search-input" placeholder="이름으로 검색...">
         </div>
     </div>
@@ -40,7 +43,7 @@
                 </tr>
             </thead>
             <tbody id="personBody">
-                <tr><td colspan="4" class="state-cell">이름을 입력해 검색하세요.</td></tr>
+                <tr><td colspan="4" class="state-cell">이름을 입력하거나 부서를 선택해 검색하세요.</td></tr>
             </tbody>
         </table>
     </div>

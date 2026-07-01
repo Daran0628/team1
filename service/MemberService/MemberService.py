@@ -1,8 +1,10 @@
 from flask_jwt_extended import get_jwt_identity
 
 from domain.model.Member import Member
+from domain.model.Department import Department
 from domain.enum.EnrollmentStatus import EnrollmentStatus
 from web.converter.MemberConverter import MemberConverter
+from web.dto.MemberResponseDTO import DepartmentOptionDTO
 from extensions import db
 
 
@@ -56,15 +58,31 @@ class MemberService:
         # DTO로 반환 (GET과 동일한 응답 구조 유지 추천)
         return MemberConverter.to_member_info_response_dto(member)
 
-    def search_members(self, keyword: str):
+    def search_members(self, keyword: str, department_id: str = None):
 
         keyword = (keyword or "").strip()
-        if not keyword:
+        department_id = (department_id or "").strip()
+
+        if not keyword and not department_id:
             return []
 
-        members = Member.query.filter(
-            Member.name_ko.ilike(f"%{keyword}%"),
-            Member.enrollment_status == EnrollmentStatus.ACTIVE,
-        ).all()
+        filters = [Member.enrollment_status == EnrollmentStatus.ACTIVE]
+
+        if keyword:
+            filters.append(Member.name_ko.ilike(f"%{keyword}%"))
+
+        if department_id:
+            filters.append(Member.department_id == department_id)
+
+        members = Member.query.filter(*filters).all()
 
         return [MemberConverter.to_search_result_dto(m) for m in members]
+
+    def list_departments(self):
+
+        departments = Department.query.order_by(Department.department_name).all()
+
+        return [
+            DepartmentOptionDTO(department_id=d.id, department_name=d.department_name)
+            for d in departments
+        ]

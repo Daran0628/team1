@@ -26,3 +26,9 @@ class MemberSearchResultDTO:
     department_name: str
     department_phone: str | None
     email: str
+
+
+@dataclass
+class DepartmentOptionDTO:
+    department_id: str
+    department_name: str

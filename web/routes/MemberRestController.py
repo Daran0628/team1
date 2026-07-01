@@ -55,10 +55,22 @@ def update_my_info():
 def search_members():
 
     keyword = request.args.get("keyword", "")
+    department_id = request.args.get("department_id", "")
 
-    dto_list = _service.search_members(keyword)
+    dto_list = _service.search_members(keyword, department_id)
 
     return ApiResponse.on_success(
         SuccessStatus.MEMBER_SEARCH_SUCCESS,
+        dto_list
+    )
+
+@member_bp.route("/departments", methods=["GET"])
+@jwt_required()
+def list_departments():
+
+    dto_list = _service.list_departments()
+
+    return ApiResponse.on_success(
+        SuccessStatus.MEMBER_DEPARTMENT_LIST_SUCCESS,
         dto_list
     )
