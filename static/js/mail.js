@@ -1,18 +1,4 @@
 const API = '/api/mail';
-const token = () => sessionStorage.getItem('access_token');
-
-if (!token()) { window.location.replace('/login'); }
-
-const role = sessionStorage.getItem('role');
-if (role === 'ADMIN' || role === 'SUPERADMIN') {
-    document.getElementById('admin-menu').style.display = 'flex';
-    document.getElementById('iam-menu').style.display = 'flex';
-}
-
-function logout() {
-    sessionStorage.clear();
-    location.replace('/login');
-}
 
 const mailList       = document.getElementById('mailList');
 const mailDetail     = document.getElementById('mailDetail');
@@ -30,7 +16,7 @@ let currentMessage = null;
 function parseJwt(t) {
     try { return JSON.parse(atob(t.split('.')[1])); } catch { return {}; }
 }
-const payload = parseJwt(token() || '');
+const payload = parseJwt(getToken() || '');
 if (payload.sub) sidebarAccount.textContent = payload.sub;
 
 // ── 폴더 전환 ────────────────────────────────
@@ -52,7 +38,8 @@ document.querySelectorAll('.folder-item').forEach(item => {
 async function loadInbox() {
     mailList.innerHTML = '<li class="mail-empty">불러오는 중...</li>';
     try {
-        const res  = await fetch(`${API}/inbox`, { headers: { Authorization: `Bearer ${token()}` } });
+        const res = await apiFetch(`${API}/inbox`);
+        if (!res) return;
         const data = await res.json();
         if (!res.ok) { mailList.innerHTML = `<li class="mail-empty">오류: ${data.message}</li>`; return; }
 
@@ -85,7 +72,8 @@ async function loadInbox() {
 async function loadSent() {
     mailList.innerHTML = '<li class="mail-empty">불러오는 중...</li>';
     try {
-        const res  = await fetch(`${API}/sent`, { headers: { Authorization: `Bearer ${token()}` } });
+        const res = await apiFetch(`${API}/sent`);
+        if (!res) return;
         const data = await res.json();
         if (!res.ok) { mailList.innerHTML = `<li class="mail-empty">오류: ${data.message}</li>`; return; }
 
@@ -127,7 +115,8 @@ async function openMessage(uid, el) {
         : `${API}/message/${uid}`;
 
     try {
-        const res  = await fetch(endpoint, { headers: { Authorization: `Bearer ${token()}` } });
+        const res = await apiFetch(endpoint);
+        if (!res) return;
         const data = await res.json();
         if (!res.ok) return;
 
@@ -173,11 +162,8 @@ document.getElementById('btnDelete').addEventListener('click', async () => {
     const endpoint = currentFolder === 'sent'
         ? `${API}/sent/${currentUid}`
         : `${API}/message/${currentUid}`;
-    const res = await fetch(endpoint, {
-        method:  'DELETE',
-        headers: { Authorization: `Bearer ${token()}` },
-    });
-    if (res.ok) {
+    const res = await apiFetch(endpoint, { method: 'DELETE' });
+    if (res && res.ok) {
         showPanel('empty');
         currentUid     = null;
         currentMessage = null;
@@ -210,11 +196,11 @@ document.getElementById('btnSend').addEventListener('click', async () => {
     setMsg(msgEl, '발송 중...', '');
 
     try {
-        const res  = await fetch(`${API}/send`, {
-            method:  'POST',
-            headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ to, subject, body }),
+        const res = await apiFetch(`${API}/send`, {
+            method: 'POST',
+            body:   JSON.stringify({ to, subject, body }),
         });
+        if (!res) return;
         const data = await res.json();
         if (res.ok) {
             setMsg(msgEl, '발송 완료!', 'success');
