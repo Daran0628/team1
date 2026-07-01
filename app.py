@@ -16,6 +16,7 @@ from web.routes.RBACRestController import rbac_bp  # ← 추가 (IAM/RBAC)
 from web.routes.GroupRestController import group_bp  # ← 추가 (IAM/RBAC)
 from web.routes.MailRestController import mail_bp
 from web.routes.StorageRestController import storage_bp
+from web.routes.MemberRestController import member_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -29,6 +30,7 @@ app.register_blueprint(rbac_bp)  # ← 추가 (IAM/RBAC)
 app.register_blueprint(group_bp)  # ← 추가 (IAM/RBAC)
 app.register_blueprint(mail_bp)
 app.register_blueprint(storage_bp)
+app.register_blueprint(member_bp)
 
 
 

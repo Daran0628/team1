@@ -19,6 +19,8 @@ class Department(db.Model):
         unique=True
     )
 
+    phone_no = db.Column(db.String(20), nullable=True)
+
  # Member와 양방향 관계 (선택사항)
     members = db.relationship(
         "Member",
