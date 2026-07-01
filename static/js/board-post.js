@@ -14,6 +14,8 @@
     var isLiked           = false;
     var blobUrls          = [];   /* 페이지 언로드 시 해제 */
     var inlineAttachIds   = new Set();  /* content 내 이미 렌더된 첨부 UUID */
+    var attachmentItems   = [];         /* 전체 첨부파일 목록 (수정 모달에서 이름 치환용) */
+    var editInlineMap     = new Map();  /* 수정 모달: 표시 플레이스홀더 → uuid */
 
     /* ── DOM ─────────────────────────────────────────────── */
     var postTitleEl     = document.getElementById('postTitle');
@@ -189,16 +191,19 @@
             if (!res || !res.ok) return;
             var json  = await res.json();
             var items = json.result || [];
+            attachmentItems = items;
             renderAttachments(items);
         } catch (_) { /* nothing */ }
     }
 
     function renderAttachments(items) {
-        /* 이미 본문에 인라인으로 렌더된 이미지는 갤러리·첨부파일 목록에서 제외 */
+        /* 갤러리: 비인라인 이미지만 / 파일 목록: 비이미지 + 인라인 이미지 */
         var images = items.filter(function (a) {
             return isImageMime(a.contentType) && !inlineAttachIds.has(a.attachmentId);
         });
-        var files  = items.filter(function (a) { return !isImageMime(a.contentType); });
+        var files  = items.filter(function (a) {
+            return !isImageMime(a.contentType) || inlineAttachIds.has(a.attachmentId);
+        });
 
         /* 이미지 갤러리 */
         if (images.length) {
@@ -236,7 +241,10 @@
 
                 /* 파일 아이콘 추정 */
                 var ext = (a.originalName || '').split('.').pop().toLowerCase();
-                var icon = ext === 'pdf' ? '📄' : ext === 'zip' || ext === '7z' ? '🗜️' : '📎';
+                var icon = isImageMime(a.contentType) ? '🖼️'
+                    : ext === 'pdf' ? '📄'
+                    : ext === 'zip' || ext === '7z' ? '🗜️'
+                    : '📎';
 
                 btn.innerHTML = '<span class="attachment-icon">' + icon + '</span>';
 
@@ -310,9 +318,27 @@
     /* ── 게시글 수정 ──────────────────────────────────────── */
     function openEditModal() {
         if (!postData) return;
-        editPostTitle.value   = postData.title;
-        editPostContent.value = postData.content || '';
+        editPostTitle.value = postData.title;
         editPostErr.textContent = '';
+
+        /* {{ATTACHMENT:uuid}} → [이미지: 파일명] 으로 치환해 표시 */
+        editInlineMap = new Map();
+        var content = (postData.content || '').replace(
+            /\{\{ATTACHMENT:([0-9a-f-]{36})\}\}/g,
+            function (_, uuid) {
+                var att  = attachmentItems.find(function (a) { return a.attachmentId === uuid; });
+                var base = att ? att.originalName : uuid;
+                var key  = '[이미지: ' + base + ']';
+                var n    = 2;
+                /* 같은 이름이 이미 다른 uuid에 쓰이면 suffix 추가 */
+                while (editInlineMap.has(key) && editInlineMap.get(key) !== uuid) {
+                    key = '[이미지: ' + base + ' (' + n++ + ')]';
+                }
+                editInlineMap.set(key, uuid);
+                return key;
+            }
+        );
+        editPostContent.value = content;
         openModal('editPostModal');
     }
 
@@ -321,6 +347,12 @@
         var content = editPostContent.value.trim();
         if (!title)   { editPostErr.textContent = '제목을 입력하세요.'; return; }
         if (!content) { editPostErr.textContent = '내용을 입력하세요.'; return; }
+
+        /* [이미지: 파일명] → {{ATTACHMENT:uuid}} 로 복원 */
+        editInlineMap.forEach(function (uuid, placeholder) {
+            content = content.split(placeholder).join('{{ATTACHMENT:' + uuid + '}}');
+        });
+
         try {
             btnConfirmEdit.disabled = true;
             var res = await apiFetch(
