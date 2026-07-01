@@ -1,17 +1,5 @@
 (function () {
-    function getToken() { return sessionStorage.getItem('access_token'); }
-
-    async function tryRefresh() {
-        try {
-            var res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
-            if (!res.ok) return false;
-            var json = await res.json();
-            var t = json && json.result && json.result.access_token;
-            if (!t) return false;
-            sessionStorage.setItem('access_token', t);
-            return true;
-        } catch (_) { return false; }
-    }
+    // getToken / tryRefresh: api.js 전역 함수 참조
 
     async function apiFetch(url) {
         var token = getToken();

@@ -2,49 +2,7 @@
    objstorage.js  —  Object Storage Browser
    ────────────────────────────────────────────────────────────── */
 
-// ── Auth helpers ─────────────────────────────────────────────
-
-function getToken() {
-    return sessionStorage.getItem('access_token');
-}
-
-async function apiFetch(url, options) {
-    let token = getToken();
-    if (!token) {
-        const ok = await tryRefresh();
-        if (!ok) { window.location.replace('/login'); return null; }
-        token = getToken();
-    }
-
-    const isFormData = options && options.body instanceof FormData;
-    const headers = Object.assign(
-        isFormData ? {} : { 'Content-Type': 'application/json' },
-        { 'Authorization': 'Bearer ' + token },
-        (options && options.headers) || {}
-    );
-
-    const res = await fetch(url, Object.assign({}, options, { headers }));
-
-    if (res.status === 401) {
-        const ok = await tryRefresh();
-        if (!ok) { window.location.replace('/login'); return null; }
-        headers['Authorization'] = 'Bearer ' + getToken();
-        return fetch(url, Object.assign({}, options, { headers }));
-    }
-    return res;
-}
-
-async function tryRefresh() {
-    try {
-        const res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
-        if (!res.ok) return false;
-        const json = await res.json();
-        const t = json && json.result && json.result.access_token;
-        if (!t) return false;
-        sessionStorage.setItem('access_token', t);
-        return true;
-    } catch (_) { return false; }
-}
+// ── Auth helpers: api.js 참조 (getToken, tryRefresh, apiFetch) ─
 
 async function apiJSON(url, options) {
     const res = await apiFetch(url, options);
@@ -125,6 +83,7 @@ function setupEventListeners() {
         else if (action === 'download') downloadObject(name);
         else if (action === 'share') openShareModal(name);
         else if (action === 'delete') confirmDelete(name);
+        else if (action === 'delete-folder') confirmDeleteFolder(name);
     });
     tbody.addEventListener('change', e => {
         if (e.target.classList.contains('row-check')) syncDeleteButton();
@@ -143,8 +102,24 @@ function setupEventListeners() {
     document.getElementById('btnGenerateShareUrl').addEventListener('click', generateShareUrl);
     document.getElementById('btnCopyShareUrl').addEventListener('click', copyShareUrl);
 
+    // Delete bucket button
+    document.getElementById('btnDeleteBucket').addEventListener('click', () => {
+        if (currentBucket) confirmDeleteBucket(currentBucket);
+    });
+
     // Delete confirm
-    document.getElementById('btnConfirmDelete').addEventListener('click', executeDelete);
+    document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+        const btn = document.getElementById('btnConfirmDelete');
+        if (btn.dataset.bucket === '1') {
+            delete btn.dataset.bucket;
+            executeDeleteBucket();
+        } else if (btn.dataset.folder === '1') {
+            delete btn.dataset.folder;
+            executeDeleteFolder();
+        } else {
+            executeDelete();
+        }
+    });
 
     // Close buttons (data-close-modal)
     document.querySelectorAll('[data-close-modal]').forEach(btn => {
@@ -186,7 +161,7 @@ function renderBuckets(buckets) {
     list.innerHTML = buckets.map(b => `
         <li class="bucket-item${currentBucket === b.bucket_name ? ' active' : ''}"
             data-name="${esc(b.bucket_name)}">
-            <span class="bucket-icon">🗄</span>
+            <span class="bucket-icon">🪣</span>
             <span class="bucket-name">${esc(b.bucket_name)}</span>
         </li>
     `).join('');
@@ -241,7 +216,7 @@ async function loadObjects() {
         const url = `/api/storage/buckets/${enc(currentBucket)}/objects`
             + `?prefix=${enc(currentPrefix)}&recursive=false`;
         const result = await apiJSON(url);
-        allObjects = result || [];
+        allObjects = (result || []).filter(o => !o.object_name.endsWith('.keep'));
         renderObjects(allObjects);
         updateObjectCount();
     } catch (err) {
@@ -272,7 +247,7 @@ function renderObjects(objects) {
             : `<span class="file-icon">${icon}</span><span>${esc(displayName)}</span>`;
 
         const actionBtns = isDir
-            ? '<span class="no-actions">—</span>'
+            ? `<button class="btn-action btn-danger-action" title="폴더 삭제" data-action="delete-folder" data-name="${esc(obj.object_name)}">🗑</button>`
             : `<button class="btn-action" title="다운로드" data-action="download" data-name="${esc(obj.object_name)}">⬇</button>`
               + ` <button class="btn-action btn-share" title="공유 링크" data-action="share" data-name="${esc(obj.object_name)}">🔗</button>`
               + ` <button class="btn-action btn-danger-action" title="삭제" data-action="delete" data-name="${esc(obj.object_name)}">🗑</button>`;
@@ -463,6 +438,58 @@ async function executeDelete() {
     deleteTarget = null;
 }
 
+function confirmDeleteBucket(name) {
+    deleteTarget = name;
+    document.getElementById('deleteTargetName').textContent = name;
+    document.getElementById('btnConfirmDelete').dataset.bucket = '1';
+    openModal('deleteModal');
+}
+
+async function executeDeleteBucket() {
+    if (!deleteTarget) return;
+    const name = deleteTarget;
+    deleteTarget = null;
+    try {
+        await apiJSON(
+            `/api/storage/buckets/${enc(name)}`,
+            { method: 'DELETE' }
+        );
+        closeModal('deleteModal');
+        showToast(`버킷 "${name}"이 삭제되었습니다.`, 'success');
+        currentBucket = null;
+        currentPrefix = '';
+        document.getElementById('objectBrowser').hidden = true;
+        document.getElementById('welcomeState').hidden = false;
+        await loadBuckets();
+    } catch (err) {
+        showToast('삭제 실패: ' + err.message, 'error');
+    }
+}
+
+function confirmDeleteFolder(prefix) {
+    deleteTarget = prefix;
+    document.getElementById('deleteTargetName')
+        .textContent = getDisplayName(prefix.replace(/\/$/, '')) + '/';
+    document.getElementById('btnConfirmDelete').dataset.folder = '1';
+    openModal('deleteModal');
+}
+
+async function executeDeleteFolder() {
+    if (!currentBucket || !deleteTarget) return;
+    try {
+        await apiJSON(
+            `/api/storage/buckets/${enc(currentBucket)}/folders?prefix=${enc(deleteTarget)}`,
+            { method: 'DELETE' }
+        );
+        closeModal('deleteModal');
+        showToast('폴더가 삭제되었습니다.', 'success');
+        await loadObjects();
+    } catch (err) {
+        showToast('삭제 실패: ' + err.message, 'error');
+    }
+    deleteTarget = null;
+}
+
 async function deleteSelectedObjects() {
     const checked = Array.from(document.querySelectorAll('.row-check:checked'))
         .map(cb => cb.dataset.name);
@@ -516,15 +543,7 @@ function openModal(id)  { document.getElementById(id).hidden = false; }
 function closeModal(id) { document.getElementById(id).hidden = true; }
 
 // ── Utilities ─────────────────────────────────────────────────
-
-function esc(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+// esc: api.js 전역 함수 사용
 
 function enc(str) { return encodeURIComponent(str); }
 
@@ -568,17 +587,4 @@ function formatDate(dateStr) {
     } catch (_) { return String(dateStr); }
 }
 
-// ── Toast ─────────────────────────────────────────────────────
-
-function showToast(message, type) {
-    type = type || 'info';
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = 'toast toast-' + type;
-    toast.textContent = message;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('toast-out');
-        setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
-    }, 3500);
-}
+// showToast: api.js 전역 함수 사용

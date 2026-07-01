@@ -2,45 +2,7 @@
    permission.js  —  Permission management UI
    ────────────────────────────────────────────────────────────── */
 
-// ── Auth helpers ─────────────────────────────────────────────
-
-function getToken() {
-    return sessionStorage.getItem('access_token');
-}
-
-async function apiFetch(url, options) {
-    var token = getToken();
-    if (!token) {
-        var silentRefresh = await tryRefresh();
-        if (!silentRefresh) { window.location.replace('/login'); return null; }
-        token = getToken();
-    }
-
-    var headers = Object.assign({ 'Content-Type': 'application/json',
-                                   'Authorization': 'Bearer ' + token },
-                                  (options && options.headers) || {});
-    var res = await fetch(url, Object.assign({}, options, { headers: headers }));
-
-    if (res.status === 401) {
-        var refreshed = await tryRefresh();
-        if (!refreshed) { window.location.replace('/login'); return null; }
-        headers['Authorization'] = 'Bearer ' + getToken();
-        return fetch(url, Object.assign({}, options, { headers: headers }));
-    }
-    return res;
-}
-
-async function tryRefresh() {
-    try {
-        var res = await fetch('/api/auth/refresh', { method: 'GET', credentials: 'include' });
-        if (!res.ok) return false;
-        var json = await res.json();
-        var token = json && json.result && json.result.access_token;
-        if (!token) return false;
-        sessionStorage.setItem('access_token', token);
-        return true;
-    } catch (_) { return false; }
-}
+// ── Auth helpers: api.js 참조 (getToken, tryRefresh, apiFetch) ─
 
 async function apiJSON(url, options) {
     var res = await apiFetch(url, options);
@@ -120,12 +82,7 @@ function currentPage() {
 }
 
 // ── Render ────────────────────────────────────────────────────
-
-function escText(s) {
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-}
+// escText: api.js 전역 alias 사용
 
 function renderTable() {
     var tbody = document.getElementById('permBody');

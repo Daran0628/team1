@@ -73,8 +73,26 @@ def _to_room_member_dto(membership: ChatRoomMember) -> RoomMemberDTO:
     )
 
 
-def _to_room_dto(room: ChatRoom) -> ChatRoomResponseDTO:
+def _to_room_dto(room: ChatRoom, membership: ChatRoomMember = None) -> ChatRoomResponseDTO:
     active_members = [ms for ms in room.members if ms.is_active]
+
+    unread_count = 0
+    if membership:
+        cutoff = membership.last_read_at or membership.joined_at
+        unread_count = ChatMessage.query.filter(
+            ChatMessage.room_id == room.id,
+            ChatMessage.created_at > cutoff,
+            ChatMessage.is_deleted == False,
+        ).count()
+
+    last_msg = (
+        ChatMessage.query
+        .filter_by(room_id=room.id, is_deleted=False)
+        .order_by(ChatMessage.created_at.desc())
+        .first()
+    )
+    last_message_at = last_msg.created_at.isoformat() if last_msg else None
+
     return ChatRoomResponseDTO(
         room_id=room.id,
         room_type=room.room_type.value,
@@ -82,6 +100,8 @@ def _to_room_dto(room: ChatRoom) -> ChatRoomResponseDTO:
         created_by=room.created_by,
         created_at=room.created_at.isoformat(),
         members=[_to_room_member_dto(ms) for ms in active_members],
+        unread_count=unread_count,
+        last_message_at=last_message_at,
     )
 
 
@@ -141,7 +161,8 @@ class ChatService:
             .filter_by(member_id=member_id, is_active=True)
             .all()
         )
-        return [_to_room_dto(ms.room) for ms in memberships]
+        dtos = [_to_room_dto(ms.room, ms) for ms in memberships]
+        return sorted(dtos, key=lambda d: d.last_message_at or d.created_at, reverse=True)
 
     def get_room(self, room_id: str, member_id: str) -> ChatRoomResponseDTO:
         room = ChatRoom.query.get(room_id)
@@ -168,6 +189,7 @@ class ChatService:
                 new_ms = self._get_membership(room_id, new_admin_id)
                 new_admin_name = new_ms.member.name_ko
                 new_ms.room_role = ChatRoomRole.Admin
+                ms.room_role = ChatRoomRole.Member
                 ms.is_active = False
                 db.session.commit()
                 self._publish_notice(
@@ -201,6 +223,7 @@ class ChatService:
             inactive = ChatRoomMember.query.filter_by(room_id=room_id, member_id=member.id).first()
             if inactive:
                 inactive.is_active = True
+                inactive.room_role = ChatRoomRole.Member  # 재초대 시 항상 일반 멤버로 리셋
             else:
                 db.session.add(ChatRoomMember(room_id=room_id, member_id=member.id))
 

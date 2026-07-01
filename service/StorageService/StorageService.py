@@ -58,8 +58,12 @@ def create_bucket(dto: CreateBucketRequestDTO, creator_id: str) -> BucketRespons
 
 
 def list_buckets() -> list[BucketResponseDTO]:
-    buckets = StorageBucket.query.order_by(StorageBucket.created_at).all()
-    return [_bucket_to_dto(b) for b in buckets]
+    from core.rbac.RBACUtils import get_accessible_bucket_names
+    accessible = get_accessible_bucket_names()
+    query = StorageBucket.query.order_by(StorageBucket.created_at)
+    if accessible is not None:
+        query = query.filter(StorageBucket.bucket_name.in_(accessible))
+    return [_bucket_to_dto(b) for b in query.all()]
 
 
 def get_bucket(bucket_name: str) -> BucketResponseDTO:
@@ -235,6 +239,38 @@ def delete_object(bucket_name: str, object_name: str) -> None:
     resource = StorageResource.query.filter_by(
         bucket_name=bucket_name,
         s3_key=object_name,
+        is_deleted=False,
+    ).first()
+    if resource:
+        resource.is_deleted = True
+        db.session.commit()
+
+
+def delete_folder(bucket_name: str, prefix: str) -> None:
+    _get_bucket_or_raise(bucket_name)
+    client = _minio()
+
+    if not prefix.endswith('/'):
+        prefix += '/'
+
+    try:
+        objects = list(client.list_objects(bucket_name, prefix=prefix, recursive=True))
+    except S3Error as e:
+        raise StorageException(ErrorStatus.STORAGE_OPERATION_FAILED) from e
+
+    marker_key = prefix + '.keep'
+    if any(obj.object_name != marker_key for obj in objects):
+        raise StorageException(ErrorStatus.STORAGE_FOLDER_NOT_EMPTY)
+
+    try:
+        client.stat_object(bucket_name, marker_key)
+        client.remove_object(bucket_name, marker_key)
+    except S3Error:
+        pass  # 마커 없는 가상 prefix
+
+    resource = StorageResource.query.filter_by(
+        bucket_name=bucket_name,
+        s3_key=marker_key,
         is_deleted=False,
     ).first()
     if resource:
