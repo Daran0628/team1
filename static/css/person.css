@@ -1,0 +1,9 @@
+/* person.css — 인물 검색 페이지 전용 오버라이드 */
+
+.toolbar {
+    justify-content: center;
+}
+
+.toolbar-right {
+    margin-left: 0;
+}
