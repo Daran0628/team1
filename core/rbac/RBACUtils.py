@@ -289,3 +289,64 @@ def storage_required(action: str):
             return fn(*args, **kwargs)
         return wrapper
     return decorator
+
+
+# ── VDI 접근 권한 확인 ────────────────────────────────────────
+
+# 자신의 VDI에 대해 권한 없이 허용하는 기본 액션
+_VDI_SELF_ALLOWED = {'CONNECT', 'POWER_ON', 'POWER_OFF', 'REBOOT', 'SNAPSHOT'}
+
+
+def check_vdi_action(required_action: str, vdi_assigned_to: str | None = None) -> bool:
+    """
+    required_action: VdiAction 값 (CONNECT / POWER_ON / POWER_OFF / REBOOT / SNAPSHOT / MANAGE 등)
+    vdi_assigned_to: VDI에 할당된 member_id — 현재 유저와 같으면 기본 액션 자동 허용.
+    """
+    if get_jwt().get('role', '') in _ADMIN_ACCOUNT_TYPES:
+        return True
+
+    member = _get_member()
+    if not member:
+        return False
+
+    # 자신의 VDI에 대한 기본 작업은 Role 없이 허용
+    if vdi_assigned_to and str(member.id) == str(vdi_assigned_to):
+        if required_action in _VDI_SELF_ALLOWED:
+            return True
+
+    for binding in _collect_all_bindings(member):
+        role = binding.role
+        if role.role_name in _ADMIN_ROLE_NAMES:
+            return True
+        for perm in role.permissions:
+            if perm.perm_type != 'VDI':
+                continue
+            if required_action in perm.action_list or 'MANAGE' in perm.action_list:
+                return True
+
+    return False
+
+
+def vdi_required(action: str):
+    """
+    action: VdiAction 값
+    vdi_assigned_to는 view_args에서 vdi_id를 통해 DB 조회로 확인.
+    @jwt_required() 아래에 붙여서 사용.
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            from flask import request
+            from domain.model.Vdi import Vdi
+
+            vdi_id = (request.view_args or {}).get('vdi_id')
+            assigned_to = None
+            if vdi_id:
+                vdi = Vdi.query.get(vdi_id)
+                assigned_to = vdi.assigned_to if vdi else None
+
+            if not check_vdi_action(action, assigned_to):
+                return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator

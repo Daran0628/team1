@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VDI 관리</title>
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/vdi-list.css">
+</head>
+<body>
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>VDI 관리</span>
+    </nav>
+    <h1>VDI 관리</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnCreate" class="btn btn-primary" style="display:none">⊕ VDI 생성</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+        </div>
+        <div class="toolbar-right">
+            <span id="itemsCount" class="items-count"></span>
+            <select id="statusFilter" class="search-input" style="width:auto;cursor:pointer;">
+                <option value="">All status</option>
+                <option value="RUNNING">RUNNING</option>
+                <option value="STOPPED">STOPPED</option>
+                <option value="EXITED">EXITED</option>
+            </select>
+            <input type="search" id="searchInput" class="search-input" placeholder="이름 검색...">
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-name">Container Name</th>
+                    <th class="col-vdi-image">Image</th>
+                    <th class="col-vdi-status">Status</th>
+                    <th class="col-vdi-assigned">할당 대상</th>
+                    <th class="col-vdi-date">생성일</th>
+                    <th class="col-actions">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="vdiBody">
+                <tr><td colspan="6" class="state-cell">불러오는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-bar" id="paginationBar"></div>
+
+</main>
+
+<!-- ══ VDI 생성 모달 ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="createModal" hidden>
+    <div class="modal">
+        <div class="modal-head">
+            <h2>VDI 생성</h2>
+            <button class="btn-x" data-close="createModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputContainerName">Container Name <span class="req">*</span></label>
+                <input type="text" id="inputContainerName" placeholder="예: dev-ubuntu-01" maxlength="80">
+            </div>
+            <div class="field">
+                <label for="inputImage">Image <span class="req">*</span></label>
+                <input type="text" id="inputImage" placeholder="예: ubuntu:22.04" maxlength="200">
+            </div>
+            <div class="field">
+                <label for="inputAssignedTo">할당 대상 <span class="req">*</span></label>
+                <select id="inputAssignedTo" class="field-select">
+                    <option value="">멤버 선택...</option>
+                </select>
+            </div>
+            <div class="form-error" id="createErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="createModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSaveCreate">생성</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 스냅샷 생성 모달 ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="snapModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>스냅샷 생성</h2>
+            <button class="btn-x" data-close="snapModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="snapName">스냅샷 이름 <span class="req">*</span></label>
+                <input type="text" id="snapName" placeholder="스냅샷 이름" maxlength="80">
+            </div>
+            <div class="form-error" id="snapErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="snapModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSnapConfirm">생성</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ VDI 삭제 확인 모달 ═════════════════════════════════════ -->
+<div class="modal-overlay" id="deleteModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>VDI 삭제</h2>
+            <button class="btn-x" data-close="deleteModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="deleteMsg" class="delete-msg"></p>
+            <div class="form-error" id="deleteErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="deleteModal">Cancel</button>
+            <button class="btn btn-danger" id="btnDeleteConfirm">삭제</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="vdi-toast"></div>
+
+<script src="/static/js/vdi-list.js"></script>
+</body>
+</html>
