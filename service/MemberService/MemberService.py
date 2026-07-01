@@ -1,6 +1,7 @@
 from flask_jwt_extended import get_jwt_identity
 
 from domain.model.Member import Member
+from domain.enum.EnrollmentStatus import EnrollmentStatus
 from web.converter.MemberConverter import MemberConverter
 from extensions import db
 
@@ -54,3 +55,16 @@ class MemberService:
 
         # DTO로 반환 (GET과 동일한 응답 구조 유지 추천)
         return MemberConverter.to_member_info_response_dto(member)
+
+    def search_members(self, keyword: str):
+
+        keyword = (keyword or "").strip()
+        if not keyword:
+            return []
+
+        members = Member.query.filter(
+            Member.name_ko.ilike(f"%{keyword}%"),
+            Member.enrollment_status == EnrollmentStatus.ACTIVE,
+        ).all()
+
+        return [MemberConverter.to_search_result_dto(m) for m in members]

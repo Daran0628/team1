@@ -28,14 +28,14 @@ FINANCE_DEPT_ID="00000000-0000-0000-0000-000000000007"
 OPS_DEPT_ID="00000000-0000-0000-0000-000000000008"
 
 DEPARTMENTS = [
-    {"id": DEV_DEPT_ID,       "department_name": "개발팀"},
-    {"id": ADMIN_DEPT_ID,     "department_name": "관리팀"},
-    {"id": HR_DEPT_ID,        "department_name": "인사팀"},
-    {"id": PLAN_DEPT_ID,      "department_name": "기획팀"},
-    {"id": SALES_DEPT_ID,     "department_name": "영업팀"},
-    {"id": MARKETING_DEPT_ID, "department_name": "마케팅팀"},
-    {"id": FINANCE_DEPT_ID,   "department_name": "재무팀"},
-    {"id": OPS_DEPT_ID,       "department_name": "IT운영팀"},
+    {"id": DEV_DEPT_ID,       "department_name": "개발팀",   "phone_no": "02-1234-5601"},
+    {"id": ADMIN_DEPT_ID,     "department_name": "관리팀",   "phone_no": "02-1234-5602"},
+    {"id": HR_DEPT_ID,        "department_name": "인사팀",   "phone_no": "02-1234-5603"},
+    {"id": PLAN_DEPT_ID,      "department_name": "기획팀",   "phone_no": "02-1234-5604"},
+    {"id": SALES_DEPT_ID,     "department_name": "영업팀",   "phone_no": "02-1234-5605"},
+    {"id": MARKETING_DEPT_ID, "department_name": "마케팅팀", "phone_no": "02-1234-5606"},
+    {"id": FINANCE_DEPT_ID,   "department_name": "재무팀",   "phone_no": "02-1234-5607"},
+    {"id": OPS_DEPT_ID,       "department_name": "IT운영팀", "phone_no": "02-1234-5608"},
 ]
 
 TEST_USERS = [
@@ -95,10 +95,15 @@ for idx, name in enumerate(_names, start=2):
 with app.app_context():
 
     for dept in DEPARTMENTS:
-        exists = Department.query.filter_by(id=dept["id"]).first()
-        if exists:
+        existing = Department.query.filter_by(id=dept["id"]).first()
+        if existing:
+            existing.phone_no = dept["phone_no"]
             continue
-        db.session.add(Department(id=dept["id"], department_name=dept["department_name"]))
+        db.session.add(Department(
+            id=dept["id"],
+            department_name=dept["department_name"],
+            phone_no=dept["phone_no"],
+        ))
     db.session.commit()
 
     for data in TEST_USERS:

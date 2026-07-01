@@ -95,6 +95,13 @@ def permission_page():
         'permission.html'
     )
 
+@app.route('/person')
+def person_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'person.html'
+    )
+
 @app.route('/mypage')
 def mypage():
     return send_from_directory(

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>인물 검색</title>
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/group.css">
+</head>
+<body>
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>인물 검색</span>
+    </nav>
+    <h1>인물 검색</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left"></div>
+        <div class="toolbar-right">
+            <span id="itemsCount" class="items-count"></span>
+            <input type="search" id="searchInput" class="search-input" placeholder="이름으로 검색...">
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-name">이름</th>
+                    <th class="col-name">부서</th>
+                    <th class="col-name">이메일</th>
+                    <th class="col-name">부서 연락처</th>
+                </tr>
+            </thead>
+            <tbody id="personBody">
+                <tr><td colspan="4" class="state-cell">이름을 입력해 검색하세요.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<div id="toastContainer"></div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/person.js"></script>
+</body>
+</html>

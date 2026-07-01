@@ -49,3 +49,16 @@ def update_my_info():
         SuccessStatus.MEMBER_UPDATE_SUCCESS,
         dto
     )
+
+@member_bp.route("/search", methods=["GET"])
+@jwt_required()
+def search_members():
+
+    keyword = request.args.get("keyword", "")
+
+    dto_list = _service.search_members(keyword)
+
+    return ApiResponse.on_success(
+        SuccessStatus.MEMBER_SEARCH_SUCCESS,
+        dto_list
+    )

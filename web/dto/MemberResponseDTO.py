@@ -18,3 +18,11 @@ class MemberInfoResponseDTO:
     work_type: str
 
     last_login: datetime | None
+
+
+@dataclass
+class MemberSearchResultDTO:
+    name_ko: str
+    department_name: str
+    department_phone: str | None
+    email: str
