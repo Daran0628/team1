@@ -144,7 +144,7 @@ function renderBuckets(buckets) {
     list.innerHTML = buckets.map(b => `
         <li class="bucket-item${currentBucket === b.bucket_name ? ' active' : ''}"
             data-name="${esc(b.bucket_name)}">
-            <span class="bucket-icon">🗄</span>
+            <span class="bucket-icon">🪣</span>
             <span class="bucket-name">${esc(b.bucket_name)}</span>
         </li>
     `).join('');

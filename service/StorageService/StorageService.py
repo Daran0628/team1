@@ -58,8 +58,12 @@ def create_bucket(dto: CreateBucketRequestDTO, creator_id: str) -> BucketRespons
 
 
 def list_buckets() -> list[BucketResponseDTO]:
-    buckets = StorageBucket.query.order_by(StorageBucket.created_at).all()
-    return [_bucket_to_dto(b) for b in buckets]
+    from core.rbac.RBACUtils import get_accessible_bucket_names
+    accessible = get_accessible_bucket_names()
+    query = StorageBucket.query.order_by(StorageBucket.created_at)
+    if accessible is not None:
+        query = query.filter(StorageBucket.bucket_name.in_(accessible))
+    return [_bucket_to_dto(b) for b in query.all()]
 
 
 def get_bucket(bucket_name: str) -> BucketResponseDTO:
