@@ -244,3 +244,13 @@ document.getElementById('btnCreateRoom').addEventListener('click', async () => {
 
 // ── Init ──────────────────────────────────────────────────────
 loadRooms();
+
+// 브라우저 뒤로가기(bfcache 복원) 시 목록 재조회
+window.addEventListener('pageshow', (e) => {
+    if (e.persisted) loadRooms();
+});
+
+// 다른 탭에서 돌아올 때 목록 재조회
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadRooms();
+});
