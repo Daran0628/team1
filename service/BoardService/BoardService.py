@@ -224,7 +224,10 @@ def list_posts(board_id: str, page: int = 1, size: int = 20) -> dict:
          .limit(size)
          .all()
     )
-    return {"total": total, "page": page, "size": size, "items": [_post_to_dict(p) for p in posts]}
+    # N+1 방지: 작성자 일괄 조회
+    author_ids = list({p.author_id for p in posts})
+    authors    = {m.id: m for m in Member.query.filter(Member.id.in_(author_ids)).all()} if author_ids else {}
+    return {"total": total, "page": page, "size": size, "items": [_post_to_dict(p, authors.get(p.author_id)) for p in posts]}
 
 
 def create_post(board_id: str, data: dict) -> dict:
@@ -264,7 +267,7 @@ def create_post(board_id: str, data: dict) -> dict:
     except Exception as e:
         db.session.rollback()
         raise e
-    return _post_detail_to_dict(post)
+    return _post_detail_to_dict(post, member)
 
 
 def get_post(board_id: str, post_id: str) -> dict:
@@ -292,7 +295,7 @@ def get_post(board_id: str, post_id: str) -> dict:
         db.session.rollback()
         raise e
 
-    return _post_detail_to_dict(post)
+    return _post_detail_to_dict(post, member)
 
 
 def update_post(board_id: str, post_id: str, data: dict) -> dict:
@@ -315,7 +318,7 @@ def update_post(board_id: str, post_id: str, data: dict) -> dict:
     except Exception as e:
         db.session.rollback()
         raise e
-    return _post_detail_to_dict(post)
+    return _post_detail_to_dict(post, member)
 
 
 def delete_post(board_id: str, post_id: str) -> None:
@@ -497,10 +500,17 @@ def list_approvers(board_id: str) -> list:
         raise BoardException(ErrorStatus.BOARD_ACCESS_DENIED)
     _get_board_or_raise(board_id)
     approvers = BoardApprover.query.filter_by(board_id=board_id).all()
-    return [
-        {"memberId": a.member_id, "grantedBy": a.granted_by, "grantedAt": a.granted_at.isoformat()}
-        for a in approvers
-    ]
+    # memberAccountId 포함: JS에서 account_id 기반 비교에 사용
+    result = []
+    for a in approvers:
+        m = Member.query.get(a.member_id)
+        result.append({
+            "memberId":        a.member_id,
+            "memberAccountId": m.account_id if m else None,
+            "grantedBy":       a.granted_by,
+            "grantedAt":       a.granted_at.isoformat(),
+        })
+    return result
 
 
 def add_approver(board_id: str, member_id: str) -> dict:
@@ -738,26 +748,38 @@ def _board_to_dict(b: Board) -> dict:
     }
 
 
-def _post_to_dict(p: Post) -> dict:
-    """Post 모델을 목록용 dict로 변환한다 (content 제외)."""
+def _post_to_dict(p: Post, author: Member = None) -> dict:
+    """Post 모델을 목록용 dict로 변환한다 (content 제외). author 미전달 시 DB 조회."""
+    if author is None:
+        author = Member.query.get(p.author_id)
     return {
-        "postId":    p.id,
-        "boardId":   p.board_id,
-        "title":     p.title,
-        "authorId":  p.author_id,
-        "status":    p.status.value,
-        "viewCount": p.view_count,
-        "likeCount": p.like_count,
-        "isPinned":  p.is_pinned,
-        "createdAt": p.created_at.isoformat(),
-        "updatedAt": p.updated_at.isoformat(),
+        "postId":          p.id,
+        "boardId":         p.board_id,
+        "title":           p.title,
+        "authorId":        p.author_id,
+        "authorName":      author.name_ko if author else None,
+        "authorAccountId": author.account_id if author else None,
+        "status":          p.status.value,
+        "viewCount":       p.view_count,
+        "likeCount":       p.like_count,
+        "isPinned":        p.is_pinned,
+        "createdAt":       p.created_at.isoformat(),
+        "updatedAt":       p.updated_at.isoformat(),
     }
 
 
-def _post_detail_to_dict(p: Post) -> dict:
-    """Post 모델을 상세용 dict로 변환한다 (content + 첨부파일 포함)."""
+def _post_detail_to_dict(p: Post, member: Member = None) -> dict:
+    """Post 모델을 상세용 dict로 변환한다 (content + isLiked + boardName 포함)."""
     d = _post_to_dict(p)
     d["content"] = p.content
+    # 게시판 이름 추가
+    board = Board.query.get(p.board_id)
+    d["boardName"] = board.board_name if board else None
+    # 좋아요 여부 추가
+    if member:
+        d["isLiked"] = PostLike.query.filter_by(post_id=p.id, member_id=member.id).first() is not None
+    else:
+        d["isLiked"] = False
     attachments = PostAttachment.query.filter_by(post_id=p.id).all()
     d["attachments"] = [_attachment_to_dict(a) for a in attachments]
     return d
@@ -776,30 +798,37 @@ def _attachment_to_dict(a: PostAttachment) -> dict:
 
 
 def _comment_to_dict(c: PostComment) -> dict:
-    """댓글을 대댓글 포함 dict로 변환한다 (1단계 중첩)."""
+    """댓글을 대댓글 포함 dict로 변환한다 (1단계 중첩). 작성자 이름·accountId 포함."""
+    author = Member.query.get(c.author_id)
     replies = (
         PostComment.query
-        .filter_by(parent_id=c.id, is_deleted=False)
+        .filter_by(parent_id=c.id)
         .order_by(PostComment.created_at.asc())
         .all()
     )
     return {
-        "commentId": c.id,
-        "postId":    c.post_id,
-        "parentId":  c.parent_id,
-        "authorId":  c.author_id,
-        "content":   c.content,
-        "createdAt": c.created_at.isoformat(),
-        "updatedAt": c.updated_at.isoformat(),
+        "commentId":        c.id,
+        "postId":           c.post_id,
+        "parentId":         c.parent_id,
+        "authorId":         c.author_id,
+        "authorName":       author.name_ko if author else None,
+        "authorAccountId":  author.account_id if author else None,
+        "content":          c.content,
+        "isDeleted":        c.is_deleted,
+        "createdAt":        c.created_at.isoformat(),
+        "updatedAt":        c.updated_at.isoformat(),
         "replies":   [
             {
-                "commentId": r.id,
-                "postId":    r.post_id,
-                "parentId":  r.parent_id,
-                "authorId":  r.author_id,
-                "content":   r.content,
-                "createdAt": r.created_at.isoformat(),
-                "updatedAt": r.updated_at.isoformat(),
+                "commentId":        r.id,
+                "postId":           r.post_id,
+                "parentId":         r.parent_id,
+                "authorId":         r.author_id,
+                "authorName":       (lambda m: m.name_ko if m else None)(Member.query.get(r.author_id)),
+                "authorAccountId":  (lambda m: m.account_id if m else None)(Member.query.get(r.author_id)),
+                "content":          r.content,
+                "isDeleted":        r.is_deleted,
+                "createdAt":        r.created_at.isoformat(),
+                "updatedAt":        r.updated_at.isoformat(),
             }
             for r in replies
         ],

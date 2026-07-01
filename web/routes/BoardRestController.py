@@ -1,4 +1,5 @@
 from flask import Blueprint, request, Response
+from urllib.parse import quote as _urlquote
 from flask_jwt_extended import jwt_required
 
 from core.response.ApiResponse import ApiResponse
@@ -281,7 +282,7 @@ def api_inline_attachment(board_id: str, post_id: str, attachment_id: str):
             data,
             mimetype=content_type,
             headers={
-                "Content-Disposition": f"inline; filename=\"{filename}\"",
+                "Content-Disposition": f"inline; filename*=UTF-8''{_urlquote(filename)}",
                 "Cache-Control": "private, max-age=3600",
             },
         )

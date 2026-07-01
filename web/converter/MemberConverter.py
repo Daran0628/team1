@@ -33,6 +33,7 @@ class MemberConverter:
             name_ko=member.name_ko,
             employee_no=member.employee_no,
 
+            department_id=member.department_id,
             department_name=member.department.department_name,
 
             email=member.email,

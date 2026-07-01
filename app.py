@@ -163,5 +163,29 @@ def chatroom_page(room_id):
     )
 
 
+@app.route('/board')
+def board_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'board.html'
+    )
+
+
+@app.route('/board/<board_id>')
+def board_posts_page(board_id):
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'board-posts.html'
+    )
+
+
+@app.route('/board/<board_id>/post/<post_id>')
+def board_post_page(board_id, post_id):
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'board-post.html'
+    )
+
+
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)
