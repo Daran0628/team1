@@ -11,6 +11,7 @@
 
     <style>.main{padding:0}</style>
 </head>
+
 <body>
 
 <div class="sidebar">
@@ -27,7 +28,7 @@
     <a href="/static/pages/admin.html" class="nav-item"><span class="nav-icon">⚙️</span> 관리자</a>
     <a href="/static/pages/iam.html" class="nav-item active"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
     <div class="sidebar-bottom">
-        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+        <a href="#" class="nav-item" id="logout-link"><span class="nav-icon">🚪</span> 로그아웃</a>
     </div>
 </div>
 
@@ -153,6 +154,8 @@
     </div>
 </div>
 
+<script src="/static/js/api.js"></script>
 <script src="/static/js/permission.js"></script>
+<script src="/static/js/sidebar_auth.js"></script>
 </body>
 </html>
