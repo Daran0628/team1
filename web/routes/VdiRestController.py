@@ -1,17 +1,12 @@
+import fcntl
 import json
 import os
+import pty
 import select
 import struct
 import subprocess
+import termios
 import threading
-
-try:
-    import fcntl
-    import pty
-    import termios
-    _PTY_AVAILABLE = True
-except ImportError:
-    _PTY_AVAILABLE = False
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, decode_token
@@ -182,10 +177,6 @@ def api_list_snapshots(vdi_id: str):
 
 @sock.route('/api/vdi/instances/<vdi_id>/terminal')
 def vdi_terminal(ws, vdi_id: str):
-    if not _PTY_AVAILABLE:
-        ws.close(1011, 'PTY not supported on this platform')
-        return
-
     # 1. JWT 검증 (쿼리 파라미터 노출 방지 → 연결 후 첫 메시지로 수신)
     import json as _json
     try:

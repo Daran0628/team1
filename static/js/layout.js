@@ -23,6 +23,14 @@ function _layoutParseJwt(t) {
     try { return JSON.parse(atob(t.split('.')[1])); } catch { return {}; }
 }
 
+function _applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+}
+
+// FOUC 방지를 위해 셸을 그리기 전, 스크립트 로드 시점에 바로 적용
+_applyTheme(localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
+
 function _buildSidebarNav() {
     return SIDEBAR_MENU.map(item => {
         const disabled = !item.href;
@@ -57,12 +65,15 @@ function initLayoutShell() {
                 <span class="brand-badge">LOGO</span>
                 <span class="brand-name">NOVAworks</span>
             </div>
-            <div class="topbar-user" id="topbarUser">
-                <span id="topbarUserName">${esc(payload.sub || '')}</span>
-                <span class="caret"><i class="fa-solid fa-chevron-down"></i></span>
-                <div class="user-dropdown" id="userDropdown" hidden>
-                    <a href="/mypage">마이페이지</a>
-                    <button id="btnShellLogout" type="button">로그아웃</button>
+            <div class="topbar-right">
+                <button class="theme-toggle" id="themeToggle" type="button" title="라이트/다크 모드 전환"></button>
+                <div class="topbar-user" id="topbarUser">
+                    <span id="topbarUserName">${esc(payload.sub || '')}</span>
+                    <span class="caret"><i class="fa-solid fa-chevron-down"></i></span>
+                    <div class="user-dropdown" id="userDropdown" hidden>
+                        <a href="/mypage">마이페이지</a>
+                        <button id="btnShellLogout" type="button">로그아웃</button>
+                    </div>
                 </div>
             </div>
         </header>
@@ -77,6 +88,18 @@ function initLayoutShell() {
     `;
 
     _highlightActiveNav();
+
+    const themeToggle = document.getElementById('themeToggle');
+    function _renderThemeToggleIcon() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        themeToggle.innerHTML = `<i class="fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}"></i>`;
+    }
+    _renderThemeToggleIcon();
+    themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        _applyTheme(isDark ? 'light' : 'dark');
+        _renderThemeToggleIcon();
+    });
 
     const topbarUser   = document.getElementById('topbarUser');
     const userDropdown = document.getElementById('userDropdown');

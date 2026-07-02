@@ -2,6 +2,7 @@
 
 .dashboard-body {
     padding: 1.5rem 5% 3rem;
+    color: var(--lo-text-strong); /* 라이트: 인디고 톤 / 다크: 기본 텍스트색 (아이콘 포함, 상속으로 적용) */
 }
 
 .dash-row-top {
@@ -33,7 +34,7 @@
 }
 .card-head h3 { font-size: 0.95rem; }
 .card-link { font-size: 0.75rem; color: var(--lo-muted); text-decoration: none; }
-.card-link:hover { color: var(--lo-primary); }
+.card-link:hover { color: var(--lo-secondary); }
 
 .empty-note {
     color: var(--lo-muted);
@@ -81,7 +82,7 @@
     align-items: center;
     gap: 0.4rem;
     text-decoration: none;
-    color: var(--lo-text);
+    color: inherit;
     font-size: 0.7rem;
     text-align: center;
 }
@@ -93,7 +94,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 1.1rem;
 }
-.shortcut-item:hover .shortcut-icon { border-color: var(--lo-primary); }
+.shortcut-item:hover .shortcut-icon { border-color: var(--lo-secondary); }
 
 /* ── 나의 티켓 현황 ─────────────────────────────────────────── */
 .ticket-stats {
@@ -132,6 +133,11 @@
 .status-접수   { background: #fff1d6; color: #b45309; }
 .status-대기   { background: #f1f2f4; color: var(--lo-muted); }
 .status-완료   { background: #dcfce7; color: #15803d; }
+
+[data-theme="dark"] .status-진행중 { background: rgba(96, 148, 255, 0.18); color: #93b4ff; }
+[data-theme="dark"] .status-접수   { background: rgba(255, 184, 92, 0.18); color: #ffc98a; }
+[data-theme="dark"] .status-대기   { background: rgba(255, 255, 255, 0.08); color: var(--lo-muted); }
+[data-theme="dark"] .status-완료   { background: rgba(74, 222, 128, 0.18); color: #86efac; }
 
 /* ── 공지사항 / FAQ (목록형 카드) ───────────────────────────── */
 .simple-list { display: flex; flex-direction: column; gap: 0.55rem; }
@@ -189,7 +195,7 @@
 .chat-time { display: block; font-size: 0.68rem; color: var(--lo-muted); margin-bottom: 0.3rem; }
 .chat-badge {
     display: inline-block;
-    background: var(--lo-primary);
+    background: var(--lo-secondary);
     color: #fff;
     border-radius: 99px;
     font-size: 0.66rem;
