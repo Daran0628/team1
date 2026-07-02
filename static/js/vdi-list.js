@@ -1,5 +1,8 @@
 /* vdi-list.js — VDI 목록 관리 UI */
 
+// Docker 리포지토리 이름 규칙: 소문자 영숫자 + '.' '_' '-' 구분자만 허용
+var SNAPSHOT_NAME_RE = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/;
+
 // ── Auth helpers ──────────────────────────────────────────────
 
 function getToken() {
@@ -290,6 +293,10 @@ document.getElementById('btnSnapConfirm').addEventListener('click', async functi
     var name  = document.getElementById('snapName').value.trim();
     var errEl = document.getElementById('snapErr');
     if (!name) { errEl.textContent = '스냅샷 이름을 입력하세요.'; return; }
+    if (!SNAPSHOT_NAME_RE.test(name)) {
+        errEl.textContent = "스냅샷 이름은 영문 소문자, 숫자, '.', '_', '-'만 사용할 수 있습니다.";
+        return;
+    }
     try {
         await apiJSON('/api/vdi/instances/' + state.snapVdiId + '/snapshots', {
             method: 'POST',

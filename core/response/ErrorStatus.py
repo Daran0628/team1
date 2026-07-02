@@ -38,6 +38,21 @@ class ErrorStatus(Enum):
     STORAGE_FILE_TOO_LARGE        = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "STORAGE4013", "파일 크기는 최대 200MB까지 업로드할 수 있습니다.")
     STORAGE_OPERATION_FAILED      = (HTTPStatus.INTERNAL_SERVER_ERROR, "STORAGE5001", "스토리지 작업에 실패했습니다.")
 
+    # Group (커스텀 그룹)
+    GROUP_NOT_FOUND                  = (HTTPStatus.NOT_FOUND,   "GROUP4001", "그룹을 찾을 수 없습니다.")
+    GROUP_NAME_DUPLICATE             = (HTTPStatus.CONFLICT,    "GROUP4002", "이미 존재하는 그룹 이름입니다.")
+    GROUP_MEMBER_NOT_FOUND           = (HTTPStatus.NOT_FOUND,   "GROUP4003", "그룹에서 해당 멤버를 찾을 수 없습니다.")
+    GROUP_MEMBER_ALREADY_EXISTS      = (HTTPStatus.CONFLICT,    "GROUP4004", "이미 그룹에 속한 멤버입니다.")
+
+    # VDI (가상 데스크탑)
+    VDI_NOT_FOUND              = (HTTPStatus.NOT_FOUND,            "VDI4001", "VDI 인스턴스를 찾을 수 없습니다.")
+    VDI_ALREADY_EXISTS         = (HTTPStatus.CONFLICT,             "VDI4002", "이미 존재하는 컨테이너 이름입니다.")
+    VDI_MEMBER_ALREADY_HAS_VDI = (HTTPStatus.CONFLICT,             "VDI4003", "이미 VDI가 할당된 사용자입니다.")
+    VDI_SNAPSHOT_NOT_FOUND     = (HTTPStatus.NOT_FOUND,            "VDI4004", "스냅샷을 찾을 수 없습니다.")
+    VDI_INVALID_SNAPSHOT_NAME  = (HTTPStatus.BAD_REQUEST,          "VDI4005", "스냅샷 이름은 영문 소문자, 숫자, '.', '_', '-'만 사용할 수 있습니다.")
+    VDI_CREATE_FAILED          = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5001", "컨테이너 생성에 실패했습니다.")
+    VDI_OPERATION_FAILED       = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5002", "컨테이너 작업에 실패했습니다.")
+    
     # Board (게시판)
     BOARD_NOT_FOUND                  = (HTTPStatus.NOT_FOUND,  "BOARD4001", "게시판을 찾을 수 없습니다.")
     BOARD_ACCESS_DENIED              = (HTTPStatus.FORBIDDEN,  "BOARD4002", "게시판 접근 권한이 없습니다.")

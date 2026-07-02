@@ -29,6 +29,8 @@ from service.VdiService.VdiService import (
     delete_vdi,
     create_snapshot,
     list_snapshots,
+    create_vdi_from_snapshot,
+    restore_vdi_from_snapshot,
 )
 
 vdi_bp = Blueprint('vdi', __name__, url_prefix='/api/vdi')
@@ -167,6 +169,39 @@ def api_list_snapshots(vdi_id: str):
     def work():
         result = list_snapshots(vdi_id)
         return ApiResponse.on_success(SuccessStatus.VDI_SNAPSHOT_READ, result)
+    return _handle(work)
+
+
+@vdi_bp.route('/instances/from-snapshot', methods=['POST'])
+@jwt_required()
+@vdi_required('MANAGE')
+def api_create_vdi_from_snapshot():
+    body = request.get_json(silent=True) or {}
+    def work():
+        snapshot_id    = body.get('snapshotId', '').strip()
+        container_name = body.get('containerName', '').strip()
+        target_member  = body.get('assignedTo', '').strip()
+
+        if not snapshot_id or not container_name or not target_member:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "snapshotId, containerName, assignedTo 필드가 필요합니다.")
+
+        result = create_vdi_from_snapshot(snapshot_id, container_name, target_member)
+        return ApiResponse.on_success(SuccessStatus.VDI_SNAPSHOT_RESTORE_AS_NEW, result)
+    return _handle(work)
+
+
+@vdi_bp.route('/instances/<vdi_id>/restore', methods=['POST'])
+@jwt_required()
+@vdi_required('RESTORE')
+def api_restore_vdi(vdi_id: str):
+    body = request.get_json(silent=True) or {}
+    def work():
+        snapshot_id = body.get('snapshotId', '').strip()
+        if not snapshot_id:
+            return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "snapshotId 필드가 필요합니다.")
+
+        result = restore_vdi_from_snapshot(vdi_id, snapshot_id)
+        return ApiResponse.on_success(SuccessStatus.VDI_RESTORE, result)
     return _handle(work)
 
 
