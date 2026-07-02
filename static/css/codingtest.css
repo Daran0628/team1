@@ -1,5 +1,9 @@
 /* codingtest.css — 코딩테스트 페이지 전용 오버라이드 */
 
+/* .btn 등에 display가 명시되어 있으면 hidden 속성보다 우선 적용되는
+   문제가 있어(mail.css에서도 동일 이슈 발견), 강제로 확실히 숨긴다 */
+[hidden] { display: none !important; }
+
 /* rbac.css/group.css의 레거시 변수(--primary 등)를 대시보드 테마로 재매핑
    (person.css와 동일한 방식 — 이 페이지에만 로드되므로 다른 페이지엔 영향 없음) */
 :root {
