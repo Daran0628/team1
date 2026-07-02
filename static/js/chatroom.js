@@ -340,6 +340,13 @@ function scrollToBottom() {
 }
 
 async function markRead() {
+    // SSE로 자기 자신의 read 이벤트가 되돌아오길 기다리지 않고 즉시 로컬 상태부터 갱신
+    // (초기 진입 시 SSE 연결 전에 markRead가 먼저 실행돼 자신의 이벤트를 못 받는 경우 대응)
+    if (myMemberId && currentRoom) {
+        const me = currentRoom.members.find(m => m.member_id === myMemberId);
+        if (me) me.last_read_at = new Date().toISOString();
+        refreshUnreadBadges();
+    }
     await apiFetch('/api/chat/rooms/' + roomId + '/read', { method: 'PUT' });
 }
 
