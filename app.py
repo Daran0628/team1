@@ -24,6 +24,7 @@ from web.routes.VdiRestController import vdi_bp
 from web.routes.BoardRestController import board_bp
 from service.BoardService.BoardService import ensure_board_bucket
 from web.routes.CafeteriaRestController import cafeteria_bp
+from web.routes.CodingTestRestController import coding_test_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -49,7 +50,7 @@ app.register_blueprint(chat_bp)
 app.register_blueprint(sse, url_prefix="/stream")
 app.register_blueprint(board_bp)
 app.register_blueprint(cafeteria_bp)
-
+app.register_blueprint(coding_test_bp)
 
 with app.app_context():
     from domain.model.Member import Member
@@ -70,6 +71,10 @@ with app.app_context():
     from domain.model.ChatFile import ChatFile
     from domain.model.Board import Board, Post, PostAttachment, PostComment, PostLike, PostView, BoardApprover
     from domain.model.CafeteriaMenu import CafeteriaMenu
+    from domain.model.Problem import Problem
+    from domain.model.TestCase import TestCase
+    from domain.model.Submission import Submission
+    from domain.model.Score import Score
     db.create_all()
     ensure_chat_bucket()
     ensure_board_bucket()
@@ -114,6 +119,14 @@ def person_page():
 @app.route('/mypage')
 def mypage():
     return send_from_directory(_PAGES_DIR, 'mypage.html')
+
+@app.route('/coding-test')
+def coding_test_page():
+    return send_from_directory(_PAGES_DIR, 'codingtest.html')
+
+@app.route('/coding-test/<problem_id>')
+def coding_test_detail_page(problem_id):
+    return send_from_directory(_PAGES_DIR, 'codingtest-detail.html')
 
 @app.route('/mail')
 def mail_page():

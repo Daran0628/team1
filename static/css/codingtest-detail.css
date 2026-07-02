@@ -1,0 +1,107 @@
+/* codingtest-detail.css — 코딩테스트 문제 상세/제출 페이지 전용 */
+
+.ct-detail-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.card {
+    background: var(--lo-surface);
+    border: 1px solid var(--lo-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.ct-limits {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.ct-limit-pill {
+    background: var(--lo-bg);
+    border-radius: 99px;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.78rem;
+    color: var(--lo-muted);
+}
+
+.ct-description {
+    white-space: pre-wrap;
+    line-height: 1.7;
+    font-size: 0.9rem;
+    color: var(--lo-text-strong);
+    margin-bottom: 1.5rem;
+}
+
+.ct-subhead {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--lo-text-strong);
+}
+
+.ct-sample-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.ct-sample-item {
+    border: 1px solid var(--lo-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.ct-sample-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+.ct-sample-col { padding: 0.6rem 0.8rem; }
+.ct-sample-col + .ct-sample-col { border-left: 1px solid var(--lo-border); }
+.ct-sample-col-label { font-size: 0.72rem; color: var(--lo-muted); margin-bottom: 0.3rem; }
+.ct-sample-col pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--lo-text-strong);
+}
+
+.ct-code-editor {
+    width: 100%;
+    border: 1.5px solid var(--lo-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    background: var(--lo-bg);
+    color: var(--lo-text-strong);
+    outline: none;
+    resize: vertical;
+}
+.ct-code-editor:focus { border-color: var(--lo-secondary); }
+
+#btnSubmit { width: 100%; margin-bottom: 1.5rem; }
+
+.ct-submissions-head { margin-top: 0; }
+
+.status-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 99px;
+    white-space: nowrap;
+}
+.status-pill.PENDING              { background: rgba(107, 114, 128, 0.15); color: var(--lo-muted); }
+.status-pill.JUDGING              { background: rgba(9, 102, 146, 0.15);   color: var(--lo-secondary); }
+.status-pill.ACCEPTED             { background: rgba(34, 197, 94, 0.15);  color: #15803d; }
+.status-pill.WRONG_ANSWER,
+.status-pill.RUNTIME_ERROR,
+.status-pill.COMPILE_ERROR        { background: rgba(232, 62, 62, 0.15); color: var(--lo-danger); }
+.status-pill.TIME_LIMIT_EXCEEDED  { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+
+[data-theme="dark"] .status-pill.ACCEPTED { color: #86efac; }
+[data-theme="dark"] .status-pill.WRONG_ANSWER,
+[data-theme="dark"] .status-pill.RUNTIME_ERROR,
+[data-theme="dark"] .status-pill.COMPILE_ERROR { color: #f3a3a3; }
+[data-theme="dark"] .status-pill.TIME_LIMIT_EXCEEDED { color: #ffc98a; }
+
+@media (max-width: 900px) {
+    .ct-detail-grid { grid-template-columns: 1fr; }
+}

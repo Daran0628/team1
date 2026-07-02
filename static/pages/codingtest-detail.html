@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
+    <title>코딩테스트</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/group.css">
+    <link rel="stylesheet" href="/static/css/codingtest.css">
+    <link rel="stylesheet" href="/static/css/codingtest-detail.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
+</head>
+<body>
+
+<div class="app-shell">
+<div id="shellSlot"></div>
+<div class="app-main">
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <a href="/coding-test">코딩테스트</a> <span>›</span>
+        <span id="crumbTitle">문제</span>
+    </nav>
+    <h1 id="pageTitle">불러오는 중...</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="ct-detail-grid">
+
+        <section class="card ct-problem-card">
+            <div id="problemMeta" class="ct-limits"></div>
+            <div id="problemDescription" class="ct-description">불러오는 중...</div>
+
+            <h3 class="ct-subhead">샘플 테스트케이스</h3>
+            <div id="sampleList" class="ct-sample-list"></div>
+        </section>
+
+        <section class="card ct-submit-card">
+            <h3 class="ct-subhead">코드 제출</h3>
+            <div class="field">
+                <label for="languageSelect">언어</label>
+                <select id="languageSelect" class="field-select">
+                    <option value="PYTHON">Python</option>
+                    <option value="CPP">C++</option>
+                    <option value="JAVA">Java</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="sourceCode">코드</label>
+                <textarea id="sourceCode" class="ct-code-editor" rows="14" spellcheck="false" placeholder="여기에 코드를 작성하세요"></textarea>
+            </div>
+            <div class="form-error" id="submitErr"></div>
+            <button class="btn btn-primary" id="btnSubmit">제출</button>
+
+            <h3 class="ct-subhead ct-submissions-head">내 제출 내역</h3>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>제출 시각</th>
+                            <th>언어</th>
+                            <th>상태</th>
+                            <th>점수</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissionBody">
+                        <tr><td colspan="4" class="state-cell">아직 제출 내역이 없습니다.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+</main>
+
+<div id="toastContainer"></div>
+
+</div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/layout.js"></script>
+<script src="/static/js/codingtest-detail.js"></script>
+</body>
+</html>

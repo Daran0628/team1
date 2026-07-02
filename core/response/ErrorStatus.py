@@ -84,6 +84,12 @@ class ErrorStatus(Enum):
     # Cafeteria
     CAFETERIA_MENU_NOT_FOUND = (HTTPStatus.NOT_FOUND, "CAFETERIA4001", "해당 날짜의 메뉴가 없습니다.")
 
+    # 코딩테스트
+    CODE_PROBLEM_NOT_FOUND        = (HTTPStatus.NOT_FOUND,   "CODE4001", "문제를 찾을 수 없습니다.")
+    CODE_SUBMISSION_NOT_FOUND     = (HTTPStatus.NOT_FOUND,   "CODE4002", "제출 내역을 찾을 수 없습니다.")
+    CODE_UNSUPPORTED_LANGUAGE     = (HTTPStatus.BAD_REQUEST, "CODE4003", "지원하지 않는 언어입니다.")
+    CODE_TEST_CASE_REQUIRED       = (HTTPStatus.BAD_REQUEST, "CODE4004", "테스트케이스가 최소 1개 필요합니다.")
+    CODE_SUBMISSION_UPLOAD_FAILED = (HTTPStatus.INTERNAL_SERVER_ERROR, "CODE5001", "소스코드 업로드에 실패했습니다.")
 
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)

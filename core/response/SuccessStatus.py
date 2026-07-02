@@ -113,6 +113,14 @@ class SuccessStatus(Enum):
     CAFETERIA_MENU_MONTH      = (HTTPStatus.OK, "CAFETERIA2004", "이번 달 메뉴 조회에 성공했습니다.")
     CAFETERIA_LUNCH_RECOMMEND = (HTTPStatus.OK, "CAFETERIA2005", "점심 메뉴 추천에 성공했습니다.")
 
+    # 코딩테스트
+    CODE_PROBLEM_CREATE    = (HTTPStatus.CREATED, "CODE2001", "문제가 등록되었습니다.")
+    CODE_PROBLEM_LIST      = (HTTPStatus.OK,      "CODE2002", "문제 목록 조회에 성공했습니다.")
+    CODE_PROBLEM_READ      = (HTTPStatus.OK,      "CODE2003", "문제 조회에 성공했습니다.")
+    CODE_SUBMISSION_CREATE = (HTTPStatus.CREATED, "CODE2011", "코드가 제출되었습니다.")
+    CODE_SUBMISSION_READ   = (HTTPStatus.OK,      "CODE2012", "제출 결과 조회에 성공했습니다.")
+    CODE_SUBMISSION_LIST   = (HTTPStatus.OK,      "CODE2013", "제출 목록 조회에 성공했습니다.")
+
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
         obj._value_ = code

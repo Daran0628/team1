@@ -6,6 +6,7 @@ flask-bcrypt
 flask-sqlalchemy
 redis
 requests
+rq
 minio
 flask-sock
 flask-sse
