@@ -4,10 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VDI 관리</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
     <link rel="stylesheet" href="/static/css/rbac.css">
     <link rel="stylesheet" href="/static/css/vdi-list.css">
 </head>
 <body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/board" class="nav-item"><span class="nav-icon">📋</span> 게시판</a>
+    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+    <a href="/vdi/list" class="nav-item active"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" id="logout-link"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
 
 <header class="page-header">
     <nav class="breadcrumb">
@@ -57,6 +80,8 @@
     <div class="pagination-bar" id="paginationBar"></div>
 
 </main>
+
+</div><!-- /.main -->
 
 <!-- ══ VDI 생성 모달 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="createModal" hidden>
@@ -131,6 +156,8 @@
 <!-- Toast -->
 <div id="toast" class="vdi-toast"></div>
 
+<script src="/static/js/api.js"></script>
 <script src="/static/js/vdi-list.js"></script>
+<script src="/static/js/sidebar_auth.js"></script>
 </body>
 </html>

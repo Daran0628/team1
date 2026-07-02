@@ -8,7 +8,6 @@ class MemberInfoResponseDTO:
     name_ko: str
     employee_no: str
 
-    department_id: str | None
     department_name: str
 
     email: str

@@ -46,15 +46,11 @@ class CreatePermissionRequestDTO:
         from domain.enum.StorageAction import StorageAction
         from domain.enum.VdiAction import VdiAction
         from domain.enum.RbacAction import RbacAction
-        from domain.enum.BoardAction import BoardAction
-        from domain.enum.PostAction import PostAction
 
         _valid_actions: dict = {
             'STORAGE': {a.value for a in StorageAction},
             'VDI':     {a.value for a in VdiAction},
             'RBAC':    {a.value for a in RbacAction},
-            'BOARD':   {a.value for a in BoardAction},
-            'POST':    {a.value for a in PostAction},
         }
         if self.type not in _valid_actions:
             raise ValueError(f"type은 {list(_valid_actions.keys())} 중 하나여야 합니다.")

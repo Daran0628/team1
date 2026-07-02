@@ -642,3 +642,5 @@ html, body { height: 100%; }
     .room-item { padding: 0.55rem; justify-content: center; }
     .room-item-icon { margin: 0; }
 }
+
+.chat-layout { margin-left: 240px; flex: 1; }
