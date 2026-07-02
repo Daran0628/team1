@@ -10,6 +10,7 @@ from domain.model.StorageBucket import StorageBucket
 from domain.model.StorageResource import StorageResource
 from service.StorageService.StorageService import (
     StorageException,
+    MAX_FILE_SIZE,
     create_bucket,
     list_buckets,
     get_bucket,
@@ -169,6 +170,12 @@ def api_upload_object(bucket_name: str):
         if 'file' not in request.files:
             return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, "file 필드가 없습니다.")
         file = request.files['file']
+        # 전체 읽기 전에 크기부터 확인 (초과 시 메모리에 올리지 않고 즉시 거부)
+        file.seek(0, 2)
+        file_size = file.tell()
+        file.seek(0)
+        if file_size > MAX_FILE_SIZE:
+            return ApiResponse.on_failure(ErrorStatus.STORAGE_FILE_TOO_LARGE)
         object_name = request.form.get('objectName') or file.filename
         content_type = file.content_type or 'application/octet-stream'
         data = file.read()

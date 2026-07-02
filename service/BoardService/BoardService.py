@@ -19,6 +19,8 @@ from extensions import db
 logger = logging.getLogger(__name__)
 
 BOARD_BUCKET = "board-files"
+MAX_FILE_SIZE = 50 * 1024 * 1024    # 첨부파일 파일당 최대 50MB
+MAX_TOTAL_SIZE = 150 * 1024 * 1024  # 한 번의 업로드 요청에서 허용하는 총 용량
 
 
 def ensure_board_bucket() -> None:
@@ -588,6 +590,18 @@ def upload_attachments(board_id: str, post_id: str, files: list) -> list:
         raise BoardException(ErrorStatus.POST_NOT_AUTHOR)
     if not files:
         raise ValueError("업로드할 파일이 없습니다.")
+
+    # 검증 패스: 실제 업로드 전에 개별/합계 크기부터 확인 (부분 업로드 방지)
+    total_size = 0
+    for file_storage in files:
+        file_storage.seek(0, 2)
+        file_size = file_storage.tell()
+        file_storage.seek(0)
+        if file_size > MAX_FILE_SIZE:
+            raise BoardException(ErrorStatus.ATTACHMENT_TOO_LARGE)
+        total_size += file_size
+    if total_size > MAX_TOTAL_SIZE:
+        raise BoardException(ErrorStatus.ATTACHMENT_TOTAL_TOO_LARGE)
 
     client = get_minio_client()
     created = []

@@ -313,6 +313,8 @@ function updateBreadcrumb() {
 
 // ── Upload ────────────────────────────────────────────────────
 
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 파일당 최대 200MB
+
 async function handleFileSelect(e) {
     const files = Array.from(e.target.files);
     if (!files.length || !currentBucket) return;
@@ -321,6 +323,10 @@ async function handleFileSelect(e) {
     progress.hidden = false;
 
     for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) {
+            showToast(`${file.name}은(는) 최대 용량(200MB)을 초과해 업로드할 수 없습니다.`, 'error');
+            continue;
+        }
         const fd = new FormData();
         fd.append('file', file);
         fd.append('objectName', currentPrefix + file.name);

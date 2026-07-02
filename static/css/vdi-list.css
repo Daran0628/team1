@@ -41,6 +41,23 @@
 .member-name { font-weight: 600; color: var(--text); }
 .member-id   { font-size: 0.72rem; color: var(--muted); font-family: monospace; }
 
+/* ── 스냅샷 목록 ────────────────────────────────────────────── */
+.snap-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-bottom: 0.75rem; }
+.snap-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+.snap-row .snap-info { flex: 1; min-width: 0; }
+.snap-row .snap-name { font-size: 0.82rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.snap-row .snap-date { font-size: 0.7rem; color: var(--muted); }
+.snap-row .act-btn { padding: 4px 8px; font-size: 0.7rem; }
+.snap-empty { font-size: 0.8rem; color: var(--muted); text-align: center; padding: 12px 0; }
+
 /* ── Toast notification ─────────────────────────────────────── */
 .vdi-toast {
     position: fixed;

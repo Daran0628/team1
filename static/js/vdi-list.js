@@ -1,5 +1,8 @@
 /* vdi-list.js — VDI 목록 관리 UI */
 
+// Docker 리포지토리 이름 규칙: 소문자 영숫자 + '.' '_' '-' 구분자만 허용
+var SNAPSHOT_NAME_RE = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/;
+
 // ── Auth helpers ──────────────────────────────────────────────
 
 function getToken() {
@@ -215,6 +218,7 @@ document.getElementById('vdiBody').addEventListener('click', async function(e) {
         document.getElementById('snapName').value = '';
         document.getElementById('snapErr').textContent = '';
         document.getElementById('snapModal').hidden = false;
+        loadSnapshotList();
     } else if (action === 'delete') {
         state.deleteVdiId = vdiId;
         var vdi = state.vdis.find(function(v) { return v.vdiId === vdiId; });
@@ -241,6 +245,17 @@ async function powerAction(vdiId, action) {
 
 // ── VDI 생성 ──────────────────────────────────────────────────
 
+function populateMemberSelect(sel) {
+    sel.innerHTML = '<option value="">멤버 선택...</option>';
+    Object.entries(state.members).forEach(function(entry) {
+        var id = entry[0], m = entry[1];
+        var opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = m.name + (m.accountId ? ' (' + m.accountId + ')' : '');
+        sel.appendChild(opt);
+    });
+}
+
 document.getElementById('btnCreate').addEventListener('click', async function() {
     document.getElementById('inputContainerName').value = '';
     document.getElementById('inputImage').value = '';
@@ -251,14 +266,7 @@ document.getElementById('btnCreate').addEventListener('click', async function() 
     document.getElementById('createModal').hidden = false;
 
     await loadMembers();
-    sel.innerHTML = '<option value="">멤버 선택...</option>';
-    Object.entries(state.members).forEach(function(entry) {
-        var id = entry[0], m = entry[1];
-        var opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = m.name + (m.accountId ? ' (' + m.accountId + ')' : '');
-        sel.appendChild(opt);
-    });
+    populateMemberSelect(sel);
 });
 
 document.getElementById('btnSaveCreate').addEventListener('click', async function() {
@@ -286,17 +294,127 @@ document.getElementById('btnSaveCreate').addEventListener('click', async functio
 
 // ── 스냅샷 ────────────────────────────────────────────────────
 
+function fmtSnapDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate() + ' ' +
+        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+
+async function loadSnapshotList() {
+    var listEl = document.getElementById('snapList');
+    listEl.innerHTML = '<div class="snap-empty">불러오는 중...</div>';
+    try {
+        var snaps = await apiJSON('/api/vdi/instances/' + state.snapVdiId + '/snapshots');
+        if (!snaps || !snaps.length) {
+            listEl.innerHTML = '<div class="snap-empty">스냅샷이 없습니다.</div>';
+            return;
+        }
+        listEl.innerHTML = snaps.map(function(s) {
+            return '<div class="snap-row" data-snapshot-id="' + s.snapshotId + '">' +
+                '<div class="snap-info">' +
+                    '<div class="snap-name">' + esc(s.snapshotName) + '</div>' +
+                    '<div class="snap-date">' + esc(fmtSnapDate(s.createdAt)) + '</div>' +
+                '</div>' +
+                '<button class="act-btn" data-snap-action="create-vdi">새 VDI로 생성</button>' +
+                '<button class="act-btn act-stop" data-snap-action="restore">복원</button>' +
+                '<button class="act-btn act-del" data-snap-action="delete">삭제</button>' +
+            '</div>';
+        }).join('');
+    } catch (e) {
+        listEl.innerHTML = '<div class="snap-empty">스냅샷 목록을 불러오지 못했습니다.</div>';
+    }
+}
+
 document.getElementById('btnSnapConfirm').addEventListener('click', async function() {
     var name  = document.getElementById('snapName').value.trim();
     var errEl = document.getElementById('snapErr');
     if (!name) { errEl.textContent = '스냅샷 이름을 입력하세요.'; return; }
+    if (!SNAPSHOT_NAME_RE.test(name)) {
+        errEl.textContent = "스냅샷 이름은 영문 소문자, 숫자, '.', '_', '-'만 사용할 수 있습니다.";
+        return;
+    }
     try {
         await apiJSON('/api/vdi/instances/' + state.snapVdiId + '/snapshots', {
             method: 'POST',
             body: JSON.stringify({ snapshotName: name }),
         });
-        document.getElementById('snapModal').hidden = true;
+        errEl.textContent = '';
+        document.getElementById('snapName').value = '';
         toast('스냅샷이 생성되었습니다.', 'success');
+        loadSnapshotList();
+    } catch (e) {
+        errEl.textContent = e.message;
+    }
+});
+
+// ── 스냅샷 목록 행 액션 (새 VDI 생성 / 복원 / 삭제) ────────────────
+
+document.getElementById('snapList').addEventListener('click', async function(e) {
+    var btn = e.target.closest('[data-snap-action]');
+    if (!btn) return;
+    var row = btn.closest('.snap-row');
+    var snapshotId = row.dataset.snapshotId;
+
+    if (btn.dataset.snapAction === 'create-vdi') {
+        document.getElementById('snapCreateVdiName').value = '';
+        document.getElementById('snapCreateVdiErr').textContent = '';
+        document.getElementById('snapCreateVdiModal').dataset.snapshotId = snapshotId;
+        var sel = document.getElementById('snapCreateVdiAssignedTo');
+        sel.innerHTML = '<option value="">멤버 로딩 중...</option>';
+        document.getElementById('snapCreateVdiModal').hidden = false;
+        await loadMembers();
+        populateMemberSelect(sel);
+    } else if (btn.dataset.snapAction === 'restore') {
+        if (!confirm('이 VDI를 해당 스냅샷 시점으로 복원하시겠습니까?\n현재 컨테이너는 삭제되고 스냅샷 이미지로 다시 생성됩니다. 이 작업은 되돌릴 수 없습니다.')) return;
+        try {
+            await apiJSON('/api/vdi/instances/' + state.snapVdiId + '/restore', {
+                method: 'POST',
+                body: JSON.stringify({ snapshotId: snapshotId }),
+            });
+            toast('VDI가 복원되었습니다.', 'success');
+            document.getElementById('snapModal').hidden = true;
+            await loadVdis();
+        } catch (e) {
+            toast(e.message, 'error');
+        }
+    } else if (btn.dataset.snapAction === 'delete') {
+        if (!confirm('이 스냅샷을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+        try {
+            await apiJSON('/api/vdi/instances/' + state.snapVdiId + '/snapshots/' + snapshotId, { method: 'DELETE' });
+            toast('스냅샷이 삭제되었습니다.', 'success');
+            loadSnapshotList();
+        } catch (e) {
+            toast(e.message, 'error');
+        }
+    }
+});
+
+// ── 스냅샷으로 새 VDI 생성 모달 ────────────────────────────────
+
+document.getElementById('btnSnapCreateVdiConfirm').addEventListener('click', async function() {
+    var modal         = document.getElementById('snapCreateVdiModal');
+    var snapshotId    = modal.dataset.snapshotId;
+    var containerName = document.getElementById('snapCreateVdiName').value.trim();
+    var assignedTo    = document.getElementById('snapCreateVdiAssignedTo').value;
+    var errEl         = document.getElementById('snapCreateVdiErr');
+
+    if (!containerName || !assignedTo) {
+        errEl.textContent = '모든 필드를 입력하세요.';
+        return;
+    }
+    try {
+        await apiJSON('/api/vdi/instances/from-snapshot', {
+            method: 'POST',
+            body: JSON.stringify({
+                snapshotId: snapshotId,
+                containerName: containerName,
+                assignedTo: assignedTo,
+            }),
+        });
+        modal.hidden = true;
+        toast('스냅샷으로 새 VDI가 생성되었습니다.', 'success');
+        await loadVdis();
     } catch (e) {
         errEl.textContent = e.message;
     }
@@ -330,7 +448,7 @@ document.querySelectorAll('[data-close]').forEach(function(btn) {
     });
 });
 
-['createModal', 'snapModal', 'deleteModal'].forEach(function(id) {
+['createModal', 'snapModal', 'snapCreateVdiModal', 'deleteModal'].forEach(function(id) {
     document.getElementById(id).addEventListener('click', function(e) {
         if (e.target === e.currentTarget) e.currentTarget.hidden = true;
     });

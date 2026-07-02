@@ -35,8 +35,24 @@ class ErrorStatus(Enum):
     STORAGE_BUCKET_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4003", "버켓이 비어있지 않습니다. ?force=true로 강제 삭제하세요.")
     STORAGE_OBJECT_NOT_FOUND      = (HTTPStatus.NOT_FOUND,  "STORAGE4011", "오브젝트를 찾을 수 없습니다.")
     STORAGE_FOLDER_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4012", "폴더가 비어있지 않습니다.")
+    STORAGE_FILE_TOO_LARGE        = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "STORAGE4013", "파일 크기는 최대 200MB까지 업로드할 수 있습니다.")
     STORAGE_OPERATION_FAILED      = (HTTPStatus.INTERNAL_SERVER_ERROR, "STORAGE5001", "스토리지 작업에 실패했습니다.")
 
+    # Group (커스텀 그룹)
+    GROUP_NOT_FOUND                  = (HTTPStatus.NOT_FOUND,   "GROUP4001", "그룹을 찾을 수 없습니다.")
+    GROUP_NAME_DUPLICATE             = (HTTPStatus.CONFLICT,    "GROUP4002", "이미 존재하는 그룹 이름입니다.")
+    GROUP_MEMBER_NOT_FOUND           = (HTTPStatus.NOT_FOUND,   "GROUP4003", "그룹에서 해당 멤버를 찾을 수 없습니다.")
+    GROUP_MEMBER_ALREADY_EXISTS      = (HTTPStatus.CONFLICT,    "GROUP4004", "이미 그룹에 속한 멤버입니다.")
+
+    # VDI (가상 데스크탑)
+    VDI_NOT_FOUND              = (HTTPStatus.NOT_FOUND,            "VDI4001", "VDI 인스턴스를 찾을 수 없습니다.")
+    VDI_ALREADY_EXISTS         = (HTTPStatus.CONFLICT,             "VDI4002", "이미 존재하는 컨테이너 이름입니다.")
+    VDI_MEMBER_ALREADY_HAS_VDI = (HTTPStatus.CONFLICT,             "VDI4003", "이미 VDI가 할당된 사용자입니다.")
+    VDI_SNAPSHOT_NOT_FOUND     = (HTTPStatus.NOT_FOUND,            "VDI4004", "스냅샷을 찾을 수 없습니다.")
+    VDI_INVALID_SNAPSHOT_NAME  = (HTTPStatus.BAD_REQUEST,          "VDI4005", "스냅샷 이름은 영문 소문자, 숫자, '.', '_', '-'만 사용할 수 있습니다.")
+    VDI_CREATE_FAILED          = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5001", "컨테이너 생성에 실패했습니다.")
+    VDI_OPERATION_FAILED       = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5002", "컨테이너 작업에 실패했습니다.")
+    
     # Board (게시판)
     BOARD_NOT_FOUND                  = (HTTPStatus.NOT_FOUND,  "BOARD4001", "게시판을 찾을 수 없습니다.")
     BOARD_ACCESS_DENIED              = (HTTPStatus.FORBIDDEN,  "BOARD4002", "게시판 접근 권한이 없습니다.")
@@ -49,6 +65,8 @@ class ErrorStatus(Enum):
     BOARD_APPROVER_ALREADY_EXISTS    = (HTTPStatus.CONFLICT,   "BOARD4032", "이미 등록된 승인자입니다.")
     BOARD_APPROVAL_PERMISSION_DENIED = (HTTPStatus.FORBIDDEN,  "BOARD4033", "게시글 승인 권한이 없습니다.")
     ATTACHMENT_NOT_FOUND             = (HTTPStatus.NOT_FOUND,  "BOARD4041", "첨부파일을 찾을 수 없습니다.")
+    ATTACHMENT_TOO_LARGE             = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "BOARD4042", "파일 하나의 크기는 최대 50MB까지 업로드할 수 있습니다.")
+    ATTACHMENT_TOTAL_TOO_LARGE       = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "BOARD4043", "한 번에 업로드 가능한 첨부파일 총 용량은 150MB입니다.")
     ATTACHMENT_UPLOAD_FAILED         = (HTTPStatus.INTERNAL_SERVER_ERROR, "BOARD5001", "첨부파일 업로드에 실패했습니다.")
 
     # Group (커스텀 그룹)
@@ -73,6 +91,7 @@ class ErrorStatus(Enum):
     CHAT_ADMIN_MUST_TRANSFER   = (HTTPStatus.CONFLICT,   "CHAT4006", "관리자는 다른 멤버에게 관리자를 이양 후 나가야 합니다.")
     CHAT_MESSAGE_NOT_FOUND     = (HTTPStatus.NOT_FOUND,  "CHAT4011", "메시지를 찾을 수 없습니다.")
     CHAT_FILE_NOT_FOUND        = (HTTPStatus.NOT_FOUND,  "CHAT4012", "첨부 파일을 찾을 수 없습니다.")
+    CHAT_FILE_TOO_LARGE        = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "CHAT4013", "파일 크기는 최대 25MB까지 업로드할 수 있습니다.")
     CHAT_FILE_UPLOAD_FAILED    = (HTTPStatus.INTERNAL_SERVER_ERROR, "CHAT5001", "파일 업로드에 실패했습니다.")
 
     # Cafeteria
