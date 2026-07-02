@@ -327,6 +327,44 @@ def check_vdi_action(required_action: str, vdi_assigned_to: str | None = None) -
     return False
 
 
+def check_board_action(required_action: str) -> bool:
+    """perm_type='BOARD' 권한 확인. 액션: CREATE / UPDATE / DELETE / READ / MANAGE"""
+    if get_jwt().get('role', '') in _ADMIN_ACCOUNT_TYPES:
+        return True
+    member = _get_member()
+    if not member:
+        return False
+    for binding in _collect_all_bindings(member):
+        role = binding.role
+        if role.role_name in _ADMIN_ROLE_NAMES:
+            return True
+        for perm in role.permissions:
+            if perm.perm_type != 'BOARD':
+                continue
+            if required_action in perm.action_list or 'MANAGE' in perm.action_list:
+                return True
+    return False
+
+
+def check_post_action(required_action: str) -> bool:
+    """perm_type='POST' 권한 확인. 액션: UPDATE / DELETE / MANAGE"""
+    if get_jwt().get('role', '') in _ADMIN_ACCOUNT_TYPES:
+        return True
+    member = _get_member()
+    if not member:
+        return False
+    for binding in _collect_all_bindings(member):
+        role = binding.role
+        if role.role_name in _ADMIN_ROLE_NAMES:
+            return True
+        for perm in role.permissions:
+            if perm.perm_type != 'POST':
+                continue
+            if required_action in perm.action_list or 'MANAGE' in perm.action_list:
+                return True
+    return False
+
+
 def vdi_required(action: str):
     """
     action: VdiAction 값
