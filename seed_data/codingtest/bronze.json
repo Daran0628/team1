@@ -1,0 +1,104 @@
+[
+  {
+    "title": "논문 인용 지수 (Acowdemia I)",
+    "description": "베시는 논문을 N편 발표했고, 각 논문에는 인용된 횟수가 기록되어 있다. 어떤 정수 h에 대해, 인용 횟수가 h 이상인 논문이 h편 이상 존재하면 그 h를 \"h-지수\"라고 부르며, h-지수는 이러한 h 중 가장 큰 값으로 정의된다.\n\n베시는 총설(리뷰) 논문을 한 편 써서 기존 논문 중 최대 L편을 인용할 수 있다. 단, 같은 논문을 두 번 인용할 수는 없다. 총설에 인용된 논문은 인용 횟수가 1 증가한다. 베시가 어떤 논문들을 인용할지 최적으로 선택했을 때 얻을 수 있는 최대 h-지수를 구하라.\n\n입력 형식:\n첫 줄에 논문의 수 N과 인용 가능한 최대 논문 수 L이 공백으로 구분되어 주어진다.\n둘째 줄에 N개의 정수로 각 논문의 인용 횟수가 주어진다.\n\n출력 형식:\n총설 작성 후 얻을 수 있는 최대 h-지수를 한 줄에 출력한다.\n\n제약조건:\n1 ≤ N ≤ 100,000\n0 ≤ L ≤ 100,000\n0 ≤ 각 논문의 인용 횟수 ≤ 100,000\n\n출처: USACO Bronze, 2021 US Open, \"Acowdemia I\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "4 0\n1 100 2 3\n", "expected_output": "2\n", "is_sample": true},
+      {"input": "4 1\n1 100 2 3\n", "expected_output": "3\n", "is_sample": true},
+      {"input": "5 2\n2 2 2 1 1\n", "expected_output": "2\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "젖소 알파벳 방송 (Uddered but not Herd)",
+    "description": "젖소들은 a부터 z까지 26개의 글자를 자신들만의 순서로 배열한 \"소 알파벳\"을 가지고 있다. 베시는 이 소 알파벳 순서대로 글자를 처음부터 끝까지 반복해서 흥얼거린다(끝까지 흥얼거리면 다시 처음부터 시작한다). 농부 존은 베시가 흥얼거리는 동안 그 중 일부 글자만 듣고 순서대로 기록해 두었다.\n\n존이 들은 글자들이 실제로 나타나려면 베시가 소 알파벳을 최소 몇 바퀴 흥얼거려야 했는지 구하라. 즉, 들은 글자열을 처음부터 순서대로 확인하면서, 소 알파벳 상의 위치가 이전 글자보다 뒤로 가지 않고 같은 바퀴 안에서 이어질 수 있으면 같은 바퀴로 보고, 그렇지 않고 다시 앞선 위치로 돌아가야 한다면 새로운 바퀴가 시작된 것으로 센다.\n\n입력 형식:\n첫 줄에 a부터 z까지 26개의 알파벳이 소 알파벳 순서대로 공백 없이 주어진다.\n둘째 줄에 존이 들은 소문자 문자열(길이 1 이상 1000 이하)이 주어진다.\n\n출력 형식:\n필요한 최소 반복 횟수를 한 줄에 출력한다.\n\n제약조건:\n들은 문자열의 길이는 1 이상 1000 이하이다.\n소 알파벳은 a~z를 한 번씩만 포함하는 순열이다.\n\n출처: USACO Bronze, 2021 January Contest, \"Uddered but not Herd\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "abcdefghijklmnopqrstuvwxyz\nmood\n", "expected_output": "3\n", "is_sample": true},
+      {"input": "abcdefghijklmnopqrstuvwxyz\naabbcc\n", "expected_output": "4\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "짝수 홀수 그룹 나누기 (Even More Odd Photos)",
+    "description": "농부 존은 자신의 젖소 N마리를 여러 그룹으로 나눈 뒤, 그 그룹들을 한 줄로 세워서 사진을 찍으려고 한다. 각 젖소는 품종 번호(정수)를 하나씩 가지고 있다. 그룹으로 나눌 때 각 젖소는 정확히 하나의 그룹에 속해야 하며, 그룹의 순서를 정했을 때 첫 번째 그룹에 속한 젖소들의 품종 번호 합은 짝수, 두 번째 그룹의 합은 홀수, 세 번째 그룹의 합은 다시 짝수, 이런 식으로 번갈아 가며 조건을 만족해야 한다.\n\n이 조건을 만족하도록 그룹을 나눌 때, 만들 수 있는 그룹의 최대 개수를 구하라. (그룹에 속한 젖소들은 원래 나열 순서를 유지할 필요는 없으며, 자유롭게 묶어서 그룹을 구성할 수 있다.)\n\n입력 형식:\n첫 줄에 젖소의 수 N이 주어진다.\n둘째 줄에 N개의 정수로 각 젖소의 품종 번호가 주어진다.\n\n출력 형식:\n만들 수 있는 최대 그룹 수를 한 줄에 출력한다.\n\n제약조건:\n2 ≤ N ≤ 1000\n각 품종 번호는 1 이상 100 이하의 정수이다.\n\n출처: USACO Bronze, 2021 January Contest, \"Even More Odd Photos\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "7\n1 3 5 7 9 11 13\n", "expected_output": "3\n", "is_sample": true},
+      {"input": "7\n11 2 17 13 1 15 3\n", "expected_output": "5\n", "is_sample": true},
+      {"input": "5\n2 4 6 3 5\n", "expected_output": "5\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "십이지 나이 계산 (Year of the Cow)",
+    "description": "젖소 세계에도 12년 주기로 반복되는 띠(십이지)가 있으며, 순서는 쥐, 소, 호랑이, 토끼, 용, 뱀, 말, 양, 원숭이, 닭, 개, 돼지이다. 베시는 소띠 해에 태어났다.\n\n여러 마리의 젖소에 대해 \"어떤 젖소는 다른 특정 젖소(베시이거나 앞서 언급된 다른 젖소)를 기준으로, 특정 띠에 해당하는 해 중 기준 젖소가 태어난 해 이전/이후로 가장 가까운 해에 태어났다\"는 형태의 정보가 순서대로 주어진다. 이 정보를 이용해 모든 젖소가 태어난 해를 베시의 출생년도를 기준(0년)으로 계산할 수 있다.\n\n이 정보를 바탕으로 베시와 엘시(Elsie) 사이의 출생년도 차이(연 단위, 절댓값)를 구하라.\n\n입력 형식:\n첫 줄에 정보의 개수 N이 주어진다.\n다음 N줄에 걸쳐 각 줄은 \"이름 born in previous/next 띠이름 year from 기준이름\" 형식으로 주어진다. 기준이름은 베시이거나 이전에 등장한 젖소의 이름이다. 엘시라는 이름의 젖소가 반드시 한 번은 언급된다.\n\n출력 형식:\n베시와 엘시의 출생년도 차이를 한 줄에 출력한다.\n\n제약조건:\n1 ≤ N ≤ 100\n\n출처: USACO Bronze, 2021 February Contest, \"Year of the Cow\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "4\nMildred born in previous Dragon year from Bessie\nGretta born in previous Monkey year from Mildred\nElsie born in next Ox year from Gretta\nPaulina born in next Dog year from Bessie\n", "expected_output": "12\n", "is_sample": true},
+      {"input": "2\nDaisy born in next Tiger year from Bessie\nElsie born in previous Rat year from Daisy\n", "expected_output": "1\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "편안한 젖소 세기 (Comfortable Cows)",
+    "description": "농부 존은 격자 평면 위에 젖소를 한 마리씩 순서대로 배치한다. 어떤 젖소가 상하좌우로 인접한 칸에 정확히 3마리의 다른 젖소를 이웃으로 두고 있으면 그 젖소를 \"편안한 젖소\"라고 부른다.\n\n젖소를 한 마리 배치할 때마다(이미 배치된 젖소들의 이웃 관계도 새로 배치된 젖소의 영향을 받아 바뀔 수 있으므로), 그 시점까지 배치된 전체 젖소 중 편안한 젖소의 수를 세어 출력해야 한다.\n\n입력 형식:\n첫 줄에 젖소의 수 N이 주어진다.\n다음 N줄에 걸쳐 각 줄에 두 정수 x, y가 주어지며, 이는 순서대로 배치되는 젖소의 좌표를 나타낸다. 모든 좌표는 서로 다르다.\n\n출력 형식:\n총 N줄을 출력한다. i번째 줄에는 i번째 젖소까지 배치를 마친 시점에서 편안한 젖소의 총 수를 출력한다.\n\n제약조건:\n1 ≤ N ≤ 100,000\n0 ≤ x, y ≤ 1000\n\n출처: USACO Bronze, 2021 February Contest, \"Comfortable Cows\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "8\n0 1\n1 0\n1 1\n1 2\n2 1\n2 2\n3 1\n3 2\n", "expected_output": "0\n0\n0\n1\n0\n0\n1\n2\n", "is_sample": true},
+      {"input": "6\n0 0\n0 1\n1 0\n1 1\n2 0\n2 1\n", "expected_output": "0\n0\n0\n0\n1\n2\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "세 수 복원하기 (Do You Know Your ABCs?)",
+    "description": "엘시는 A ≤ B ≤ C를 만족하는 세 양의 정수 A, B, C를 마음속으로 정한 뒤, A, B, C, A+B, B+C, C+A, A+B+C 이렇게 일곱 개의 값을 계산했다. 그리고 이 일곱 개의 값을 순서를 뒤섞어서 베시에게 알려주었다.\n\n뒤섞인 일곱 개의 정수가 주어질 때, 원래의 A, B, C 값을 구하라. (입력이 항상 유효하므로 답은 유일하게 결정된다.)\n\n입력 형식:\n한 줄에 뒤섞인 일곱 개의 정수가 공백으로 구분되어 주어진다. 각 정수는 1 이상 10억(10^9) 이하이다.\n\n출력 형식:\nA, B, C를 공백으로 구분하여 한 줄에 출력한다. (A ≤ B ≤ C 순서)\n\n제약조건:\n모든 입력값은 1 이상 10^9 이하의 정수이다.\n항상 조건을 만족하는 A, B, C가 존재한다.\n\n출처: USACO Bronze, 2020 December Contest, \"Do You Know Your ABCs?\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "2 2 11 4 9 7 9\n", "expected_output": "2 2 7\n", "is_sample": true},
+      {"input": "1 2 3 3 5 4 6\n", "expected_output": "1 2 3\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "평균 꽃잎 사진 세기 (Daisy Chains)",
+    "description": "베시는 일렬로 놓인 N송이의 데이지를 구경하는데, 각 데이지는 고유한 꽃잎 개수를 가지고 있다. 베시는 연속된 구간 [i, j] (1 ≤ i ≤ j ≤ N)에 해당하는 모든 데이지들을 한 장의 사진에 담아 가능한 모든 연속 구간에 대해 사진을 찍는다.\n\n어떤 사진에 대해, 그 사진에 포함된 데이지들의 꽃잎 개수의 평균값과 정확히 같은 꽃잎 개수를 가진 데이지가 그 사진 안에 하나라도 있으면, 그 사진을 \"평균을 포함하는 사진\"이라고 부른다. 평균을 포함하는 사진의 개수를 구하라.\n\n입력 형식:\n첫 줄에 데이지의 수 N이 주어진다.\n둘째 줄에 N개의 정수로 각 데이지의 꽃잎 개수가 주어진다.\n\n출력 형식:\n평균을 포함하는 사진의 개수를 한 줄에 출력한다.\n\n제약조건:\n1 ≤ N ≤ 100\n1 ≤ 각 데이지의 꽃잎 개수 ≤ 1000\n\n출처: USACO Bronze, 2020 December Contest, \"Daisy Chains\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "4\n1 1 2 3\n", "expected_output": "6\n", "is_sample": true},
+      {"input": "3\n1 2 3\n", "expected_output": "4\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "외양간 배정 경우의 수 (Just Stalling)",
+    "description": "농부 존에게는 키가 서로 다를 수 있는 N마리의 젖소와 N개의 외양간이 있다. 각 외양간에는 수용 가능한 최대 키 제한이 정해져 있으며, 어떤 젖소는 자신의 키가 외양간의 제한 이하일 때만 그 외양간에 들어갈 수 있다.\n\nN마리의 젖소를 N개의 외양간에 한 마리씩 서로 다른 외양간에 배정하되, 모든 젖소가 자신이 배정된 외양간의 키 제한을 만족하도록 하는 배정 방법의 총 가짓수를 구하라.\n\n입력 형식:\n첫 줄에 정수 N이 주어진다.\n둘째 줄에 N개의 정수로 각 젖소의 키가 주어진다.\n셋째 줄에 N개의 정수로 각 외양간의 키 제한이 주어진다.\n\n출력 형식:\n가능한 배정 방법의 총 가짓수를 한 줄에 출력한다. 결과값이 매우 클 수 있으므로 64비트 정수 범위로 계산해야 한다.\n\n제약조건:\n1 ≤ N ≤ 20\n모든 키와 키 제한은 1 이상 10^9 이하의 정수이다.\n\n출처: USACO Bronze, 2021 January Contest, \"Just Stalling\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "4\n1 2 3 4\n2 4 3 4\n", "expected_output": "8\n", "is_sample": true},
+      {"input": "3\n1 1 1\n1 1 1\n", "expected_output": "6\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "수업 중 조는 횟수 합치기 (Sleeping in Class)",
+    "description": "베시가 N번의 수업 시간 동안 존 횟수를 기록한 로그가 순서대로 주어진다. 엘시는 이 로그에서 서로 인접한 두 기록을 하나로 합치는(두 값을 더해 하나의 값으로 만드는) 작업을 반복하여, 최종적으로 남은 모든 기록의 값이 서로 같아지도록 만들고 싶어한다.\n\n이를 위해 필요한 최소 합치기 작업 횟수를 구하라. 이러한 테스트 케이스가 여러 개 주어질 수 있다.\n\n입력 형식:\n첫 줄에 테스트 케이스의 수 T가 주어진다.\n각 테스트 케이스는 다음과 같이 두 줄로 구성된다.\n- 첫 줄에 기록의 개수 N\n- 둘째 줄에 N개의 정수로 각 수업의 존 횟수\n\n출력 형식:\n각 테스트 케이스마다 필요한 최소 합치기 작업 횟수를 한 줄에 하나씩 출력한다.\n\n제약조건:\n1 ≤ T ≤ 10\n1 ≤ N ≤ 100,000\n각 테스트 케이스 내 값들의 합은 최대 1,000,000\n모든 테스트 케이스의 N의 합은 최대 100,000\n\n출처: USACO Bronze, 2022 February Contest, \"Sleeping in Class\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "3\n6\n1 2 3 1 1 1\n3\n2 2 3\n5\n0 0 0 0 0\n", "expected_output": "3\n2\n0\n", "is_sample": true},
+      {"input": "1\n5\n1 1 2 1 1\n", "expected_output": "2\n", "is_sample": false}
+    ]
+  },
+  {
+    "title": "나무 블록으로 단어 만들기 (Blocks)",
+    "description": "베시에게는 정육면체 나무 블록이 4개 있고, 각 블록의 여섯 면에는 알파벳이 하나씩 적혀 있다(같은 알파벳이 한 블록에 중복해서 적혀 있을 수도 있다). 베시는 블록들을 한 줄로 배열하여 각 블록의 윗면 글자로 특정 단어를 만들고 싶어한다.\n\n블록 하나는 단어의 한 글자에만 사용할 수 있으며, 서로 다른 글자는 서로 다른 블록에서 가져와야 한다. 주어진 여러 개의 단어 각각에 대해, 4개의 블록을 이용해 그 단어를 만들 수 있는지 없는지를 판별하라.\n\n입력 형식:\n첫 줄에 판별할 단어의 개수 N이 주어진다.\n다음 4줄에 걸쳐 각 블록의 여섯 면에 적힌 알파벳(대문자)이 공백 없이 주어진다.\n다음 N줄에 걸쳐 판별할 단어(1자 이상 4자 이하 대문자)가 주어진다.\n\n출력 형식:\n각 단어에 대해 만들 수 있으면 \"YES\", 만들 수 없으면 \"NO\"를 한 줄에 하나씩 출력한다.\n\n제약조건:\n1 ≤ N ≤ 10\n각 단어의 길이는 1 이상 4 이하이다.\n\n출처: USACO Bronze, 2022 February Contest, \"Blocks\"",
+    "time_limit_ms": 2000,
+    "memory_limit_mb": 256,
+    "test_cases": [
+      {"input": "6\nMOOOOO\nOOOOOO\nABCDEF\nUVWXYZ\nCOW\nMOO\nZOO\nMOVE\nCODE\nFARM\n", "expected_output": "YES\nNO\nYES\nYES\nNO\nNO\n", "is_sample": true},
+      {"input": "2\nAAAAAA\nBBBBBB\nCCCCCC\nDDDDDD\nABCD\nABCC\n", "expected_output": "YES\nNO\n", "is_sample": false}
+    ]
+  }
+]
