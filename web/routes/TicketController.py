@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
+from core.jwt.JwtUtils import role_required
 from domain.model.Member import Member
 from service.TicketService.TicketService import TicketService
 
@@ -82,12 +83,9 @@ def create_ticket():
 
 @ticket_bp.route("/<ticket_id>/status", methods=["PUT"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def update_ticket_status(ticket_id):
-    """티켓 상태 변경 (관리자만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
-
+    
     data   = request.get_json(silent=True) or {}
     status = data.get("status", "").strip()
 
@@ -103,12 +101,9 @@ def update_ticket_status(ticket_id):
 
 @ticket_bp.route("/<ticket_id>/assign", methods=["PUT"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def assign_ticket(ticket_id):
-    """티켓 담당자 배정 (관리자만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
-
+    
     data = request.get_json(silent=True) or {}
     assigned_to = data.get("assignedTo", "").strip()
 
@@ -124,12 +119,9 @@ def assign_ticket(ticket_id):
 
 @ticket_bp.route("/<ticket_id>", methods=["DELETE"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def delete_ticket(ticket_id):
-    """티켓 삭제 (관리자만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
-
+    
     try:
         _service.delete(ticket_id)
         return ApiResponse.on_success(SuccessStatus._OK, None)
@@ -139,21 +131,17 @@ def delete_ticket(ticket_id):
 
 @ticket_bp.route("/notify/count", methods=["GET"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def get_notify_count():
-    """관리자 알림 카운트 조회"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
+    
     count = _service.get_notify_count()
     return ApiResponse.on_success(SuccessStatus._OK, {"count": count})
 
 
 @ticket_bp.route("/notify/clear", methods=["POST"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def clear_notify_count():
-    """관리자 알림 카운트 초기화"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
+    
     _service.clear_notify_count()
     return ApiResponse.on_success(SuccessStatus._OK, {"message": "알림 초기화 완료"})

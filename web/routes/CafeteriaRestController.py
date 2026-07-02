@@ -1,11 +1,12 @@
 from datetime import date
 
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt
+from flask import Blueprint, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
+from core.jwt.JwtUtils import role_required
 from domain.model.Member import Member
 from service.CafeteriaService.CafeteriaService import CafeteriaService
 from web.converter.CafeteriaConverter import CafeteriaConverter
@@ -13,7 +14,6 @@ from web.converter.CafeteriaConverter import CafeteriaConverter
 cafeteria_bp = Blueprint("cafeteria", __name__, url_prefix="/api/cafeteria")
 _service = CafeteriaService()
 
-_ADMIN_ROLES = ("ADMIN", "SUPERADMIN")
 
 
 @cafeteria_bp.route("/today", methods=["GET"])
@@ -47,11 +47,9 @@ def recommend_lunch():
 
 @cafeteria_bp.route("", methods=["POST"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def upsert_menu():
-    claims = get_jwt()
-    if claims.get("role") not in _ADMIN_ROLES:
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN, None)
-
+    
     body = request.get_json() or {}
     menu_date_str = body.get("menu_date")
     menu_text = body.get("menu_text")
@@ -59,7 +57,7 @@ def upsert_menu():
         return ApiResponse.on_failure(ErrorStatus._BAD_REQUEST, None)
 
     menu_date = date.fromisoformat(menu_date_str)
-    account_id = claims.get("sub")
+    account_id = get_jwt_identity()
     member = Member.query.filter_by(account_id=account_id).first()
     member_id = member.id if member else None
     menu = _service.upsert_menu(menu_date, menu_text, member_id)
@@ -69,11 +67,9 @@ def upsert_menu():
 
 @cafeteria_bp.route("/<menu_date_str>", methods=["DELETE"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def delete_menu(menu_date_str):
-    claims = get_jwt()
-    if claims.get("role") not in _ADMIN_ROLES:
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN, None)
-
+    
     menu_date = date.fromisoformat(menu_date_str)
     ok = _service.delete_menu(menu_date)
     if not ok:
