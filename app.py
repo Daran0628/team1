@@ -19,6 +19,7 @@ from web.routes.VdiRestController import vdi_bp
 from web.routes.ChatRestController import chat_bp
 from service.ChatService.ChatService import ensure_chat_bucket
 from web.routes.MailRestController import mail_bp
+from web.routes.CodingTestRestController import coding_test_bp
 
 app = Flask(__name__)
 init_extensions(app)
@@ -36,6 +37,7 @@ app.register_blueprint(vdi_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(sse, url_prefix="/stream")
 app.register_blueprint(mail_bp)
+app.register_blueprint(coding_test_bp)
 
 with app.app_context():
     from domain.model.Member import Member
@@ -51,6 +53,10 @@ with app.app_context():
     from domain.model.ChatRoom import ChatRoom, ChatRoomMember
     from domain.model.ChatMessage import ChatMessage
     from domain.model.ChatFile import ChatFile
+    from domain.model.Problem import Problem
+    from domain.model.TestCase import TestCase
+    from domain.model.Submission import Submission
+    from domain.model.Score import Score
     db.create_all()
     ensure_chat_bucket()
 
