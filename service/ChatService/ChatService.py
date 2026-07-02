@@ -250,6 +250,16 @@ class ChatService:
 
     # ── 텍스트 메시지 ────────────────────────────────────────────
 
+    def _notify_room_members(self, room_id: str) -> None:
+        """방의 활성 멤버 전원에게 '목록이 바뀌었다' 신호를 보낸다 (채팅방 목록 실시간 갱신용)."""
+        room = ChatRoom.query.get(room_id)
+        if not room:
+            return
+        for ms in room.members:
+            if not ms.is_active:
+                continue
+            sse.publish({"roomId": room_id}, type="room_update", channel=f"member:{ms.member.account_id}")
+
     def send_message(self, room_id: str, sender_id: str, dto: SendMessageRequestDTO) -> ChatMessageResponseDTO:
         if not ChatRoom.query.get(room_id):
             raise ValueError("CHAT_ROOM_NOT_FOUND")
@@ -278,6 +288,7 @@ class ChatService:
             type="message",
             channel=f"room:{room_id}",
         )
+        self._notify_room_members(room_id)
         return dto_result
 
     def get_messages(self, room_id: str, member_id: str, since: str = None, limit: int = 50) -> list:
@@ -304,7 +315,7 @@ class ChatService:
         return [_to_message_dto(m) for m in reversed(messages)]
 
     def mark_read(self, room_id: str, member_id: str) -> None:
-        """읽음 시각을 갱신하고, 같은 방의 다른 클라이언트에 실시간으로 알린다."""
+        """읽음 시각을 갱신하고, 같은 방의 다른 클라이언트 및 본인의 다른 탭/기기에 실시간으로 알린다."""
         ms = self._get_membership(room_id, member_id)
         ms.last_read_at = datetime.now(timezone.utc)
         db.session.commit()
@@ -313,6 +324,7 @@ class ChatService:
             type="read",
             channel=f"room:{room_id}",
         )
+        sse.publish({"roomId": room_id}, type="room_update", channel=f"member:{ms.member.account_id}")
 
     # ── 파일 / 이미지 첨부 ──────────────────────────────────────
 
@@ -396,6 +408,7 @@ class ChatService:
             type="message",
             channel=f"room:{room_id}",
         )
+        self._notify_room_members(room_id)
         return dto_result
 
     def get_file_url(self, room_id: str, member_id: str, file_id: str, expires: int = 3600) -> str:
@@ -460,3 +473,4 @@ class ChatService:
             type="message",
             channel=f"room:{room_id}",
         )
+        self._notify_room_members(room_id)
