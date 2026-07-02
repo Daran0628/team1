@@ -5,6 +5,7 @@ flask-jwt-extended
 flask-bcrypt
 flask-sqlalchemy
 redis
+rq
 minio
 flask-sock
 flask-sse

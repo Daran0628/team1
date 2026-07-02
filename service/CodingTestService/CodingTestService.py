@@ -131,7 +131,11 @@ def create_submission(dto: CreateSubmissionRequestDTO, member_id: str) -> Submis
     db.session.add(submission)
     db.session.commit()
 
-    # TODO(다음 단계): 비동기 채점 큐(Redis+RQ)에 submission_id enqueue
+    try:
+        from service.CodingTestService.queue import enqueue_judge
+        enqueue_judge(submission.submission_id)
+    except Exception:
+        logger.exception("채점 큐 등록 실패 (submission=%s) — PENDING 상태로 남습니다.", submission.submission_id)
 
     return _submission_to_dto(submission)
 
