@@ -1,9 +1,10 @@
 from flask import Blueprint, request
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
+from core.jwt.JwtUtils import role_required
 from domain.model.Member import Member
 from service.FaqService.FaqService import FaqService
 
@@ -48,11 +49,8 @@ def get_faq(faq_id):
 
 @faq_bp.route("", methods=["POST"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def create_faq():
-    """FAQ 등록 (ADMIN, SUPERADMIN만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
 
     data     = request.get_json(silent=True) or {}
     question = data.get("question", "").strip()
@@ -73,12 +71,9 @@ def create_faq():
 
 @faq_bp.route("/<faq_id>", methods=["PUT"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def update_faq(faq_id):
-    """FAQ 수정 (ADMIN, SUPERADMIN만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
-
+    
     data     = request.get_json(silent=True) or {}
     question = data.get("question", "").strip()
     answer   = data.get("answer", "").strip()
@@ -96,12 +91,9 @@ def update_faq(faq_id):
 
 @faq_bp.route("/<faq_id>", methods=["DELETE"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def delete_faq(faq_id):
-    """FAQ 삭제 (ADMIN, SUPERADMIN만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
-
+    
     try:
         _service.delete(faq_id)
         return ApiResponse.on_success(SuccessStatus._OK, None)
