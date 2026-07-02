@@ -27,8 +27,6 @@ from web.routes.CafeteriaRestController import cafeteria_bp
 
 app = Flask(__name__)
 init_extensions(app)
-<<<<<<< HEAD
-=======
 
 # 요청 본문 전체 상한 (개별 도메인 업로드 제한보다 여유 있게, 극단적으로 큰 요청에 대한 최소 방어선)
 app.config['MAX_CONTENT_LENGTH'] = 250 * 1024 * 1024
