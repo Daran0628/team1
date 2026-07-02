@@ -11,11 +11,15 @@ class FaqService:
             query = query.filter_by(category=category)
         return query.all()
 
-    def get_one(self, faq_id: str):
-        """FAQ 단건 조회"""
+    def _get_or_raise(self, faq_id: str) -> Faq:
         faq = Faq.query.get(faq_id)
         if faq is None:
             raise ValueError("존재하지 않는 FAQ입니다.")
+        return faq
+
+    def get_one(self, faq_id: str):
+        """FAQ 단건 조회"""
+        faq = self._get_or_raise(faq_id)
         return faq
 
     def create(self, member_id: str, question: str, answer: str, category: str = None):
@@ -32,9 +36,7 @@ class FaqService:
 
     def update(self, faq_id: str, question: str, answer: str, category: str = None):
         """FAQ 수정"""
-        faq = Faq.query.get(faq_id)
-        if faq is None:
-            raise ValueError("존재하지 않는 FAQ입니다.")
+        faq = self._get_or_raise(faq_id)
         faq.question = question
         faq.answer   = answer
         faq.category = category
@@ -43,8 +45,6 @@ class FaqService:
 
     def delete(self, faq_id: str):
         """FAQ 삭제"""
-        faq = Faq.query.get(faq_id)
-        if faq is None:
-            raise ValueError("존재하지 않는 FAQ입니다.")
+        faq = self._get_or_raise(faq_id)
         db.session.delete(faq)
         db.session.commit()

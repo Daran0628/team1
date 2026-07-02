@@ -15,11 +15,16 @@ class TicketService:
         return Ticket.query.filter_by(member_id=member_id)\
                            .order_by(Ticket.created_at.desc()).all()
 
-    def get_one(self, ticket_id: str):
-        """티켓 단건 조회"""
+    def _get_or_raise(self, ticket_id: str) -> Ticket:
         ticket = Ticket.query.get(ticket_id)
         if ticket is None:
             raise ValueError("존재하지 않는 티켓입니다.")
+        return ticket
+                        
+
+    def get_one(self, ticket_id: str):
+        """티켓 단건 조회"""
+        ticket = self._get_or_raise(ticket_id)
         return ticket
 
     def create(self, member_id: str, title: str, content: str, priority: str = "MEDIUM"):
@@ -59,26 +64,20 @@ class TicketService:
 
     def update_status(self, ticket_id: str, status: str):
         """티켓 상태 변경 (관리자)"""
-        ticket = Ticket.query.get(ticket_id)
-        if ticket is None:
-            raise ValueError("존재하지 않는 티켓입니다.")
+        ticket = self._get_or_raise(ticket_id)
         ticket.status = status
         db.session.commit()
         return ticket
     
     def assign(self, ticket_id: str, assigned_to: str):
         """티켓 담당자 배정 (관리자)"""
-        ticket = Ticket.query.get(ticket_id)
-        if ticket is None:
-            raise ValueError("존재하지 않는 티켓입니다.")
+        ticket = self._get_or_raise(ticket_id)
         ticket.assigned_to = assigned_to
         db.session.commit()
         return ticket
 
     def delete(self, ticket_id: str):
         """티켓 삭제"""
-        ticket = Ticket.query.get(ticket_id)
-        if ticket is None:
-            raise ValueError("존재하지 않는 티켓입니다.")
+        ticket = self._get_or_raise(ticket_id)
         db.session.delete(ticket)
         db.session.commit()
