@@ -377,6 +377,7 @@ class ChatService:
                 "fileId":      file_id,
                 "originalName": original_name,
                 "mimeType":    mime_type,
+                "fileSize":    size,
                 "createdAt":   dto_result.created_at,
             },
             type="message",

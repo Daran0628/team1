@@ -197,18 +197,9 @@ function appendMessage(rawMsg) {
     if ((msg.message_type === 'FILE' || msg.message_type === 'IMAGE') && msg.files && msg.files.length) {
         const f = msg.files[0];
         if (f.mime_type && f.mime_type.startsWith('image/')) {
-            bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'} img-bubble"
-                data-file-id="${f.file_id}" data-name="${esc(f.original_name)}">
-                <div class="img-wrap"><div class="img-spinner"></div></div>
-            </div>`;
+            bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'} img-bubble" data-file-id="${f.file_id}" data-name="${esc(f.original_name)}"><div class="img-wrap"><div class="img-spinner"></div></div></div>`;
         } else {
-            bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'} file-bubble" data-file-id="${f.file_id}">
-                <span class="file-icon-lg">${fileEmoji(f.mime_type)}</span>
-                <div class="file-info">
-                    <div class="file-name">${esc(f.original_name)}</div>
-                    <div class="file-size">${fmtSize(f.file_size)}</div>
-                </div>
-            </div>`;
+            bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'} file-bubble" data-file-id="${f.file_id}"><span class="file-icon-lg">${fileEmoji(f.mime_type)}</span><div class="file-info"><div class="file-name">${esc(f.original_name)}</div><div class="file-size">${fmtSize(f.file_size)}</div></div></div>`;
         }
     } else {
         bubbleHTML = `<div class="bubble ${mine ? 'mine' : 'other'}">${esc(msg.content || '')}</div>`;
@@ -344,7 +335,7 @@ function subscribeSSE() {
                 files: msg.fileId ? [{
                     file_id:       msg.fileId,
                     original_name: msg.originalName || msg.content || 'file',
-                    file_size:     0,
+                    file_size:     msg.fileSize || 0,
                     mime_type:     msg.mimeType || '',
                     created_at:    msg.createdAt || new Date().toISOString(),
                 }] : [],
