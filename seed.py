@@ -26,14 +26,14 @@ FINANCE_DEPT_ID   = "00000000-0000-0000-0000-000000000007"
 OPS_DEPT_ID       = "00000000-0000-0000-0000-000000000008"
 
 DEPARTMENTS = [
-    {"id": DEV_DEPT_ID,       "department_name": "개발팀"},
-    {"id": ADMIN_DEPT_ID,     "department_name": "관리팀"},
-    {"id": HR_DEPT_ID,        "department_name": "인사팀"},
-    {"id": PLAN_DEPT_ID,      "department_name": "기획팀"},
-    {"id": SALES_DEPT_ID,     "department_name": "영업팀"},
-    {"id": MARKETING_DEPT_ID, "department_name": "마케팅팀"},
-    {"id": FINANCE_DEPT_ID,   "department_name": "재무팀"},
-    {"id": OPS_DEPT_ID,       "department_name": "IT운영팀"},
+    {"id": DEV_DEPT_ID,       "department_name": "개발팀",   "phone_no": "02-1234-5601"},
+    {"id": ADMIN_DEPT_ID,     "department_name": "관리팀",   "phone_no": "02-1234-5602"},
+    {"id": HR_DEPT_ID,        "department_name": "인사팀",   "phone_no": "02-1234-5603"},
+    {"id": PLAN_DEPT_ID,      "department_name": "기획팀",   "phone_no": "02-1234-5604"},
+    {"id": SALES_DEPT_ID,     "department_name": "영업팀",   "phone_no": "02-1234-5605"},
+    {"id": MARKETING_DEPT_ID, "department_name": "마케팅팀", "phone_no": "02-1234-5606"},
+    {"id": FINANCE_DEPT_ID,   "department_name": "재무팀",   "phone_no": "02-1234-5607"},
+    {"id": OPS_DEPT_ID,       "department_name": "IT운영팀", "phone_no": "02-1234-5608"},
 ]
 
 TEST_USERS = [
@@ -92,10 +92,15 @@ with app.app_context():
 
     # ── 부서 시드 ────────────────────────────────────────────
     for dept in DEPARTMENTS:
-        exists = Department.query.filter_by(id=dept["id"]).first()
-        if exists:
+        existing = Department.query.filter_by(id=dept["id"]).first()
+        if existing:
+            existing.phone_no = dept["phone_no"]
             continue
-        db.session.add(Department(id=dept["id"], department_name=dept["department_name"]))
+        db.session.add(Department(
+            id=dept["id"],
+            department_name=dept["department_name"],
+            phone_no=dept["phone_no"],
+        ))
     db.session.commit()
 
     # ── 회원 시드 ────────────────────────────────────────────
@@ -121,13 +126,9 @@ with app.app_context():
         db.session.add(member)
         print(f"[OK]   {data['account_id']} / {data['password']}")
     db.session.commit()
-
     print("회원/부서 시드 완료")
 
     # ── 메일박스 생성 (전체 사용자) ───────────────────────────
-    # 주의: Mailcow 서버(같은 LAN)에 연결 가능할 때만 성공합니다.
-    #       연결 안 되면 이 아래에서 에러가 날 수 있어요 — 그래도
-    #       위쪽 회원/부서 데이터는 이미 커밋됐으니 걱정 없어요.
     import time
     from service.MailService.MailService import MailService
     mail_service = MailService()

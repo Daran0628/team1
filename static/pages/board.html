@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'">
+    <title>커뮤니티 게시판</title>
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/board.css">
+</head>
+<body>
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>게시판</span>
+    </nav>
+    <h1>커뮤니티 게시판</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnAddBoard" class="btn btn-primary" hidden>⊕ 게시판 추가</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+        </div>
+        <div class="toolbar-right">
+            <input type="search" id="searchInput" class="search-input" placeholder="게시판 검색...">
+        </div>
+    </div>
+
+    <div class="board-grid" id="boardGrid">
+        <div class="state-cell">불러오는 중...</div>
+    </div>
+
+</main>
+
+<!-- ══ 게시판 추가/수정 모달 ══════════════════════════════════════ -->
+<div class="modal-overlay" id="boardModal" hidden>
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h2 id="boardModalTitle">게시판 추가</h2>
+            <button class="btn-x" data-close="boardModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputBoardName">게시판 이름 <span class="req">*</span></label>
+                <input type="text" id="inputBoardName" maxlength="100" placeholder="예: 자유 게시판">
+            </div>
+            <div class="field">
+                <label for="inputBoardType">게시판 유형 <span class="req">*</span></label>
+                <select id="inputBoardType" class="field-select">
+                    <option value="FREE">FREE — 자유 게시판</option>
+                    <option value="NOTICE">NOTICE — 공지 게시판</option>
+                    <option value="DATA_ROOM">DATA_ROOM — 자료실</option>
+                </select>
+            </div>
+            <div class="field" id="fieldDepartment" hidden>
+                <label>내 부서 (수정 불가)</label>
+                <div class="field-readonly" id="deptDisplay">—</div>
+                <input type="hidden" id="inputDeptId">
+            </div>
+            <div class="field field-check">
+                <label>
+                    <input type="checkbox" id="inputIsPublic" checked>
+                    공개 게시판 (비공개 시 해당 부서 멤버만 접근)
+                </label>
+            </div>
+            <div class="field field-check">
+                <label>
+                    <input type="checkbox" id="inputRequiresApproval">
+                    게시글 승인 필요 (승인자가 승인해야 게시됨)
+                </label>
+            </div>
+            <div class="field" id="fieldApprovalPurpose" hidden>
+                <label for="inputApprovalPurpose">승인 목적 설명</label>
+                <input type="text" id="inputApprovalPurpose" maxlength="255" placeholder="예: 부서장 승인 후 공개">
+            </div>
+            <div class="form-error" id="boardModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="boardModal">취소</button>
+            <button class="btn btn-primary" id="btnSaveBoard">저장</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 게시판 삭제 확인 모달 ══════════════════════════════════════ -->
+<div class="modal-overlay" id="deleteBoardModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>게시판 삭제</h2>
+            <button class="btn-x" data-close="deleteBoardModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="deleteBoardMsg" class="delete-msg"></p>
+            <div class="form-error" id="deleteBoardErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="deleteBoardModal">취소</button>
+            <button class="btn btn-danger" id="btnConfirmDeleteBoard">삭제</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/board.js"></script>
+</body>
+</html>

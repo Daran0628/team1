@@ -34,6 +34,7 @@ class ErrorStatus(Enum):
     STORAGE_BUCKET_ALREADY_EXISTS = (HTTPStatus.CONFLICT,   "STORAGE4002", "이미 존재하는 버켓입니다.")
     STORAGE_BUCKET_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4003", "버켓이 비어있지 않습니다. ?force=true로 강제 삭제하세요.")
     STORAGE_OBJECT_NOT_FOUND      = (HTTPStatus.NOT_FOUND,  "STORAGE4011", "오브젝트를 찾을 수 없습니다.")
+    STORAGE_FOLDER_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4012", "폴더가 비어있지 않습니다.")
     STORAGE_OPERATION_FAILED      = (HTTPStatus.INTERNAL_SERVER_ERROR, "STORAGE5001", "스토리지 작업에 실패했습니다.")
 
     # Group (커스텀 그룹)
@@ -49,6 +50,20 @@ class ErrorStatus(Enum):
     VDI_CREATE_FAILED          = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5001", "컨테이너 생성에 실패했습니다.")
     VDI_OPERATION_FAILED       = (HTTPStatus.INTERNAL_SERVER_ERROR, "VDI5002", "컨테이너 작업에 실패했습니다.")
 
+    # Board (게시판)
+    BOARD_NOT_FOUND                  = (HTTPStatus.NOT_FOUND,  "BOARD4001", "게시판을 찾을 수 없습니다.")
+    BOARD_ACCESS_DENIED              = (HTTPStatus.FORBIDDEN,  "BOARD4002", "게시판 접근 권한이 없습니다.")
+    POST_NOT_FOUND                   = (HTTPStatus.NOT_FOUND,  "BOARD4011", "게시글을 찾을 수 없습니다.")
+    POST_NOT_AUTHOR                  = (HTTPStatus.FORBIDDEN,  "BOARD4012", "게시글 작성자가 아닙니다.")
+    POST_ALREADY_PROCESSED           = (HTTPStatus.CONFLICT,   "BOARD4013", "이미 처리된 게시글입니다.")
+    COMMENT_NOT_FOUND                = (HTTPStatus.NOT_FOUND,  "BOARD4021", "댓글을 찾을 수 없습니다.")
+    COMMENT_NOT_AUTHOR               = (HTTPStatus.FORBIDDEN,  "BOARD4022", "댓글 작성자가 아닙니다.")
+    BOARD_APPROVER_NOT_FOUND         = (HTTPStatus.NOT_FOUND,  "BOARD4031", "승인자를 찾을 수 없습니다.")
+    BOARD_APPROVER_ALREADY_EXISTS    = (HTTPStatus.CONFLICT,   "BOARD4032", "이미 등록된 승인자입니다.")
+    BOARD_APPROVAL_PERMISSION_DENIED = (HTTPStatus.FORBIDDEN,  "BOARD4033", "게시글 승인 권한이 없습니다.")
+    ATTACHMENT_NOT_FOUND             = (HTTPStatus.NOT_FOUND,  "BOARD4041", "첨부파일을 찾을 수 없습니다.")
+    ATTACHMENT_UPLOAD_FAILED         = (HTTPStatus.INTERNAL_SERVER_ERROR, "BOARD5001", "첨부파일 업로드에 실패했습니다.")
+
     # Chat
     CHAT_ROOM_NOT_FOUND        = (HTTPStatus.NOT_FOUND,  "CHAT4001", "채팅방을 찾을 수 없습니다.")
     CHAT_NOT_A_MEMBER          = (HTTPStatus.FORBIDDEN,  "CHAT4002", "채팅방 멤버가 아닙니다.")
@@ -60,6 +75,8 @@ class ErrorStatus(Enum):
     CHAT_FILE_NOT_FOUND        = (HTTPStatus.NOT_FOUND,  "CHAT4012", "첨부 파일을 찾을 수 없습니다.")
     CHAT_FILE_UPLOAD_FAILED    = (HTTPStatus.INTERNAL_SERVER_ERROR, "CHAT5001", "파일 업로드에 실패했습니다.")
 
+    # Cafeteria (구내식당)
+    CAFETERIA_MENU_NOT_FOUND = (HTTPStatus.NOT_FOUND, "CAFETERIA4001", "해당 날짜의 메뉴가 없습니다.")
 
     def __new__(cls, http_status: HTTPStatus, code: str, message: str):
         obj = object.__new__(cls)
