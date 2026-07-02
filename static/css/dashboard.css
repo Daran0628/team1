@@ -1,0 +1,204 @@
+/* dashboard.css — 대시보드 정적 틀 (wireflame.png 기준, 아직 더미 텍스트) */
+
+.dashboard-body {
+    padding: 1.5rem 5% 3rem;
+    color: var(--lo-text-strong); /* 라이트: 인디고 톤 / 다크: 기본 텍스트색 (아이콘 포함, 상속으로 적용) */
+}
+
+.dash-row-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.dash-row-3col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.card {
+    background: var(--lo-surface);
+    border: 1px solid var(--lo-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.9rem;
+}
+.card-head h3 { font-size: 0.95rem; }
+.card-link { font-size: 0.75rem; color: var(--lo-muted); text-decoration: none; }
+.card-link:hover { color: var(--lo-secondary); }
+
+.empty-note {
+    color: var(--lo-muted);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+/* ── 환영 카드 ──────────────────────────────────────────────── */
+.welcome-top {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+.avatar-circle {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--lo-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.welcome-top h2 { font-size: 1.2rem; margin-bottom: 0.2rem; }
+.welcome-top .muted { color: var(--lo-muted); font-size: 0.85rem; }
+
+.welcome-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+.meta-box { background: var(--lo-bg); border-radius: 8px; padding: 0.6rem 0.75rem; }
+.meta-label { display: block; font-size: 0.72rem; color: var(--lo-muted); margin-bottom: 0.2rem; }
+.meta-value { font-size: 0.85rem; font-weight: 600; }
+
+/* ── 바로가기 ───────────────────────────────────────────────── */
+.shortcut-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.9rem 0.75rem;
+}
+.shortcut-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.7rem;
+    text-align: center;
+}
+.shortcut-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--lo-bg);
+    border: 1px solid var(--lo-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+}
+.shortcut-item:hover .shortcut-icon { border-color: var(--lo-secondary); }
+
+/* ── 나의 티켓 현황 ─────────────────────────────────────────── */
+.ticket-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--lo-border);
+}
+.ticket-stat { text-align: center; flex: 1; }
+.ticket-stat .num { display: block; font-size: 1.15rem; font-weight: 700; }
+.ticket-stat .label { font-size: 0.7rem; color: var(--lo-muted); }
+
+.sub-head { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.6rem; display: flex; justify-content: space-between; }
+
+.ticket-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 0.6rem;
+    align-items: center;
+    font-size: 0.78rem;
+    padding: 0.4rem 0;
+}
+.ticket-row .ticket-code { color: var(--lo-muted); font-size: 0.72rem; text-align: right; }
+.ticket-row .ticket-date { color: var(--lo-muted); font-size: 0.72rem; }
+.ticket-row .ticket-title { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.status-badge {
+    font-size: 0.66rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    white-space: nowrap;
+}
+.status-진행중 { background: #e0ecff; color: #1d4ed8; }
+.status-접수   { background: #fff1d6; color: #b45309; }
+.status-대기   { background: #f1f2f4; color: var(--lo-muted); }
+.status-완료   { background: #dcfce7; color: #15803d; }
+
+[data-theme="dark"] .status-진행중 { background: rgba(96, 148, 255, 0.18); color: #93b4ff; }
+[data-theme="dark"] .status-접수   { background: rgba(255, 184, 92, 0.18); color: #ffc98a; }
+[data-theme="dark"] .status-대기   { background: rgba(255, 255, 255, 0.08); color: var(--lo-muted); }
+[data-theme="dark"] .status-완료   { background: rgba(74, 222, 128, 0.18); color: #86efac; }
+
+/* ── 공지사항 / FAQ (목록형 카드) ───────────────────────────── */
+.simple-list { display: flex; flex-direction: column; gap: 0.55rem; }
+.simple-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+}
+.simple-row .row-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.simple-row .row-date { color: var(--lo-muted); font-size: 0.72rem; flex-shrink: 0; }
+
+/* ── 메일 요약 / 게시판 (pill형 카드) ───────────────────────── */
+.pill-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.pill-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    padding: 0.35rem 0;
+}
+.pill-count {
+    background: var(--lo-bg);
+    border-radius: 99px;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ── 최근 Chatting ──────────────────────────────────────────── */
+.chat-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.chat-row { display: flex; gap: 0.6rem; align-items: flex-start; }
+.chat-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--lo-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+.chat-body { flex: 1; min-width: 0; }
+.chat-name { font-size: 0.82rem; font-weight: 600; }
+.chat-msg {
+    font-size: 0.76rem;
+    color: var(--lo-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.chat-side { text-align: right; flex-shrink: 0; }
+.chat-time { display: block; font-size: 0.68rem; color: var(--lo-muted); margin-bottom: 0.3rem; }
+.chat-badge {
+    display: inline-block;
+    background: var(--lo-secondary);
+    color: #fff;
+    border-radius: 99px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    padding: 0.05rem 0.4rem;
+}

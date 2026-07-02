@@ -4,22 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>메일</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/css/mail.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
 </head>
 <body>
+
+<div class="app-shell">
+<div id="shellSlot"></div>
+<div class="app-main">
 
 <div class="mail-layout">
 
     <!-- 사이드바 -->
     <aside class="mail-sidebar">
-        <button class="btn-compose" id="btnCompose">+ 편지 쓰기</button>
+        <button class="btn-compose" id="btnCompose"><i class="fa-solid fa-pen-to-square"></i> 편지 쓰기</button>
         <ul class="folder-list">
             <li class="folder-item active" data-folder="inbox">
-                <span class="folder-icon">📥</span> 받은 편지함
+                <span class="folder-icon"><i class="fa-solid fa-inbox"></i></span> 받은 편지함
                 <span class="badge" id="unreadBadge"></span>
             </li>
             <li class="folder-item" data-folder="sent">
-                <span class="folder-icon">📤</span> 보낸 편지함
+                <span class="folder-icon"><i class="fa-solid fa-paper-plane"></i></span> 보낸 편지함
             </li>
         </ul>
         <div class="sidebar-account" id="sidebarAccount"></div>
@@ -29,7 +35,7 @@
     <section class="mail-list-panel">
         <div class="panel-header">
             <h2 id="panelTitle">받은 편지함</h2>
-            <button class="btn-refresh" id="btnRefresh" title="새로고침">↻</button>
+            <button class="btn-refresh" id="btnRefresh" title="새로고침"><i class="fa-solid fa-rotate"></i></button>
         </div>
         <ul class="mail-list" id="mailList">
             <li class="mail-empty">불러오는 중...</li>
@@ -53,8 +59,8 @@
                     <span id="detailDate"></span>
                 </div>
                 <div class="detail-actions">
-                    <button class="btn-reply" id="btnReply">↩ 답장</button>
-                    <button class="btn-delete" id="btnDelete">🗑 삭제</button>
+                    <button class="btn-reply" id="btnReply"><i class="fa-solid fa-reply"></i> 답장</button>
+                    <button class="btn-delete" id="btnDelete"><i class="fa-solid fa-trash"></i> 삭제</button>
                 </div>
             </div>
             <div class="detail-body" id="detailBody"></div>
@@ -64,7 +70,7 @@
         <div class="mail-compose" id="mailCompose" hidden>
             <div class="compose-header">
                 <h3>편지 쓰기</h3>
-                <button class="btn-close-compose" id="btnCloseCompose">✕</button>
+                <button class="btn-close-compose" id="btnCloseCompose"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="compose-form">
                 <div class="form-row">
@@ -80,7 +86,7 @@
                     <textarea id="composeBody" rows="12" placeholder="내용을 입력하세요"></textarea>
                 </div>
                 <div class="compose-actions">
-                    <button class="btn-send" id="btnSend">📤 발송</button>
+                    <button class="btn-send" id="btnSend"><i class="fa-solid fa-paper-plane"></i> 발송</button>
                 </div>
                 <div class="compose-msg" id="composeMsg"></div>
             </div>
@@ -90,7 +96,11 @@
 
 </div>
 
+</div>
+</div>
+
 <script src="/static/js/api.js"></script>
+<script src="/static/js/layout.js"></script>
 <script src="/static/js/mail.js"></script>
 </body>
 </html>

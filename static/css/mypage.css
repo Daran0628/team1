@@ -12,12 +12,26 @@
 ========================= */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
-    background: #f0f2f5;
-    min-height: 100vh;
+}
+
+/* =========================
+   PAGE HEADER (다른 페이지와 동일한 구조 — rbac.css 미로드라 여기서 정의)
+========================= */
+.page-header { padding: 1.5rem 2rem 0; }
+.breadcrumb { font-size: 0.8rem; color: var(--lo-muted); margin-bottom: 0.5rem; }
+.breadcrumb a { color: var(--lo-secondary); text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb span { margin: 0 0.25rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--lo-text-strong); letter-spacing: -0.5px; }
+
+/* 헤더 아래 남은 공간에서 카드만 중앙 정렬 */
+.mypage-center {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding: 1.5rem 5%;
+    min-height: 0;
 }
 .edit-field {
     display: none;
@@ -28,31 +42,17 @@ body {
 .mypage-container {
     width: 100%;
     max-width: 720px;
+    transform: translateY(-3rem);
 }
 
 /* =========================
    CARD (login-card 동일 스타일)
 ========================= */
 .mypage-card {
-    background: #fff;
+    background: var(--lo-surface);
+    border: 1px solid var(--lo-border);
     border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
     padding: 2.5rem 2rem;
-}
-
-/* =========================
-   HEADER
-========================= */
-.mypage-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.mypage-header h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1a1a2e;
-    letter-spacing: -0.5px;
 }
 
 /* =========================
@@ -75,33 +75,55 @@ body {
 .form-group label {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #374151;
+    color: var(--lo-muted);
     margin-bottom: 0.5rem;
 }
 
 .form-group span {
+    display: block;
+    min-height: 2.8rem;
+    box-sizing: border-box;
     padding: 0.75rem 1rem;
-    border: 1.5px solid #e5e7eb;
+    border: 1.5px solid var(--lo-border);
     border-radius: 8px;
-    background: #f9fafb;
+    background: var(--lo-bg);
     font-size: 0.95rem;
-    color: #111827;
+    line-height: 1.3rem;
+    color: var(--lo-text-strong);
 }
 
 /* input (login input 스타일 재사용 느낌) */
 .form-group input {
+    min-height: 2.8rem;
+    box-sizing: border-box;
     padding: 0.75rem 1rem;
-    border: 1.5px solid #d1d5db;
+    border: 1.5px solid var(--lo-border);
     border-radius: 8px;
     font-size: 1rem;
-    background: #fff;
+    background: var(--lo-surface);
+    color: var(--lo-text-strong);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-group input:focus {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    border-color: var(--lo-secondary);
+    box-shadow: 0 0 0 3px var(--lo-active-bg);
+}
+
+.form-group input:disabled {
+    background: var(--lo-bg);
+    color: var(--lo-muted);
+    cursor: not-allowed;
+}
+
+/* 다크 모드에서는 surface가 bg보다 밝아서 disabled가 오히려 도드라져 보임
+   → 입력 가능/불가능 배경을 반대로 적용 */
+[data-theme="dark"] .form-group input {
+    background: var(--lo-bg);
+}
+[data-theme="dark"] .form-group input:disabled {
+    background: var(--lo-surface);
 }
 
 /* =========================
@@ -116,18 +138,18 @@ body {
 
 .btn-primary {
     padding: 0.875rem 1.5rem;
-    background: #4f46e5;
+    background: var(--lo-secondary);
     color: #fff;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    transition: opacity 0.2s, transform 0.1s;
 }
 
 .btn-primary:hover {
-    background: #4338ca;
+    opacity: 0.88;
 }
 
 .btn-primary:active {
@@ -136,13 +158,16 @@ body {
 
 .btn-secondary {
     padding: 0.875rem 1.5rem;
-    background: #e5e7eb;
-    color: #111827;
-    border: none;
+    background: var(--lo-bg);
+    color: var(--lo-text-strong);
+    border: 1px solid var(--lo-border);
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
+}
+.btn-secondary:hover {
+    background: var(--lo-active-bg);
 }
 
 /* =========================
@@ -159,7 +184,7 @@ body {
         padding: 2rem 1.25rem;
     }
 
-    .mypage-header h1 {
+    .page-header h1 {
         font-size: 1.5rem;
     }
 }

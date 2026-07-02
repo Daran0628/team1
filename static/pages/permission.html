@@ -4,11 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; style-src 'self'; script-src 'self'">
+          content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
     <title>IAM — Permissions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
 </head>
 <body>
+
+<div class="app-shell">
+<div id="shellSlot"></div>
+<div class="app-main">
 
 <header class="page-header">
     <nav class="breadcrumb">
@@ -129,7 +135,11 @@
     </div>
 </div>
 
+</div>
+</div>
+
 <script src="/static/js/api.js"></script>
+<script src="/static/js/layout.js"></script>
 <script src="/static/js/permission.js"></script>
 </body>
 </html>
