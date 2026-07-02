@@ -95,23 +95,52 @@
     </div>
 </div>
 
-<!-- ══ 스냅샷 생성 모달 ══════════════════════════════════════════ -->
+<!-- ══ 스냅샷 관리 모달 ══════════════════════════════════════════ -->
 <div class="modal-overlay" id="snapModal" hidden>
-    <div class="modal modal-sm">
+    <div class="modal">
         <div class="modal-head">
-            <h2>스냅샷 생성</h2>
+            <h2>스냅샷 관리</h2>
             <button class="btn-x" data-close="snapModal">✕</button>
         </div>
         <div class="modal-body">
+            <div id="snapList" class="snap-list"></div>
+            <hr style="border:none;border-top:1px solid var(--border);margin-bottom:0.75rem;">
             <div class="field">
-                <label for="snapName">스냅샷 이름 <span class="req">*</span></label>
+                <label for="snapName">새 스냅샷 이름 <span class="req">*</span></label>
                 <input type="text" id="snapName" placeholder="스냅샷 이름" maxlength="80">
             </div>
             <div class="form-error" id="snapErr"></div>
         </div>
         <div class="modal-foot">
-            <button class="btn btn-ghost" data-close="snapModal">Cancel</button>
+            <button class="btn btn-ghost" data-close="snapModal">닫기</button>
             <button class="btn btn-primary" id="btnSnapConfirm">생성</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 스냅샷으로 새 VDI 생성 모달 ═══════════════════════════════ -->
+<div class="modal-overlay" id="snapCreateVdiModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>스냅샷으로 새 VDI 생성</h2>
+            <button class="btn-x" data-close="snapCreateVdiModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="snapCreateVdiName">새 컨테이너 이름 <span class="req">*</span></label>
+                <input type="text" id="snapCreateVdiName" placeholder="예: dev-ubuntu-02" maxlength="80">
+            </div>
+            <div class="field">
+                <label for="snapCreateVdiAssignedTo">할당 대상 <span class="req">*</span></label>
+                <select id="snapCreateVdiAssignedTo" class="field-select">
+                    <option value="">멤버 선택...</option>
+                </select>
+            </div>
+            <div class="form-error" id="snapCreateVdiErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="snapCreateVdiModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSnapCreateVdiConfirm">생성</button>
         </div>
     </div>
 </div>

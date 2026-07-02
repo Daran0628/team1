@@ -257,18 +257,6 @@
   </div>
 </div>
 
-<!-- 스냅샷으로 새 VDI 생성 모달 -->
-<div class="modal-overlay" id="snap-create-vdi-modal">
-  <div class="modal">
-    <h3>스냅샷으로 새 VDI 생성</h3>
-    <input id="snap-create-vdi-name" placeholder="새 컨테이너 이름" />
-    <div class="modal-actions">
-      <button class="btn btn-gray" id="snap-create-vdi-cancel">취소</button>
-      <button class="btn btn-blue" id="snap-create-vdi-confirm">생성</button>
-    </div>
-  </div>
-</div>
-
 <!-- 토스트 -->
 <div id="toast"></div>
 
@@ -508,8 +496,8 @@ async function loadSnapshotList() {
           '<div class="snap-name">' + s.snapshotName + '</div>' +
           '<div class="snap-date">' + fmtSnapDate(s.createdAt) + '</div>' +
         '</div>' +
-        '<button class="btn btn-gray" data-snap-action="create-vdi">새 VDI로 생성</button>' +
         '<button class="btn btn-orange" data-snap-action="restore">이 시점으로 복원</button>' +
+        '<button class="btn btn-red" data-snap-action="delete">삭제</button>' +
       '</div>';
     }).join('');
   } catch (e) {
@@ -548,7 +536,7 @@ document.getElementById('snap-modal').addEventListener('click', function(e) {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 
-// ── 스냅샷 목록 행 액션 (새 VDI 생성 / 복원) ──────────────────────
+// ── 스냅샷 목록 행 액션 (복원 / 삭제) ─────────────────────────────
 
 document.getElementById('snap-list').addEventListener('click', async function(e) {
   var btn = e.target.closest('[data-snap-action]');
@@ -556,11 +544,7 @@ document.getElementById('snap-list').addEventListener('click', async function(e)
   var row = btn.closest('.snap-row');
   var snapshotId = row.dataset.snapshotId;
 
-  if (btn.dataset.snapAction === 'create-vdi') {
-    document.getElementById('snap-create-vdi-name').value = '';
-    document.getElementById('snap-create-vdi-modal').dataset.snapshotId = snapshotId;
-    document.getElementById('snap-create-vdi-modal').classList.add('open');
-  } else if (btn.dataset.snapAction === 'restore') {
+  if (btn.dataset.snapAction === 'restore') {
     if (!confirm('이 VDI를 해당 스냅샷 시점으로 복원하시겠습니까?\n현재 컨테이너는 삭제되고 스냅샷 이미지로 다시 생성됩니다. 이 작업은 되돌릴 수 없습니다.')) return;
     try {
       await apiFetch('/instances/' + vdiData.vdiId + '/restore', {
@@ -573,35 +557,15 @@ document.getElementById('snap-list').addEventListener('click', async function(e)
     } catch (e) {
       toast(e.message, true);
     }
-  }
-});
-
-// ── 스냅샷으로 새 VDI 생성 모달 ────────────────────────────────
-
-document.getElementById('snap-create-vdi-cancel').addEventListener('click', function() {
-  document.getElementById('snap-create-vdi-modal').classList.remove('open');
-});
-document.getElementById('snap-create-vdi-modal').addEventListener('click', function(e) {
-  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
-document.getElementById('snap-create-vdi-confirm').addEventListener('click', async function() {
-  var modal = document.getElementById('snap-create-vdi-modal');
-  var snapshotId = modal.dataset.snapshotId;
-  var containerName = document.getElementById('snap-create-vdi-name').value.trim();
-  if (!containerName) { toast('새 컨테이너 이름을 입력하세요.', true); return; }
-  try {
-    await apiFetch('/instances/from-snapshot', {
-      method: 'POST',
-      body: JSON.stringify({
-        snapshotId: snapshotId,
-        containerName: containerName,
-        assignedTo: vdiData.assignedTo,
-      }),
-    });
-    modal.classList.remove('open');
-    toast('스냅샷으로 새 VDI가 생성되었습니다.');
-  } catch (e) {
-    toast(e.message, true);
+  } else if (btn.dataset.snapAction === 'delete') {
+    if (!confirm('이 스냅샷을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    try {
+      await apiFetch('/instances/' + vdiData.vdiId + '/snapshots/' + snapshotId, { method: 'DELETE' });
+      toast('스냅샷이 삭제되었습니다.');
+      loadSnapshotList();
+    } catch (e) {
+      toast(e.message, true);
+    }
   }
 });
 

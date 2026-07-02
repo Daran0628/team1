@@ -171,6 +171,20 @@ def restore_vdi_from_snapshot(vdi_id: str, snapshot_id: str) -> dict:
     return _to_dict(vdi)
 
 
+def delete_snapshot(vdi_id: str, snapshot_id: str) -> None:
+    """스냅샷 레코드와 Docker 이미지를 삭제한다."""
+    snap = VdiSnapshot.query.filter_by(snapshot_id=snapshot_id, vdi_id=vdi_id).first()
+    if not snap:
+        raise VdiException(ErrorStatus.VDI_SNAPSHOT_NOT_FOUND)
+
+    result = _docker('rmi', snap.image_tag)
+    if result.returncode != 0:
+        raise VdiException(ErrorStatus.VDI_OPERATION_FAILED, result.stderr.strip())
+
+    db.session.delete(snap)
+    db.session.commit()
+
+
 # ── 내부 헬퍼 ─────────────────────────────────────────────────
 
 def _get_or_404(vdi_id: str) -> Vdi:

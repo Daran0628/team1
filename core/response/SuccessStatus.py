@@ -92,7 +92,8 @@ class SuccessStatus(Enum):
     VDI_SNAPSHOT_READ   = (HTTPStatus.OK,      "VDI2008", "스냅샷 조회에 성공했습니다.")
     VDI_SNAPSHOT_RESTORE_AS_NEW = (HTTPStatus.CREATED, "VDI2009", "스냅샷으로 새 VDI가 생성되었습니다.")
     VDI_RESTORE         = (HTTPStatus.OK,      "VDI2010", "VDI가 스냅샷 시점으로 복원되었습니다.")
-
+    VDI_SNAPSHOT_DELETE = (HTTPStatus.OK,      "VDI2011", "스냅샷이 삭제되었습니다.")
+    
     # Chat
     CHAT_ROOM_CREATE   = (HTTPStatus.CREATED, "CHAT2001", "채팅방이 생성되었습니다.")
     CHAT_ROOM_READ     = (HTTPStatus.OK,      "CHAT2002", "채팅방 조회에 성공했습니다.")

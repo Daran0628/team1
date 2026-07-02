@@ -31,6 +31,7 @@ from service.VdiService.VdiService import (
     list_snapshots,
     create_vdi_from_snapshot,
     restore_vdi_from_snapshot,
+    delete_snapshot,
 )
 
 vdi_bp = Blueprint('vdi', __name__, url_prefix='/api/vdi')
@@ -169,6 +170,16 @@ def api_list_snapshots(vdi_id: str):
     def work():
         result = list_snapshots(vdi_id)
         return ApiResponse.on_success(SuccessStatus.VDI_SNAPSHOT_READ, result)
+    return _handle(work)
+
+
+@vdi_bp.route('/instances/<vdi_id>/snapshots/<snapshot_id>', methods=['DELETE'])
+@jwt_required()
+@vdi_required('SNAPSHOT')
+def api_delete_snapshot(vdi_id: str, snapshot_id: str):
+    def work():
+        delete_snapshot(vdi_id, snapshot_id)
+        return ApiResponse.on_success(SuccessStatus.VDI_SNAPSHOT_DELETE)
     return _handle(work)
 
 
