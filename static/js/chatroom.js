@@ -399,6 +399,8 @@ async function sendMessage() {
 }
 
 // ── File upload ───────────────────────────────────────────────
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 파일당 최대 25MB
+
 document.getElementById('btnAttach').addEventListener('click', () => {
     document.getElementById('fileInput').click();
 });
@@ -407,6 +409,11 @@ document.getElementById('fileInput').addEventListener('change', async function()
     const file = this.files[0];
     if (!file) return;
     this.value = '';
+
+    if (file.size > MAX_FILE_SIZE) {
+        showToast('파일 크기는 최대 25MB까지 업로드할 수 있습니다.', 'error');
+        return;
+    }
 
     const bar = document.getElementById('uploadBar');
     document.getElementById('uploadBarText').textContent = `"${file.name}" 업로드 중...`;

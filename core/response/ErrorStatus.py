@@ -35,6 +35,7 @@ class ErrorStatus(Enum):
     STORAGE_BUCKET_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4003", "버켓이 비어있지 않습니다. ?force=true로 강제 삭제하세요.")
     STORAGE_OBJECT_NOT_FOUND      = (HTTPStatus.NOT_FOUND,  "STORAGE4011", "오브젝트를 찾을 수 없습니다.")
     STORAGE_FOLDER_NOT_EMPTY      = (HTTPStatus.CONFLICT,   "STORAGE4012", "폴더가 비어있지 않습니다.")
+    STORAGE_FILE_TOO_LARGE        = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "STORAGE4013", "파일 크기는 최대 200MB까지 업로드할 수 있습니다.")
     STORAGE_OPERATION_FAILED      = (HTTPStatus.INTERNAL_SERVER_ERROR, "STORAGE5001", "스토리지 작업에 실패했습니다.")
 
     # Board (게시판)
@@ -49,6 +50,8 @@ class ErrorStatus(Enum):
     BOARD_APPROVER_ALREADY_EXISTS    = (HTTPStatus.CONFLICT,   "BOARD4032", "이미 등록된 승인자입니다.")
     BOARD_APPROVAL_PERMISSION_DENIED = (HTTPStatus.FORBIDDEN,  "BOARD4033", "게시글 승인 권한이 없습니다.")
     ATTACHMENT_NOT_FOUND             = (HTTPStatus.NOT_FOUND,  "BOARD4041", "첨부파일을 찾을 수 없습니다.")
+    ATTACHMENT_TOO_LARGE             = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "BOARD4042", "파일 하나의 크기는 최대 50MB까지 업로드할 수 있습니다.")
+    ATTACHMENT_TOTAL_TOO_LARGE       = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "BOARD4043", "한 번에 업로드 가능한 첨부파일 총 용량은 150MB입니다.")
     ATTACHMENT_UPLOAD_FAILED         = (HTTPStatus.INTERNAL_SERVER_ERROR, "BOARD5001", "첨부파일 업로드에 실패했습니다.")
 
     # Group (커스텀 그룹)
@@ -73,6 +76,7 @@ class ErrorStatus(Enum):
     CHAT_ADMIN_MUST_TRANSFER   = (HTTPStatus.CONFLICT,   "CHAT4006", "관리자는 다른 멤버에게 관리자를 이양 후 나가야 합니다.")
     CHAT_MESSAGE_NOT_FOUND     = (HTTPStatus.NOT_FOUND,  "CHAT4011", "메시지를 찾을 수 없습니다.")
     CHAT_FILE_NOT_FOUND        = (HTTPStatus.NOT_FOUND,  "CHAT4012", "첨부 파일을 찾을 수 없습니다.")
+    CHAT_FILE_TOO_LARGE        = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "CHAT4013", "파일 크기는 최대 25MB까지 업로드할 수 있습니다.")
     CHAT_FILE_UPLOAD_FAILED    = (HTTPStatus.INTERNAL_SERVER_ERROR, "CHAT5001", "파일 업로드에 실패했습니다.")
 
     # Cafeteria

@@ -28,6 +28,7 @@ from web.dto.ChatResponseDTO import (
 logger = logging.getLogger(__name__)
 
 CHAT_BUCKET = "chat-files"
+MAX_FILE_SIZE = 25 * 1024 * 1024  # 채팅 첨부파일 파일당 최대 25MB
 
 _MSG_TYPE_MAP = {
     "TEXT":   ChatMessageType.Text,
@@ -316,6 +317,12 @@ class ChatService:
         self._assert_member(room_id, sender_id)
 
         original_name = file_storage.filename or "file"
+        # 전체 읽기 전에 크기부터 확인 (초과 시 메모리에 올리지 않고 즉시 거부)
+        file_storage.seek(0, 2)
+        precheck_size = file_storage.tell()
+        file_storage.seek(0)
+        if precheck_size > MAX_FILE_SIZE:
+            raise ValueError("CHAT_FILE_TOO_LARGE")
         data = file_storage.read()
         mime_type = file_storage.content_type or "application/octet-stream"
         size = len(data)
