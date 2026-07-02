@@ -85,16 +85,26 @@ body {
     border-bottom: 1px solid var(--lo-border);
 }
 
-.topbar-brand { display: flex; align-items: center; gap: 0.6rem; }
-.brand-badge {
-    background: var(--lo-primary);
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+.topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+    left: 3px;
 }
-.brand-name { font-weight: 700; }
+.brand-logo-icon { height: 40px; width: auto; display: block; }
+.brand-logo-text { height: 38px; width: auto; display: block; position: relative; top: 3px; left: -5px; }
+
+/* 로고가 짙은 네이비 톤이라 다크 모드의 어두운 상단바 배경 위에서는
+   흰색 배지로 감싸서 대비를 확보한다 (상단바 높이(64px)에는 영향 없음) */
+[data-theme="dark"] .topbar-brand {
+    background: #fff;
+    padding: 4px 10px;
+    border-radius: 8px;
+}
 
 .topbar-right { display: flex; align-items: center; gap: 0.5rem; }
 

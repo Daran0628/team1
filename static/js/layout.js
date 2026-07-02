@@ -6,9 +6,9 @@
 
 const SIDEBAR_MENU = [
     { label: '대시보드',         icon: 'fa-solid fa-house',            href: '/' },
-    { label: '헬프데스크(티켓)', icon: 'fa-solid fa-headset',          href: null },
-    { label: 'FAQ',              icon: 'fa-solid fa-circle-question',  href: null },
-    { label: '공지사항',         icon: 'fa-solid fa-bullhorn',         href: null },
+    { label: '헬프데스크(티켓)', icon: 'fa-solid fa-headset',          href: '/static/pages/ticket.html' },
+    { label: 'FAQ',              icon: 'fa-solid fa-circle-question',  href: '/static/pages/faq.html' },
+    { label: '공지사항',         icon: 'fa-solid fa-bullhorn',         href: '/static/pages/notice.html' },
     { label: '메일 서비스',      icon: 'fa-solid fa-envelope',         href: '/mail' },
     { label: 'Chatting',         icon: 'fa-solid fa-comment-dots',     href: '/chat' },
     { label: '공유 스토리지',    icon: 'fa-solid fa-box-archive',      href: '/objstorage' },
@@ -61,10 +61,10 @@ function initLayoutShell() {
 
     slot.innerHTML = `
         <header class="topbar">
-            <div class="topbar-brand">
-                <span class="brand-badge">LOGO</span>
-                <span class="brand-name">NOVAworks</span>
-            </div>
+            <a class="topbar-brand" href="/" title="대시보드로 이동">
+                <img class="brand-logo-icon" src="/static/img/logo_1.png" alt="Team1">
+                <img class="brand-logo-text" src="/static/img/logo_2.png" alt="Team1 - Smart work, Better together">
+            </a>
             <div class="topbar-right">
                 <button class="theme-toggle" id="themeToggle" type="button" title="라이트/다크 모드 전환"></button>
                 <div class="topbar-user" id="topbarUser">

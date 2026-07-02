@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
@@ -32,8 +33,8 @@
 
     <div class="toolbar">
         <div class="toolbar-left">
-            <button id="btnAddGroup" class="btn btn-primary">⊕ Add Group</button>
-            <button id="btnRefresh"  class="btn btn-icon" title="새로고침">↻</button>
+            <button id="btnAddGroup" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Group</button>
+            <button id="btnRefresh"  class="btn btn-icon" title="새로고침"><i class="fa-solid fa-rotate"></i></button>
         </div>
         <div class="toolbar-right">
             <span id="itemsCount" class="items-count"></span>
@@ -67,7 +68,7 @@
     <div class="modal">
         <div class="modal-head">
             <h2 id="groupModalTitle">Add Group</h2>
-            <button class="btn-x" data-close="groupModal">✕</button>
+            <button class="btn-x" data-close="groupModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">
@@ -92,7 +93,7 @@
     <div class="modal modal-xl">
         <div class="modal-head">
             <h2 id="membersModalTitle">Manage Members</h2>
-            <button class="btn-x" data-close="membersModal">✕</button>
+            <button class="btn-x" data-close="membersModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <!-- 필터 바 -->
@@ -122,7 +123,7 @@
     <div class="modal modal-sm">
         <div class="modal-head">
             <h2>Delete Group</h2>
-            <button class="btn-x" data-close="deleteGroupModal">✕</button>
+            <button class="btn-x" data-close="deleteGroupModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <p id="deleteGroupMsg" class="delete-msg"></p>

@@ -373,7 +373,7 @@ async function loadPermBucketList() {
 
         listEl.innerHTML = '';
         if (state.storageBuckets.length === 0) {
-            listEl.innerHTML = '<span style="color:#888;font-size:13px">버킷이 없습니다.</span>';
+            listEl.innerHTML = '<span style="color:var(--muted);font-size:13px">버킷이 없습니다.</span>';
             return;
         }
         state.storageBuckets.forEach(function(b) {
@@ -387,7 +387,7 @@ async function loadPermBucketList() {
             var strong = document.createElement('strong');
             strong.textContent = b.bucketName;
             var sub = document.createElement('div');
-            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.style.cssText = 'font-size:11px;color:var(--muted)';
             sub.textContent = b.bucketId;
             info.appendChild(strong);
             info.appendChild(sub);
@@ -409,7 +409,7 @@ async function loadPermObjectList(bucketName) {
 
         listEl.innerHTML = '';
         if (state.storageObjects.length === 0) {
-            listEl.innerHTML = '<span style="color:#888;font-size:13px">오브젝트가 없습니다.</span>';
+            listEl.innerHTML = '<span style="color:var(--muted);font-size:13px">오브젝트가 없습니다.</span>';
             return;
         }
         state.storageObjects.forEach(function(r) {
@@ -423,7 +423,7 @@ async function loadPermObjectList(bucketName) {
             var strong = document.createElement('strong');
             strong.textContent = r.resourceName;
             var sub = document.createElement('div');
-            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.style.cssText = 'font-size:11px;color:var(--muted)';
             sub.textContent = r.bucketName + ' / ' + r.s3Key;
             info.appendChild(strong);
             info.appendChild(sub);

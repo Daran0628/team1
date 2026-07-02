@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'; connect-src 'self'; img-src 'self' blob: data: http: https:">
@@ -45,7 +46,7 @@
                 </div>
             </div>
             <div style="display:flex;align-items:center;gap:.5rem">
-                <button class="btn btn-ghost btn-icon" id="btnMembers" title="멤버 보기" style="font-size:.85rem">👥</button>
+                <button class="btn btn-ghost btn-icon" id="btnMembers" title="멤버 보기" style="font-size:.85rem"><i class="fa-solid fa-users"></i></button>
                 <button class="btn btn-ghost" id="btnLeaveRoom" hidden style="font-size:.8rem;color:var(--danger)">나가기</button>
             </div>
         </div>
@@ -63,12 +64,12 @@
 
         <!-- 입력 바 -->
         <div class="chat-input-bar">
-            <button class="btn-attach" id="btnAttach" title="파일 첨부">📎</button>
+            <button class="btn-attach" id="btnAttach" title="파일 첨부"><i class="fa-solid fa-paperclip"></i></button>
             <input type="file" id="fileInput" hidden>
             <textarea class="chat-textarea" id="msgInput"
                       placeholder="메시지를 입력하세요 (Shift+Enter: 줄바꿈)"
                       rows="1"></textarea>
-            <button class="btn-send" id="btnSend" disabled>➤</button>
+            <button class="btn-send" id="btnSend" disabled><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
 
@@ -79,7 +80,7 @@
     <div class="modal">
         <div class="modal-head">
             <h2>새 채팅방</h2>
-            <button class="btn-x" data-close="createModal">✕</button>
+            <button class="btn-x" data-close="createModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="create-room-tabs">
@@ -112,7 +113,7 @@
     <div class="modal modal-sm">
         <div class="modal-head">
             <h2>멤버</h2>
-            <button class="btn-x" data-close="membersModal">✕</button>
+            <button class="btn-x" data-close="membersModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div id="membersList" style="display:flex;flex-direction:column;gap:.25rem"></div>
@@ -129,7 +130,7 @@
     <div class="modal">
         <div class="modal-head">
             <h2>멤버 초대</h2>
-            <button class="btn-x" data-close="inviteModal">✕</button>
+            <button class="btn-x" data-close="inviteModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">
@@ -154,7 +155,7 @@
     <div class="modal modal-sm">
         <div class="modal-head">
             <h2>관리자 이양</h2>
-            <button class="btn-x" data-close="transferModal">✕</button>
+            <button class="btn-x" data-close="transferModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <p style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">
@@ -174,7 +175,7 @@
 
 <!-- ══ 이미지 라이트박스 ════════════════════════════════════════ -->
 <div id="lightbox" hidden>
-    <button class="lightbox-close" id="lightboxClose">✕</button>
+    <button class="lightbox-close" id="lightboxClose"><i class="fa-solid fa-xmark"></i></button>
     <img id="lightboxImg" src="" alt="">
     <div class="lightbox-name" id="lightboxName"></div>
 </div>

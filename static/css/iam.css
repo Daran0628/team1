@@ -23,8 +23,8 @@
     transition: box-shadow 0.15s, border-color 0.15s;
 }
 .iam-card:hover {
-    box-shadow: 0 4px 16px rgba(81, 47, 201, 0.10);
-    border-color: #c4b5fd;
+    box-shadow: 0 4px 16px rgba(9, 102, 146, 0.14);
+    border-color: var(--lo-secondary);
 }
 
 .iam-card-band          { height: 6px; }
@@ -74,7 +74,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #fafbff;
+    background: var(--lo-bg);
 }
 
 .iam-card-stat {
@@ -101,7 +101,7 @@
     border-radius: 5px;
     transition: background 0.12s;
 }
-.iam-card-link:hover    { background: #ede9fe; text-decoration: none; }
+.iam-card-link:hover    { background: var(--lo-active-bg); text-decoration: none; }
 .iam-card-link::after   { content: '›'; font-size: 1rem; line-height: 1; }
 
 .stat-loading           { opacity: 0.4; font-style: italic; }

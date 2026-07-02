@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
@@ -30,7 +31,7 @@
     <div class="toolbar">
         <div class="toolbar-left">
             <button id="btnNewRoom" class="btn btn-primary">＋ 새 채팅</button>
-            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침"><i class="fa-solid fa-rotate"></i></button>
         </div>
         <div class="toolbar-right">
             <span id="roomCount" class="items-count"></span>
@@ -49,7 +50,7 @@
     <div class="modal">
         <div class="modal-head">
             <h2>새 채팅방</h2>
-            <button class="btn-x" data-close="createModal">✕</button>
+            <button class="btn-x" data-close="createModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
 

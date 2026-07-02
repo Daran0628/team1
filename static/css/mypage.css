@@ -17,7 +17,7 @@ body {
 /* =========================
    PAGE HEADER (다른 페이지와 동일한 구조 — rbac.css 미로드라 여기서 정의)
 ========================= */
-.page-header { padding: 1.5rem 2rem 0; }
+.page-header { padding: 1.5rem 5% 0; }
 .breadcrumb { font-size: 0.8rem; color: var(--lo-muted); margin-bottom: 0.5rem; }
 .breadcrumb a { color: var(--lo-secondary); text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }

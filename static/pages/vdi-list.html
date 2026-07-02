@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VDI 관리</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -27,8 +28,8 @@
 
     <div class="toolbar">
         <div class="toolbar-left">
-            <button id="btnCreate" class="btn btn-primary" style="display:none">⊕ VDI 생성</button>
-            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+            <button id="btnCreate" class="btn btn-primary" style="display:none"><i class="fa-solid fa-plus"></i> VDI 생성</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침"><i class="fa-solid fa-rotate"></i></button>
         </div>
         <div class="toolbar-right">
             <span id="itemsCount" class="items-count"></span>
@@ -69,7 +70,7 @@
     <div class="modal">
         <div class="modal-head">
             <h2>VDI 생성</h2>
-            <button class="btn-x" data-close="createModal">✕</button>
+            <button class="btn-x" data-close="createModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">
@@ -100,7 +101,7 @@
     <div class="modal modal-sm">
         <div class="modal-head">
             <h2>스냅샷 생성</h2>
-            <button class="btn-x" data-close="snapModal">✕</button>
+            <button class="btn-x" data-close="snapModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">
@@ -121,7 +122,7 @@
     <div class="modal modal-sm">
         <div class="modal-head">
             <h2>VDI 삭제</h2>
-            <button class="btn-x" data-close="deleteModal">✕</button>
+            <button class="btn-x" data-close="deleteModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <p id="deleteMsg" class="delete-msg"></p>
