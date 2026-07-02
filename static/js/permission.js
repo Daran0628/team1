@@ -20,6 +20,8 @@ var ACTIONS_BY_TYPE = {
     VDI:     ['CONNECT', 'DISCONNECT', 'POWER_ON', 'POWER_OFF', 'REBOOT', 'SNAPSHOT', 'RESTORE', 'ASSIGN', 'REVOKE', 'MONITOR', 'MANAGE'],
     STORAGE: ['READ', 'DOWNLOAD', 'SHARE', 'UPLOAD', 'DELETE', 'MANAGE'],
     RBAC:    ['READ', 'MANAGE'],
+    BOARD:   ['CREATE', 'UPDATE', 'DELETE', 'READ', 'APPROVE', 'MANAGE'],
+    POST:    ['UPDATE', 'DELETE', 'MANAGE'],
 };
 
 // ── State ─────────────────────────────────────────────────────

@@ -318,6 +318,14 @@ html, body { height: 100%; }
 }
 .msg-row.mine .msg-meta { color: var(--muted); }
 
+/* 안 읽은 사람 수 (카카오톡 스타일) */
+.unread-count {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #f5a623;
+    line-height: 1;
+}
+
 /* 시스템 공지 메시지 */
 .notice-msg {
     text-align: center;

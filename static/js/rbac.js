@@ -128,6 +128,8 @@ var ACTIONS_BY_TYPE = {
     STORAGE: ['READ', 'DOWNLOAD', 'SHARE', 'UPLOAD', 'DELETE', 'MANAGE'],
     VDI:     ['READ', 'MANAGE'],
     RBAC:    ['READ', 'MANAGE'],
+    BOARD:   ['CREATE', 'UPDATE', 'DELETE', 'READ', 'APPROVE', 'MANAGE'],
+    POST:    ['UPDATE', 'DELETE', 'MANAGE'],
 };
 
 // ── Render helpers ────────────────────────────────────────────
