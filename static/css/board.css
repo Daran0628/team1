@@ -4,7 +4,7 @@
 .band-DEPARTMENT { background: #059669; }
 .band-DATA_ROOM  { background: #d97706; }
 
-.icon-FREE       { background: #ede9fe; }
+.icon-FREE       { background: var(--hover-row); }
 .icon-NOTICE     { background: #e0f2fe; }
 .icon-DEPARTMENT { background: #d1fae5; }
 .icon-DATA_ROOM  { background: #fef3c7; }
@@ -40,8 +40,8 @@
     cursor: pointer;
 }
 .board-card:hover {
-    box-shadow: 0 4px 16px rgba(81, 47, 201, 0.10);
-    border-color: #c4b5fd;
+    box-shadow: 0 4px 16px rgba(9, 102, 146, 0.14);
+    border-color: var(--primary);
 }
 .board-card-band { height: 6px; }
 
@@ -90,7 +90,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #fafbff;
+    background: var(--bg);
 }
 
 .board-card-actions { display: flex; gap: 0.35rem; }
@@ -255,7 +255,7 @@
     color: var(--text);
     transition: border-color 0.13s, background 0.13s;
 }
-.attachment-item:hover { border-color: var(--primary); background: #f5f3ff; color: var(--primary); }
+.attachment-item:hover { border-color: var(--primary); background: var(--hover-row); color: var(--primary); }
 .attachment-icon { font-size: 1rem; line-height: 1; }
 .attachment-name {
     font-weight: 500;
@@ -282,8 +282,8 @@
     color: var(--text);
     transition: all 0.13s;
 }
-.btn-like:hover        { border-color: var(--primary); color: var(--primary); background: #f5f3ff; }
-.btn-like.liked        { border-color: var(--primary); background: #ede9fe; color: var(--primary); }
+.btn-like:hover        { border-color: var(--primary); color: var(--primary); background: var(--hover-row); }
+.btn-like.liked        { border-color: var(--primary); background: var(--hover-row); color: var(--primary); }
 .like-count            { font-variant-numeric: tabular-nums; }
 
 /* ── Comments ───────────────────────────────────────────────── */
@@ -331,7 +331,7 @@
     margin-top: 0.75rem;
     margin-left: 1.5rem;
     padding-left: 1rem;
-    border-left: 2px solid #c4b5fd;
+    border-left: 2px solid var(--primary);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;

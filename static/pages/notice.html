@@ -28,7 +28,7 @@
     <div class="toolbar">
         <div class="toolbar-left"></div>
         <div class="toolbar-right">
-            <button class="btn btn-primary" id="btn-write" style="display:none" onclick="location.href='/static/pages/notice_create.html'">
+            <button class="btn btn-primary" id="btn-write" style="display:none" onclick="location.href='/notice/create'">
                 <i class="fa-solid fa-pen"></i> 글쓰기
             </button>
         </div>
@@ -99,7 +99,7 @@
         let num = list.filter(n => !n.isPinned).length;
         list.forEach(n => {
             const tr = document.createElement('tr');
-            tr.onclick = () => location.href = `/static/pages/notice_detail.html?id=${n.noticeId}`;
+            tr.onclick = () => location.href = `/notice/${n.noticeId}`;
             tr.innerHTML = `
                 <td class="td-num">${n.isPinned ? '-' : num--}</td>
                 <td><div class="td-title">${n.isPinned ? '<span class="pin-badge"><i class="fa-solid fa-thumbtack"></i> 고정</span>' : ''}${n.title}</div></td>

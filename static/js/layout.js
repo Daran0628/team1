@@ -6,11 +6,13 @@
 
 const SIDEBAR_MENU = [
     { label: '대시보드',         icon: 'fa-solid fa-house',            href: '/' },
-    { label: '헬프데스크(티켓)', icon: 'fa-solid fa-headset',          href: '/static/pages/ticket.html' },
-    { label: 'FAQ',              icon: 'fa-solid fa-circle-question',  href: '/static/pages/faq.html' },
-    { label: '공지사항',         icon: 'fa-solid fa-bullhorn',         href: '/static/pages/notice.html' },
+    { label: '헬프데스크(티켓)', icon: 'fa-solid fa-headset',          href: '/ticket' },
+    { label: 'FAQ',              icon: 'fa-solid fa-circle-question',  href: '/faq' },
+    { label: '공지사항',         icon: 'fa-solid fa-bullhorn',         href: '/notice' },
     { label: '메일 서비스',      icon: 'fa-solid fa-envelope',         href: '/mail' },
     { label: 'Chatting',         icon: 'fa-solid fa-comment-dots',     href: '/chat' },
+    { label: '게시판',           icon: 'fa-solid fa-clipboard-list',   href: '/board' },
+    { label: '오늘의 식사',      icon: 'fa-solid fa-utensils',         href: '/cafeteria' },
     { label: '공유 스토리지',    icon: 'fa-solid fa-box-archive',      href: '/objstorage' },
     { label: 'VDI',              icon: 'fa-solid fa-display',          href: '/vdi/list' },
     { label: '코딩테스트',       icon: 'fa-solid fa-code',             href: null },

@@ -5,34 +5,18 @@
     <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self'; style-src 'self'; script-src 'self'">
+          content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
     <title>커뮤니티 게시판</title>
-    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
     <link rel="stylesheet" href="/static/css/rbac.css">
     <link rel="stylesheet" href="/static/css/board.css">
 </head>
 <body>
-<div class="sidebar">
-    <div class="logo">Work<span>Portal</span></div>
-    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
-    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
-    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
-    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
-    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
-    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
-    <a href="/board" class="nav-item active"><span class="nav-icon">📋</span> 게시판</a>
-    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
-    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
-    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
-    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
-    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
-    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
-    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
-    <div class="sidebar-bottom">
-        <a href="#" class="nav-item" id="logout-link"><span class="nav-icon">🚪</span> 로그아웃</a>
-    </div>
-</div>
-<div class="main">
+
+<div class="app-shell">
+<div id="shellSlot"></div>
+<div class="app-main">
 
 <header class="page-header">
     <nav class="breadcrumb">
@@ -46,8 +30,8 @@
 
     <div class="toolbar">
         <div class="toolbar-left">
-            <button id="btnAddBoard" class="btn btn-primary" hidden>⊕ 게시판 추가</button>
-            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+            <button id="btnAddBoard" class="btn btn-primary" hidden><i class="fa-solid fa-plus"></i> 게시판 추가</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침"><i class="fa-solid fa-rotate"></i></button>
         </div>
         <div class="toolbar-right">
             <input type="search" id="searchInput" class="search-input" placeholder="게시판 검색...">
@@ -65,7 +49,7 @@
     <div class="modal modal-lg">
         <div class="modal-head">
             <h2 id="boardModalTitle">게시판 추가</h2>
-            <button class="btn-x" data-close="boardModal">✕</button>
+            <button class="btn-x" data-close="boardModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">
@@ -115,7 +99,7 @@
     <div class="modal modal-sm">
         <div class="modal-head">
             <h2>게시판 삭제</h2>
-            <button class="btn-x" data-close="deleteBoardModal">✕</button>
+            <button class="btn-x" data-close="deleteBoardModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <p id="deleteBoardMsg" class="delete-msg"></p>
@@ -129,8 +113,12 @@
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+
+</div>
+</div>
+
 <script src="/static/js/api.js"></script>
-</div><!-- /.main -->
+<script src="/static/js/layout.js"></script>
 <script src="/static/js/board.js"></script>
 <script src="/static/js/sidebar_auth.js"></script>
 </body>

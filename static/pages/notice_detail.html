@@ -18,7 +18,7 @@
 <header class="page-header">
     <nav class="breadcrumb">
         <a href="/">Home</a> <span>›</span>
-        <a href="/static/pages/notice.html">공지사항</a> <span>›</span>
+        <a href="/notice">공지사항</a> <span>›</span>
         <span>상세</span>
     </nav>
     <h1>공지사항 상세</h1>
@@ -38,7 +38,7 @@
         </div>
         <div class="detail-body" id="detail-body"></div>
         <div class="detail-footer">
-            <button class="btn btn-list" onclick="location.href='/static/pages/notice.html'">목록</button>
+            <button class="btn btn-list" onclick="location.href='/notice'">목록</button>
             <div class="btn-group" id="admin-btns" style="display:none">
                 <button class="btn btn-edit" id="btn-edit">수정</button>
                 <button class="btn btn-delete" onclick="deleteNotice()">삭제</button>
@@ -57,16 +57,15 @@
 <script>
     const token = sessionStorage.getItem('access_token');
     const role  = sessionStorage.getItem('role');
-    const params = new URLSearchParams(location.search);
-    const noticeId = params.get('id');
+    const noticeId = decodeURIComponent(location.pathname.split('/')[2] || '');
 
     if (!token) location.replace('/login');
-    if (!noticeId) location.replace('/static/pages/notice.html');
+    if (!noticeId) location.replace('/notice');
 
     if (role === 'ADMIN' || role === 'SUPERADMIN') {
         document.getElementById('admin-btns').style.display = 'flex';
         document.getElementById('btn-edit').onclick = () => {
-            location.href = `/static/pages/notice_edit.html?id=${noticeId}`;
+            location.href = `/notice/${noticeId}/edit`;
         };
     }
 
@@ -106,7 +105,7 @@
             });
             if (res.ok) {
                 showToast('삭제됐습니다.');
-                setTimeout(() => location.replace('/static/pages/notice.html'), 1000);
+                setTimeout(() => location.replace('/notice'), 1000);
             }
         } catch {
             showToast('삭제에 실패했습니다.');
