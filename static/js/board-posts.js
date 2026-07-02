@@ -21,6 +21,8 @@
     var deletingPostId    = null;
     var inlineImageFiles  = [];   /* 본문 삽입용 이미지 파일 목록 */
     var inlinePrevUrls    = [];   /* ObjectURL 해제용 */
+    var MAX_FILE_SIZE     = 50 * 1024 * 1024;   /* 파일당 최대 50MB */
+    var MAX_TOTAL_SIZE    = 150 * 1024 * 1024;  /* 한 번의 업로드 요청당 최대 150MB */
 
     /* ── DOM ─────────────────────────────────────────────── */
     var postsBody    = document.getElementById('postsBody');
@@ -203,6 +205,15 @@
         for (var i = 0; i < files.length; i++) {
             var file = files[i];
             if (!file.type.startsWith('image/')) continue;
+            if (file.size > MAX_FILE_SIZE) {
+                showToast(file.name + '은(는) 최대 용량(50MB)을 초과해 추가할 수 없습니다.', 'error');
+                continue;
+            }
+            var currentTotal = inlineImageFiles.reduce(function (sum, f) { return sum + f.size; }, 0);
+            if (currentTotal + file.size > MAX_TOTAL_SIZE) {
+                showToast('이미지 총 용량(150MB)을 초과해 더 이상 추가할 수 없습니다.', 'error');
+                continue;
+            }
             var idx    = inlineImageFiles.length;
             var marker = '[이미지 ' + (idx + 1) + ']';
             inlineImageFiles.push(file);
@@ -250,6 +261,22 @@
         var content = inputContent.value.trim();
         if (!title)   { writeModalErr.textContent = '제목을 입력하세요.'; return; }
         if (!content) { writeModalErr.textContent = '내용을 입력하세요.'; return; }
+
+        /* 일반 첨부파일 크기 검증 (개별/합계) - 게시글 생성 전에 미리 확인 */
+        var attachTotal = 0;
+        for (var fi = 0; fi < inputFiles.files.length; fi++) {
+            var af = inputFiles.files[fi];
+            if (af.size > MAX_FILE_SIZE) {
+                writeModalErr.textContent = af.name + '은(는) 최대 용량(50MB)을 초과해 업로드할 수 없습니다.';
+                return;
+            }
+            attachTotal += af.size;
+        }
+        if (attachTotal > MAX_TOTAL_SIZE) {
+            writeModalErr.textContent = '첨부파일 총 용량(150MB)을 초과했습니다.';
+            return;
+        }
+
         try {
             btnSavePost.disabled = true;
             var res = await apiFetch('/api/board/boards/' + BOARD_ID + '/posts', {

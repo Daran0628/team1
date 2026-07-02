@@ -30,6 +30,9 @@ class StorageException(Exception):
         super().__init__(error_status.message)
 
 
+MAX_FILE_SIZE = 200 * 1024 * 1024  # 오브젝트 업로드 파일당 최대 200MB
+
+
 def _minio():
     return get_minio_client()
 

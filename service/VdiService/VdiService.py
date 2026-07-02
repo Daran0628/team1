@@ -1,3 +1,4 @@
+import re
 import subprocess
 from datetime import datetime, timezone
 
@@ -10,6 +11,10 @@ class VdiException(Exception):
     def __init__(self, error_status: ErrorStatus, detail: str = ""):
         self.error_status = error_status
         self.detail = detail
+
+
+# Docker 리포지토리 이름 규칙: 소문자 영숫자 + '.' '_' '-' 구분자만 허용 (공백/대문자/한글/특수문자 불가)
+_SNAPSHOT_NAME_RE = re.compile(r'^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$')
 
 
 def _docker(*args: str) -> subprocess.CompletedProcess:
@@ -106,6 +111,11 @@ def delete_vdi(vdi_id: str) -> None:
 # ── 스냅샷 ────────────────────────────────────────────────────
 
 def create_snapshot(vdi_id: str, snapshot_name: str, member_id: str) -> dict:
+    """VDI 컨테이너의 스냅샷(Docker 이미지)을 생성한다.
+    snapshot_name은 Docker 이미지 태그에 그대로 쓰이므로 리포지토리 이름 규칙을 따라야 한다."""
+    if not _SNAPSHOT_NAME_RE.match(snapshot_name):
+        raise VdiException(ErrorStatus.VDI_INVALID_SNAPSHOT_NAME)
+
     vdi = _get_or_404(vdi_id)
     image_tag = f"{vdi.container_name}-snap-{snapshot_name}:latest"
     result = _docker('commit', vdi.container_name, image_tag)
@@ -124,9 +134,55 @@ def create_snapshot(vdi_id: str, snapshot_name: str, member_id: str) -> dict:
 
 
 def list_snapshots(vdi_id: str) -> list[dict]:
+    """VDI의 스냅샷 목록을 최신순으로 반환한다."""
     _get_or_404(vdi_id)
     snaps = VdiSnapshot.query.filter_by(vdi_id=vdi_id).order_by(VdiSnapshot.created_at.desc()).all()
     return [_snap_to_dict(s) for s in snaps]
+
+
+def create_vdi_from_snapshot(snapshot_id: str, container_name: str, member_id: str) -> dict:
+    """스냅샷 이미지로 새로운 VDI를 생성한다. 기존 VDI는 그대로 유지된다."""
+    snap = VdiSnapshot.query.get(snapshot_id)
+    if not snap:
+        raise VdiException(ErrorStatus.VDI_SNAPSHOT_NOT_FOUND)
+    return create_vdi(container_name, snap.image_tag, member_id)
+
+
+def restore_vdi_from_snapshot(vdi_id: str, snapshot_id: str) -> dict:
+    """기존 VDI 컨테이너를 지정한 스냅샷 시점으로 되돌린다 (컨테이너 재생성, vdi_id 유지)."""
+    vdi = _get_or_404(vdi_id)
+    snap = VdiSnapshot.query.get(snapshot_id)
+    if not snap or snap.vdi_id != vdi_id:
+        raise VdiException(ErrorStatus.VDI_SNAPSHOT_NOT_FOUND)
+
+    _docker('stop', vdi.container_name)
+    result = _docker('rm', '-f', vdi.container_name)
+    if result.returncode != 0:
+        raise VdiException(ErrorStatus.VDI_OPERATION_FAILED, result.stderr.strip())
+
+    result = _docker('run', '-dt', '--name', vdi.container_name, snap.image_tag)
+    if result.returncode != 0:
+        raise VdiException(ErrorStatus.VDI_OPERATION_FAILED, result.stderr.strip())
+
+    vdi.image = snap.image_tag
+    vdi.status = 'RUNNING'
+    vdi.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return _to_dict(vdi)
+
+
+def delete_snapshot(vdi_id: str, snapshot_id: str) -> None:
+    """스냅샷 레코드와 Docker 이미지를 삭제한다."""
+    snap = VdiSnapshot.query.filter_by(snapshot_id=snapshot_id, vdi_id=vdi_id).first()
+    if not snap:
+        raise VdiException(ErrorStatus.VDI_SNAPSHOT_NOT_FOUND)
+
+    result = _docker('rmi', snap.image_tag)
+    if result.returncode != 0:
+        raise VdiException(ErrorStatus.VDI_OPERATION_FAILED, result.stderr.strip())
+
+    db.session.delete(snap)
+    db.session.commit()
 
 
 # ── 내부 헬퍼 ─────────────────────────────────────────────────

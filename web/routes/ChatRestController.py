@@ -18,6 +18,7 @@ from web.dto.ChatRequestDTO import (
 _FILE_ERR_MAP = {
     "CHAT_FILE_NOT_FOUND":     ErrorStatus.CHAT_FILE_NOT_FOUND,
     "CHAT_FILE_UPLOAD_FAILED": ErrorStatus.CHAT_FILE_UPLOAD_FAILED,
+    "CHAT_FILE_TOO_LARGE":     ErrorStatus.CHAT_FILE_TOO_LARGE,
 }
 
 logger = logging.getLogger(__name__)
