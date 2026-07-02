@@ -69,12 +69,6 @@ class ErrorStatus(Enum):
     ATTACHMENT_TOTAL_TOO_LARGE       = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "BOARD4043", "한 번에 업로드 가능한 첨부파일 총 용량은 150MB입니다.")
     ATTACHMENT_UPLOAD_FAILED         = (HTTPStatus.INTERNAL_SERVER_ERROR, "BOARD5001", "첨부파일 업로드에 실패했습니다.")
 
-    # Group (커스텀 그룹)
-    GROUP_NOT_FOUND                  = (HTTPStatus.NOT_FOUND,   "GROUP4001", "그룹을 찾을 수 없습니다.")
-    GROUP_NAME_DUPLICATE             = (HTTPStatus.CONFLICT,    "GROUP4002", "이미 존재하는 그룹 이름입니다.")
-    GROUP_MEMBER_NOT_FOUND           = (HTTPStatus.NOT_FOUND,   "GROUP4003", "그룹에서 해당 멤버를 찾을 수 없습니다.")
-    GROUP_MEMBER_ALREADY_EXISTS      = (HTTPStatus.CONFLICT,    "GROUP4004", "이미 그룹에 속한 멤버입니다.")
-
     # VDI (가상 데스크탑)
     VDI_NOT_FOUND              = (HTTPStatus.NOT_FOUND,            "VDI4001", "VDI 인스턴스를 찾을 수 없습니다.")
     VDI_ALREADY_EXISTS         = (HTTPStatus.CONFLICT,             "VDI4002", "이미 존재하는 컨테이너 이름입니다.")
