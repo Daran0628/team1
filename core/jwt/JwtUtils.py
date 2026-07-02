@@ -1,7 +1,9 @@
 from functools import wraps
 
-from flask import jsonify
+from core.response.ApiResponse import ApiResponse
+from core.response.ErrorStatus import ErrorStatus
 from flask_jwt_extended import get_jwt
+
 
 
 def role_required(*roles):
@@ -10,7 +12,7 @@ def role_required(*roles):
         def wrapper(*args, **kwargs):
             claims = get_jwt()
             if claims.get("role") not in roles:
-                return jsonify({"isSuccess": False, "message": "접근 권한이 없습니다."}), 403
+                return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
             return fn(*args, **kwargs)
         return wrapper
     return decorator

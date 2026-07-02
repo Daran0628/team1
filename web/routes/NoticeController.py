@@ -1,9 +1,10 @@
 from flask import Blueprint, request
-from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from core.response.ApiResponse import ApiResponse
 from core.response.ErrorStatus import ErrorStatus
 from core.response.SuccessStatus import SuccessStatus
+from core.jwt.JwtUtils import role_required
 from service.NoticeService.NoticeService import NoticeService
 from domain.model.Member import Member
 
@@ -48,11 +49,8 @@ def get_notice(notice_id):
 
 @notice_bp.route("", methods=["POST"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def create_notice():
-    """공지사항 등록 (ADMIN, SUPERADMIN만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
 
     data      = request.get_json(silent=True) or {}
     title     = data.get("title", "").strip()
@@ -73,11 +71,8 @@ def create_notice():
 
 @notice_bp.route("/<notice_id>", methods=["PUT"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def update_notice(notice_id):
-    """공지사항 수정 (ADMIN, SUPERADMIN만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
 
     data      = request.get_json(silent=True) or {}
     title     = data.get("title", "").strip()
@@ -96,11 +91,8 @@ def update_notice(notice_id):
 
 @notice_bp.route("/<notice_id>", methods=["DELETE"])
 @jwt_required()
+@role_required("ADMIN", "SUPERADMIN")
 def delete_notice(notice_id):
-    """공지사항 삭제 (ADMIN, SUPERADMIN만)"""
-    claims = get_jwt()
-    if claims.get("role") not in ("ADMIN", "SUPERADMIN"):
-        return ApiResponse.on_failure(ErrorStatus._FORBIDDEN)
 
     try:
         _service.delete(notice_id)
