@@ -1,0 +1,60 @@
+/* ticket.css — 헬프데스크 목록/상세/등록 (support.css의 공용 톤앤매너 위에 얹는 티켓 전용 스타일) */
+
+/* ── 상태/우선순위 배지 (대시보드 status-badge와 동일한 톤 + 다크모드 대응) ── */
+.badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.badge-open     { background: #fff1d6; color: #b45309; }
+.badge-progress { background: #e0ecff; color: #1d4ed8; }
+.badge-pending  { background: var(--lo-bg); color: var(--lo-muted); }
+.badge-resolved { background: #dcfce7; color: #15803d; }
+.badge-closed   { background: var(--lo-border); color: var(--lo-muted); }
+
+[data-theme="dark"] .badge-open     { background: rgba(255, 184, 92, 0.18); color: #ffc98a; }
+[data-theme="dark"] .badge-progress { background: rgba(96, 148, 255, 0.18); color: #93b4ff; }
+[data-theme="dark"] .badge-pending  { background: rgba(255, 255, 255, 0.08); color: var(--lo-muted); }
+[data-theme="dark"] .badge-resolved { background: rgba(74, 222, 128, 0.18); color: #86efac; }
+[data-theme="dark"] .badge-closed   { background: rgba(255, 255, 255, 0.06); color: var(--lo-muted); }
+
+.priority-high, .priority-medium, .priority-low {
+    font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+}
+.priority-high   { background: rgba(232, 62, 62, 0.12); color: var(--lo-danger); }
+.priority-medium { background: #fff1d6; color: #b45309; }
+.priority-low    { background: #dcfce7; color: #15803d; }
+
+[data-theme="dark"] .priority-high   { background: rgba(224, 133, 133, 0.18); color: #e08585; }
+[data-theme="dark"] .priority-medium { background: rgba(255, 184, 92, 0.18); color: #ffc98a; }
+[data-theme="dark"] .priority-low    { background: rgba(74, 222, 128, 0.18); color: #86efac; }
+
+/* ── 목록 테이블 ────────────────────────────────────────────── */
+.td-title { font-weight: 500; color: var(--lo-text-strong); }
+
+/* ── 우선순위 선택 (등록 폼) ────────────────────────────────── */
+.priority-group { display: flex; gap: 10px; }
+.priority-btn {
+    flex: 1; padding: 10px;
+    border: 1.5px solid var(--lo-border); border-radius: 8px;
+    background: var(--lo-surface); color: var(--lo-muted);
+    font-size: 0.875rem; font-weight: 600; text-align: center;
+    cursor: pointer; transition: all 0.2s;
+}
+.priority-btn:hover { border-color: var(--lo-secondary); }
+.priority-btn.selected-high   { background: rgba(232, 62, 62, 0.12); border-color: var(--lo-danger); color: var(--lo-danger); }
+.priority-btn.selected-medium { background: #fff1d6; border-color: #b45309; color: #b45309; }
+.priority-btn.selected-low    { background: #dcfce7; border-color: #15803d; color: #15803d; }
+
+/* ── 상세 페이지 ────────────────────────────────────────────── */
+.ticket-no { font-size: 0.8rem; color: var(--lo-muted); margin-bottom: 8px; }
+.badge-row { display: flex; gap: 8px; align-items: center; }
+
+.info-grid { padding: 1.5rem 2.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.info-item { display: flex; flex-direction: column; gap: 4px; }
+.info-label { font-size: 0.75rem; color: var(--lo-muted); font-weight: 600; }
+.info-value { font-size: 0.9rem; color: var(--lo-text-strong); font-weight: 500; }
+.assignee-pending { color: #b45309; font-weight: 600; }
+[data-theme="dark"] .assignee-pending { color: #ffc98a; }
+
+.assignee-select, .status-select {
+    padding: 6px 10px; border: 1.5px solid var(--lo-border); border-radius: 6px;
+    font-size: 0.85rem; outline: none; cursor: pointer;
+    background: var(--lo-surface); color: var(--lo-text-strong);
+}

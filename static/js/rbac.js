@@ -295,7 +295,7 @@ function renderTable() {
                     // 두 번째 줄: description (있을 때)
                     if (p.description) {
                         var descSpan = document.createElement('span');
-                        descSpan.style.cssText = 'font-size:11px;color:#6b7280;font-style:italic';
+                        descSpan.style.cssText = 'font-size:11px;color:var(--muted);font-style:italic';
                         descSpan.textContent = p.description;
                         tag.appendChild(descSpan);
                     }
@@ -303,7 +303,7 @@ function renderTable() {
                     // 세 번째 줄: 리소스 이름
                     if (p.resources && p.resources.length > 0) {
                         var resRow = document.createElement('span');
-                        resRow.style.cssText = 'font-size:11px;color:#2563eb';
+                        resRow.style.cssText = 'font-size:11px;color:var(--primary)';
                         var rParts = p.resources.map(function(r) {
                             return (r.resourceType === 'BUCKET' ? '🪣 ' : '📄 ') + (r.resourceName || r.resourceId.slice(0, 8) + '…');
                         });
@@ -311,7 +311,7 @@ function renderTable() {
                         tag.appendChild(resRow);
                     } else {
                         var allSpan = document.createElement('span');
-                        allSpan.style.cssText = 'font-size:11px;color:#9ca3af';
+                        allSpan.style.cssText = 'font-size:11px;color:var(--muted)';
                         allSpan.textContent = '▸ 전체';
                         tag.appendChild(allSpan);
                     }
@@ -626,7 +626,7 @@ async function loadPermGrid(role) {
             // description
             if (p.description) {
                 var descDiv = document.createElement('div');
-                descDiv.style.cssText = 'font-size:11px;color:#6b7280;font-style:italic;margin-top:2px';
+                descDiv.style.cssText = 'font-size:11px;color:var(--muted);font-style:italic;margin-top:2px';
                 descDiv.textContent = p.description;
                 info.appendChild(descDiv);
             }
@@ -639,10 +639,10 @@ async function loadPermGrid(role) {
                     return (r.resourceType === 'BUCKET' ? '🪣 ' : '📄 ') + (r.resourceName || r.resourceId.slice(0, 8) + '…');
                 });
                 resInfo.textContent = '▸ ' + rParts.join(', ');
-                resInfo.style.color = '#2563eb';
+                resInfo.style.color = 'var(--primary)';
             } else {
                 resInfo.textContent = '▸ 전체';
-                resInfo.style.color = '#9ca3af';
+                resInfo.style.color = 'var(--muted)';
             }
             info.appendChild(resInfo);
             item.appendChild(cb);
@@ -754,7 +754,7 @@ async function loadPermBucketList() {
 
         listEl.innerHTML = '';
         if (state.storageBuckets.length === 0) {
-            listEl.innerHTML = '<span style="color:#888;font-size:13px">버킷이 없습니다.</span>';
+            listEl.innerHTML = '<span style="color:var(--muted);font-size:13px">버킷이 없습니다.</span>';
             return;
         }
         state.storageBuckets.forEach(function(b) {
@@ -768,7 +768,7 @@ async function loadPermBucketList() {
             var strong = document.createElement('strong');
             strong.textContent = b.bucketName;
             var sub = document.createElement('div');
-            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.style.cssText = 'font-size:11px;color:var(--muted)';
             sub.textContent = b.bucketId;
             info.appendChild(strong);
             info.appendChild(sub);
@@ -790,7 +790,7 @@ async function loadPermObjectList(bucketName) {
 
         listEl.innerHTML = '';
         if (state.storageObjects.length === 0) {
-            listEl.innerHTML = '<span style="color:#888;font-size:13px">오브젝트가 없습니다.</span>';
+            listEl.innerHTML = '<span style="color:var(--muted);font-size:13px">오브젝트가 없습니다.</span>';
             return;
         }
         state.storageObjects.forEach(function(r) {
@@ -804,7 +804,7 @@ async function loadPermObjectList(bucketName) {
             var strong = document.createElement('strong');
             strong.textContent = r.resourceName;
             var sub = document.createElement('div');
-            sub.style.cssText = 'font-size:11px;color:#888';
+            sub.style.cssText = 'font-size:11px;color:var(--muted)';
             sub.textContent = r.bucketName + ' / ' + r.s3Key;
             info.appendChild(strong);
             info.appendChild(sub);

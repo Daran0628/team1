@@ -19,7 +19,7 @@
 .bucket-sidebar {
     width: 220px;
     flex-shrink: 0;
-    background: #f9f8ff;
+    background: var(--lo-bg);
     border-right: 1.5px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -51,7 +51,7 @@
     line-height: 1;
     transition: background 0.13s;
 }
-.btn-new-bucket:hover { background: #ede9ff; }
+.btn-new-bucket:hover { background: var(--lo-active-bg); }
 
 .bucket-list {
     list-style: none;
@@ -72,7 +72,7 @@
     border-radius: 0;
     transition: background 0.1s;
 }
-.bucket-item:hover:not(.active) { background: #ede9ff; }
+.bucket-item:hover:not(.active) { background: var(--lo-active-bg); }
 .bucket-item.active {
     background: var(--primary);
     color: #fff;
@@ -140,7 +140,7 @@
     gap: 0.5rem;
     padding: 0.65rem 1.25rem;
     border-bottom: 1.5px solid var(--border);
-    background: #fafbfc;
+    background: var(--lo-bg);
     flex-shrink: 0;
 }
 
@@ -196,7 +196,7 @@
 .spinner {
     display: inline-block;
     width: 13px; height: 13px;
-    border: 2px solid #e0d9ff;
+    border: 2px solid var(--lo-active-bg);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
@@ -266,8 +266,8 @@
     transition: background 0.13s, border-color 0.13s, color 0.13s;
 }
 .btn-action:hover        { background: var(--bg); color: var(--text); }
-.btn-share               { color: var(--primary); border-color: #c4b5fd; }
-.btn-share:hover         { background: #ede9ff; }
+.btn-share               { color: var(--primary); border-color: var(--lo-secondary); }
+.btn-share:hover         { background: var(--lo-active-bg); }
 .btn-danger-action       { color: var(--danger); border-color: #fca5a5; }
 .btn-danger-action:hover { background: #fff0f0; }
 
@@ -305,6 +305,8 @@
     font-size: 0.875rem;
     text-align: center;
     outline: none;
+    background: var(--surface);
+    color: var(--text);
     transition: border-color 0.15s;
 }
 .expiry-input:focus { border-color: var(--primary); }

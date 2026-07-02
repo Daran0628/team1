@@ -1,12 +1,5 @@
-import fcntl
 import json
 import os
-import pty
-import select
-import struct
-import subprocess
-import termios
-import threading
 
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, decode_token
@@ -290,6 +283,14 @@ def vdi_terminal(ws, vdi_id: str):
         return
 
     # 4. PTY 생성 + docker exec 실행
+    import fcntl
+    import pty
+    import select
+    import struct
+    import subprocess
+    import termios
+    import threading
+
     master_fd, slave_fd = pty.openpty()
     try:
         proc = subprocess.Popen(

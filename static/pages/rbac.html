@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
@@ -31,8 +32,8 @@
 
     <div class="toolbar">
         <div class="toolbar-left">
-            <button id="btnAddRole" class="btn btn-primary">⊕ Add Role</button>
-            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+            <button id="btnAddRole" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Role</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침"><i class="fa-solid fa-rotate"></i></button>
         </div>
         <div class="toolbar-right">
             <span id="itemsCount" class="items-count"></span>
@@ -65,7 +66,7 @@
     <div class="modal">
         <div class="modal-head">
             <h2 id="roleModalTitle">Add Role</h2>
-            <button class="btn-x" data-close="roleModal">✕</button>
+            <button class="btn-x" data-close="roleModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">
@@ -90,7 +91,7 @@
     <div class="modal modal-lg">
         <div class="modal-head">
             <h2 id="assignModalTitle">Assign Permissions</h2>
-            <button class="btn-x" data-close="assignModal">✕</button>
+            <button class="btn-x" data-close="assignModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="assign-filter">
@@ -117,7 +118,7 @@
     <div class="modal modal-lg">
         <div class="modal-head">
             <h2>Create Permission</h2>
-            <button class="btn-x" data-close="createPermModal">✕</button>
+            <button class="btn-x" data-close="createPermModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">
@@ -138,7 +139,7 @@
             </div>
             <div id="storageResourceSection">
                 <div class="field">
-                    <label>Buckets <small style="font-weight:normal;color:#888">(선택 안 하면 전체 허용)</small></label>
+                    <label>Buckets <small style="font-weight:normal;color:var(--muted)">(선택 안 하면 전체 허용)</small></label>
                     <div class="perm-grid" id="permBucketList"></div>
                 </div>
                 <div class="field">
@@ -165,7 +166,7 @@
     <div class="modal modal-sm">
         <div class="modal-head">
             <h2>Delete Role</h2>
-            <button class="btn-x" data-close="deleteModal">✕</button>
+            <button class="btn-x" data-close="deleteModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <p id="deleteModalMsg" class="delete-msg"></p>
@@ -183,7 +184,7 @@
     <div class="modal modal-lg">
         <div class="modal-head">
             <h2 id="bindingModalTitle">Add Binding</h2>
-            <button class="btn-x" data-close="bindingModal">✕</button>
+            <button class="btn-x" data-close="bindingModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body">
             <div class="field">

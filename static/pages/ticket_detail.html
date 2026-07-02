@@ -2,75 +2,31 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/static/img/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>티켓 상세 | 업무지원포털</title>
-    <link rel="stylesheet" href="/static/css/common-layout.css">
-    <style>
-        .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #6b7280; font-size: 0.875rem; cursor: pointer; margin-bottom: 1.5rem; text-decoration: none; transition: color 0.2s; }
-        .back-btn:hover { color: #4f46e5; }
-
-        .detail-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
-        .detail-header { padding: 2rem 2.5rem; border-bottom: 1px solid #f3f4f6; }
-        .ticket-no { font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px; }
-        .detail-title { font-size: 1.4rem; font-weight: 700; color: #111827; margin-bottom: 1rem; line-height: 1.4; }
-        .badge-row { display: flex; gap: 8px; align-items: center; }
-
-        .badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-        .badge-open     { background: #dbeafe; color: #1d4ed8; }
-        .badge-progress { background: #fef3c7; color: #b45309; }
-        .badge-pending  { background: #ffedd5; color: #c2410c; }
-        .badge-resolved { background: #d1fae5; color: #065f46; }
-        .badge-closed   { background: #f3f4f6; color: #6b7280; }
-        .priority-high   { background: #fee2e2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-        .priority-medium { background: #fef3c7; color: #b45309; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-        .priority-low    { background: #d1fae5; color: #065f46; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-
-        .detail-body { padding: 2rem 2.5rem; font-size: 0.95rem; color: #374151; line-height: 1.8; white-space: pre-wrap; min-height: 160px; border-bottom: 1px solid #f3f4f6; }
-
-        .info-grid { padding: 1.5rem 2.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-        .info-item { display: flex; flex-direction: column; gap: 4px; }
-        .info-label { font-size: 0.75rem; color: #9ca3af; font-weight: 600; }
-        .info-value { font-size: 0.9rem; color: #111827; font-weight: 500; }
-        .assignee-pending { color: #c2410c; font-weight: 600; }
-        .assignee-select { padding: 6px 10px; border: 1.5px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none; }
-
-        .detail-footer { padding: 1.25rem 2.5rem; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
-        .btn { padding: 8px 18px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
-        .btn-list { background: #f3f4f6; color: #374151; }
-        .btn-list:hover { background: #e5e7eb; }
-        .btn-delete { background: #fee2e2; color: #b91c1c; }
-        .btn-delete:hover { background: #fecaca; }
-        .status-select { padding: 8px 12px; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 0.875rem; outline: none; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <link rel="stylesheet" href="/static/css/support.css">
+    <link rel="stylesheet" href="/static/css/ticket.css">
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="logo">Work<span>Portal</span></div>
-    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
-    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
-    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
-    <a href="/static/pages/ticket.html" class="nav-item active">
-        <span class="nav-icon">🎫</span> 헬프데스크
-        <span id="notify-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">0</span>
-    </a>
-    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
-    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
-    <a href="/board" class="nav-item"><span class="nav-icon">📋</span> 게시판</a>
-                    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
-                    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
-                    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
-    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
-                    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
-    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
-    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
-    <div class="sidebar-bottom">
-        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
-    </div>
-</div>
+<div class="app-shell">
+<div id="shellSlot"></div>
+<div class="app-main">
 
-<div class="main">
-    <a class="back-btn" onclick="history.back()">← 목록으로</a>
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <a href="/static/pages/ticket.html">헬프데스크</a> <span>›</span>
+        <span>상세</span>
+    </nav>
+    <h1>티켓 상세</h1>
+</header>
+
+<main class="main-content">
+    <a class="back-btn" onclick="history.back()"><i class="fa-solid fa-arrow-left"></i> 목록으로</a>
 
     <div class="detail-card">
         <div class="detail-header">
@@ -105,10 +61,15 @@
             </div>
         </div>
     </div>
-</div>
+</main>
 
 <div class="toast" id="toast"></div>
 
+</div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/layout.js"></script>
 <script>
     const token = sessionStorage.getItem('access_token');
     const role  = sessionStorage.getItem('role');
@@ -119,14 +80,14 @@
     if (!ticketId) location.replace('/static/pages/ticket.html');
 
     if (role === 'ADMIN' || role === 'SUPERADMIN') {
-        document.getElementById('admin-menu').style.display = 'flex';
-        document.getElementById('iam-menu').style.display = 'flex';
         document.getElementById('admin-controls').style.display = 'flex';
     }
 
-    function showToast(msg) {
+    function showToast(msg, type = 'info') {
         const t = document.getElementById('toast');
-        t.textContent = msg; t.classList.add('show');
+        const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-info';
+        t.innerHTML = `<i class="fa-solid ${icon}"></i> ${msg}`;
+        t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 2500);
     }
 
@@ -206,7 +167,7 @@
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })
             });
-            if (res.ok) { showToast('상태가 변경됐습니다. ✅'); loadTicket(); }
+            if (res.ok) { showToast('상태가 변경됐습니다.', 'success'); loadTicket(); }
             else showToast('상태 변경 실패했습니다.');
         } catch { showToast('오류가 발생했습니다.'); }
     }
@@ -220,7 +181,7 @@
                 headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ assignedTo })
             });
-            if (res.ok) { showToast('담당자가 배정됐습니다. ✅'); loadTicket(); }
+            if (res.ok) { showToast('담당자가 배정됐습니다.', 'success'); loadTicket(); }
             else showToast('배정에 실패했습니다.');
         } catch { showToast('오류가 발생했습니다.'); }
     }
@@ -237,11 +198,6 @@
                 setTimeout(() => location.replace('/static/pages/ticket.html'), 1000);
             }
         } catch { showToast('삭제에 실패했습니다.'); }
-    }
-
-    function logout() {
-        sessionStorage.clear();
-        location.replace('/login');
     }
 
     loadTicket();

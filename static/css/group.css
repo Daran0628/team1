@@ -16,6 +16,8 @@
     outline: none;
     cursor: pointer;
     min-width: 160px;
+    background: var(--surface);
+    color: var(--text);
 }
 .member-filter-bar .search-input { width: 200px; }
 
@@ -43,8 +45,8 @@
     transition: border-color 0.13s, background 0.13s;
     user-select: none;
 }
-.member-item:hover { border-color: var(--primary); background: #f5f3ff; }
-.member-item.is-member { border-color: #c4b5fd; background: #f5f3ff; }
+.member-item:hover { border-color: var(--primary); background: var(--lo-active-bg); }
+.member-item.is-member { border-color: var(--lo-secondary); background: var(--lo-active-bg); }
 .member-item input[type=checkbox] {
     width: 15px; height: 15px;
     accent-color: var(--primary);
@@ -58,7 +60,7 @@
     font-size: 0.65rem;
     font-weight: 700;
     color: #fff;
-    background: #6366f1;
+    background: var(--lo-secondary);
     border-radius: 3px;
     padding: 0.05rem 0.35rem;
     letter-spacing: 0.03em;
