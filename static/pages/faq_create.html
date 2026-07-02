@@ -18,7 +18,7 @@
 <header class="page-header">
     <nav class="breadcrumb">
         <a href="/">Home</a> <span>›</span>
-        <a href="/static/pages/faq.html">FAQ</a> <span>›</span>
+        <a href="/faq">FAQ</a> <span>›</span>
         <span>등록</span>
     </nav>
     <h1>FAQ 등록</h1>
@@ -61,7 +61,7 @@
     if (!token) location.replace('/login');
     if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
         alert('관리자만 접근 가능합니다.');
-        location.replace('/static/pages/faq.html');
+        location.replace('/faq');
     }
 
     function showToast(msg, type = 'info') {
@@ -95,7 +95,7 @@
 
             if (data.isSuccess) {
                 showToast('등록됐습니다!', 'success');
-                setTimeout(() => location.replace('/static/pages/faq.html'), 1000);
+                setTimeout(() => location.replace('/faq'), 1000);
             } else {
                 showToast(data.message || '등록에 실패했습니다.');
             }

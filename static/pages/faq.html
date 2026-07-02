@@ -29,7 +29,7 @@
     <div class="toolbar">
         <div class="toolbar-left"></div>
         <div class="toolbar-right">
-            <button class="btn btn-primary" id="btn-write" style="display:none" onclick="location.href='/static/pages/faq_create.html'">
+            <button class="btn btn-primary" id="btn-write" style="display:none" onclick="location.href='/faq/create'">
                 <i class="fa-solid fa-pen"></i> 등록
             </button>
         </div>
@@ -121,7 +121,7 @@
                     <p><strong>A.</strong> ${f.answer}</p>
                     ${isAdmin ? `
                         <div class="faq-actions">
-                            <button class="btn-mini btn-mini-edit" onclick="event.stopPropagation(); location.href='/static/pages/faq_edit.html?id=${f.faqId}'">수정</button>
+                            <button class="btn-mini btn-mini-edit" onclick="event.stopPropagation(); location.href='/faq/${f.faqId}/edit'">수정</button>
                             <button class="btn-mini btn-mini-delete" onclick="event.stopPropagation(); deleteFaq('${f.faqId}')">삭제</button>
                         </div>` : ''}
                 </div>`;

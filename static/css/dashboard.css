@@ -91,10 +91,17 @@
     border-radius: 10px;
     background: var(--lo-bg);
     border: 1px solid var(--lo-border);
+    color: var(--lo-secondary);
     display: flex; align-items: center; justify-content: center;
     font-size: 1.1rem;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.shortcut-item:hover .shortcut-icon { border-color: var(--lo-secondary); }
+.shortcut-item:hover .shortcut-icon {
+    background: var(--lo-secondary);
+    color: #fff;
+    border-color: var(--lo-secondary);
+}
+.shortcut-item.disabled { opacity: 0.5; pointer-events: none; }
 
 /* ── 나의 티켓 현황 ─────────────────────────────────────────── */
 .ticket-stats {

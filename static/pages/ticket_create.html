@@ -19,7 +19,7 @@
 <header class="page-header">
     <nav class="breadcrumb">
         <a href="/">Home</a> <span>›</span>
-        <a href="/static/pages/ticket.html">헬프데스크</a> <span>›</span>
+        <a href="/ticket">헬프데스크</a> <span>›</span>
         <span>등록</span>
     </nav>
     <h1>티켓 등록</h1>
@@ -106,7 +106,7 @@
 
             if (data.isSuccess) {
                 showToast('티켓이 등록됐습니다!', 'success');
-                setTimeout(() => location.replace('/static/pages/ticket.html'), 1000);
+                setTimeout(() => location.replace('/ticket'), 1000);
             } else {
                 showToast(data.message || '등록에 실패했습니다.');
             }

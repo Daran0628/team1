@@ -19,7 +19,7 @@
 <header class="page-header">
     <nav class="breadcrumb">
         <a href="/">Home</a> <span>›</span>
-        <a href="/static/pages/ticket.html">헬프데스크</a> <span>›</span>
+        <a href="/ticket">헬프데스크</a> <span>›</span>
         <span>상세</span>
     </nav>
     <h1>티켓 상세</h1>
@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="detail-footer">
-            <button class="btn btn-list" onclick="location.href='/static/pages/ticket.html'">목록</button>
+            <button class="btn btn-list" onclick="location.href='/ticket'">목록</button>
             <div id="admin-controls" style="display:none; gap:8px; align-items:center;">
                 <select class="status-select" id="status-select" onchange="updateStatus(this.value)">
                     <option value="OPEN">접수</option>
@@ -73,11 +73,10 @@
 <script>
     const token = sessionStorage.getItem('access_token');
     const role  = sessionStorage.getItem('role');
-    const params = new URLSearchParams(location.search);
-    const ticketId = params.get('id');
+    const ticketId = decodeURIComponent(location.pathname.split('/')[2] || '');
 
     if (!token) location.replace('/login');
-    if (!ticketId) location.replace('/static/pages/ticket.html');
+    if (!ticketId) location.replace('/ticket');
 
     if (role === 'ADMIN' || role === 'SUPERADMIN') {
         document.getElementById('admin-controls').style.display = 'flex';
@@ -195,7 +194,7 @@
             });
             if (res.ok) {
                 showToast('삭제됐습니다.');
-                setTimeout(() => location.replace('/static/pages/ticket.html'), 1000);
+                setTimeout(() => location.replace('/ticket'), 1000);
             }
         } catch { showToast('삭제에 실패했습니다.'); }
     }

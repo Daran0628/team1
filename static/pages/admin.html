@@ -38,9 +38,9 @@
 <div class="sidebar">
     <div class="logo">Work<span>Portal</span></div>
     <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
-    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
-    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
-    <a href="/static/pages/ticket.html" class="nav-item">
+    <a href="/notice" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/faq" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/ticket" class="nav-item">
         <span class="nav-icon">🎫</span> 헬프데스크
         <span id="notify-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">0</span>
     </a>
@@ -50,7 +50,7 @@
                     <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
                     <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
                     <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
-    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
+    <a href="/cafeteria" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
                     <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
     <a href="/static/pages/admin.html" class="nav-item active"><span class="nav-icon">⚙️</span> 관리자</a>
     <a href="/static/pages/iam.html" class="nav-item"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
@@ -132,7 +132,7 @@
     if (!token) location.replace('/login');
     if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
         alert('관리자만 접근 가능합니다.');
-        location.replace('/static/pages/notice.html');
+        location.replace('/notice');
     }
 
     function showToast(msg) {

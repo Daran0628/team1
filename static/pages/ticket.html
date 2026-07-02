@@ -29,7 +29,7 @@
     <div class="toolbar">
         <div class="toolbar-left"></div>
         <div class="toolbar-right">
-            <button class="btn btn-primary" onclick="location.href='/static/pages/ticket_create.html'">
+            <button class="btn btn-primary" onclick="location.href='/ticket/create'">
                 <i class="fa-solid fa-pen"></i> 티켓 등록
             </button>
         </div>
@@ -127,7 +127,7 @@
         }
         list.forEach((t, i) => {
             const tr = document.createElement('tr');
-            tr.onclick = () => location.href = `/static/pages/ticket_detail.html?id=${t.ticketId}`;
+            tr.onclick = () => location.href = `/ticket/${t.ticketId}`;
             tr.innerHTML = `
                 <td class="td-num">#${t.ticketNo || list.length - i}</td>
                 <td class="td-title">${t.title}</td>

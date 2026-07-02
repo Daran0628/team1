@@ -151,5 +151,49 @@ def board_post_page(board_name, post_id):
 def board_posts_page(board_name):
     return send_from_directory(_PAGES_DIR, 'board-posts.html')
 
+@app.route('/cafeteria')
+def cafeteria_page():
+    return send_from_directory(_PAGES_DIR, 'cafeteria.html')
+
+@app.route('/notice')
+def notice_page():
+    return send_from_directory(_PAGES_DIR, 'notice.html')
+
+@app.route('/notice/create')
+def notice_create_page():
+    return send_from_directory(_PAGES_DIR, 'notice_create.html')
+
+@app.route('/notice/<string:notice_id>')
+def notice_detail_page(notice_id):
+    return send_from_directory(_PAGES_DIR, 'notice_detail.html')
+
+@app.route('/notice/<string:notice_id>/edit')
+def notice_edit_page(notice_id):
+    return send_from_directory(_PAGES_DIR, 'notice_edit.html')
+
+@app.route('/faq')
+def faq_page():
+    return send_from_directory(_PAGES_DIR, 'faq.html')
+
+@app.route('/faq/create')
+def faq_create_page():
+    return send_from_directory(_PAGES_DIR, 'faq_create.html')
+
+@app.route('/faq/<string:faq_id>/edit')
+def faq_edit_page(faq_id):
+    return send_from_directory(_PAGES_DIR, 'faq_edit.html')
+
+@app.route('/ticket')
+def ticket_page():
+    return send_from_directory(_PAGES_DIR, 'ticket.html')
+
+@app.route('/ticket/create')
+def ticket_create_page():
+    return send_from_directory(_PAGES_DIR, 'ticket_create.html')
+
+@app.route('/ticket/<string:ticket_id>')
+def ticket_detail_page(ticket_id):
+    return send_from_directory(_PAGES_DIR, 'ticket_detail.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
