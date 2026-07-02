@@ -198,8 +198,28 @@ document.getElementById('btnCreateRoom').addEventListener('click', async () => {
     window.location.href = '/chat/' + data.result.room_id;
 });
 
+// ── 실시간 갱신 (SSE) ────────────────────────────────────────────
+let sseSource = null;
+let _roomUpdateTimer;
+let _sseDisconnectedAt = null;
+function subscribeSSE() {
+    if (sseSource) sseSource.close();
+    sseSource = new EventSource('/stream?channel=' + encodeURIComponent('member:' + getMyAccountId()));
+    sseSource.addEventListener('room_update', () => {
+        clearTimeout(_roomUpdateTimer);
+        _roomUpdateTimer = setTimeout(loadRooms, 200);
+    });
+    sseSource.addEventListener('open', () => {
+        if (_sseDisconnectedAt) { loadRooms(); _sseDisconnectedAt = null; } // 재연결 시 놓친 변경사항 동기화
+    });
+    sseSource.onerror = () => {
+        if (!_sseDisconnectedAt) _sseDisconnectedAt = new Date().toISOString();
+    };
+}
+
 // ── Init ──────────────────────────────────────────────────────
 loadRooms();
+subscribeSSE();
 
 window.addEventListener('pageshow', e => { if (e.persisted) loadRooms(); });
 

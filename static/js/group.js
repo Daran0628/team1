@@ -18,6 +18,7 @@ const state = {
     allGroups:       [],
     filtered:        [],
     allMembers:      [],   // {member_id, account_id, name_ko, department_id}
+    deptMap:         {},   // department_id → department_name
     pageSize:        20,
     page:            1,
     expanded:        new Set(),
@@ -26,6 +27,19 @@ const state = {
     originalChecked: new Set(),  // member_ids originally in group (for delta)
     deleteGroupId:   null,
 };
+
+// ── 부서 목록 로드 (department_id → department_name 매핑용) ─────
+async function loadDepartments() {
+    try {
+        const departments = await apiJSON('/api/member/departments');
+        state.deptMap = {};
+        (departments || []).forEach(function(d) { state.deptMap[d.department_id] = d.department_name; });
+    } catch (_) { /* 매핑 실패 시 UUID로 폴백 */ }
+}
+
+function deptLabel(deptId) {
+    return state.deptMap[deptId] || (deptId ? deptId.slice(0, 8) + '…' : '—');
+}
 
 // ── API ───────────────────────────────────────────────────────
 
@@ -349,7 +363,7 @@ function buildDeptOptions(members) {
             opts.push(m.department_id);
         }
     });
-    return opts.sort();
+    return opts.sort(function(a, b) { return deptLabel(a).localeCompare(deptLabel(b)); });
 }
 
 function renderMemberPicker() {
@@ -361,7 +375,7 @@ function renderMemberPicker() {
     // Show/hide quick add dept button
     if (deptVal) {
         quickBtn.removeAttribute('hidden');
-        quickBtn.textContent = '＋ 이 부서 전원 추가 (' + deptVal.slice(0, 8) + '…)';
+        quickBtn.textContent = '＋ 이 부서 전원 추가 (' + deptLabel(deptVal) + ')';
     } else {
         quickBtn.setAttribute('hidden', '');
     }
@@ -403,7 +417,7 @@ function renderMemberPicker() {
 
         const badge = document.createElement('span');
         badge.className = 'dept-badge';
-        badge.textContent = m.department_id.slice(0, 8) + '…';
+        badge.textContent = deptLabel(m.department_id);
         badge.title = m.department_id;
 
         item.appendChild(cb);
@@ -429,7 +443,7 @@ async function openMembersModal(group) {
     buildDeptOptions(state.allMembers).forEach(function(deptId) {
         const opt = document.createElement('option');
         opt.value = deptId;
-        opt.textContent = deptId.slice(0, 8) + '…';
+        opt.textContent = deptLabel(deptId);
         opt.title = deptId;
         sel.appendChild(opt);
     });
@@ -588,5 +602,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    loadDepartments();
     loadGroups();
 });

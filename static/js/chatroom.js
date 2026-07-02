@@ -18,9 +18,14 @@ function getMyAccountId() {
     } catch (_) { return ''; }
 }
 
+function parseIsoUtc(iso) {
+    if (!iso) return null;
+    return new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z');
+}
+
 function fmtTime(iso) {
     if (!iso) return '';
-    const d = new Date(iso.endsWith('Z') || iso.includes('+') ? iso : iso + 'Z');
+    const d = parseIsoUtc(iso);
     return d.toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
@@ -153,6 +158,35 @@ async function fetchMissedMessages(sinceIso) {
     scrollToBottom();
 }
 
+// ── 안 읽은 사람 수 (카카오톡 스타일) ───────────────────────────
+
+function computeUnreadCount(senderId, createdAtIso) {
+    if (!currentRoom || !currentRoom.members) return 0;
+    const createdAt = parseIsoUtc(createdAtIso);
+    if (!createdAt) return 0;
+    return currentRoom.members.filter(m => {
+        if (m.member_id === senderId) return false;
+        const readAt = parseIsoUtc(m.last_read_at || m.joined_at);
+        return !readAt || readAt < createdAt;
+    }).length;
+}
+
+function updateUnreadBadge(row) {
+    const badge = row.querySelector('.unread-count');
+    if (!badge) return;
+    const count = computeUnreadCount(row.dataset.senderId, row.dataset.createdAt);
+    if (count > 0) {
+        badge.textContent = count;
+        badge.hidden = false;
+    } else {
+        badge.hidden = true;
+    }
+}
+
+function refreshUnreadBadges() {
+    document.querySelectorAll('.msg-row').forEach(updateUnreadBadge);
+}
+
 function appendMessage(rawMsg) {
     const msg = {
         message_id:   rawMsg.message_id   || rawMsg.messageId,
@@ -212,11 +246,12 @@ function appendMessage(rawMsg) {
         <div class="msg-content">
             ${!sameSender && !mine ? `<div class="msg-sender">${esc(msg.sender_name)}</div>` : ''}
             ${bubbleHTML}
-            <div class="msg-meta">${currTime}</div>
+            <div class="msg-meta"><span class="unread-count" hidden></span>${currTime}</div>
         </div>`;
 
-    row.dataset.senderId = msg.sender_id;
-    row.dataset.msgTime  = currTime;
+    row.dataset.senderId  = msg.sender_id;
+    row.dataset.msgTime   = currTime;
+    row.dataset.createdAt = msg.created_at;
 
     const prevEl = area.lastElementChild;
     if (prevEl && prevEl.classList.contains('msg-row') &&
@@ -232,6 +267,7 @@ function appendMessage(rawMsg) {
     }
 
     area.appendChild(row);
+    updateUnreadBadge(row);
 
     const imgBubble = row.querySelector('.img-bubble');
     if (imgBubble) enqueueImageLoad(imgBubble);
@@ -304,6 +340,13 @@ function scrollToBottom() {
 }
 
 async function markRead() {
+    // SSE로 자기 자신의 read 이벤트가 되돌아오길 기다리지 않고 즉시 로컬 상태부터 갱신
+    // (초기 진입 시 SSE 연결 전에 markRead가 먼저 실행돼 자신의 이벤트를 못 받는 경우 대응)
+    if (myMemberId && currentRoom) {
+        const me = currentRoom.members.find(m => m.member_id === myMemberId);
+        if (me) me.last_read_at = new Date().toISOString();
+        refreshUnreadBadges();
+    }
     await apiFetch('/api/chat/rooms/' + roomId + '/read', { method: 'PUT' });
 }
 
@@ -348,6 +391,15 @@ function subscribeSSE() {
             scrollToBottom();
 
             if (!myMemberId || normalized.sender_id !== myMemberId) scheduleMarkRead();
+        } catch (_) {}
+    });
+
+    sseSource.addEventListener('read', e => {
+        try {
+            const data = JSON.parse(e.data);
+            const m = currentRoom && currentRoom.members.find(x => x.member_id === data.memberId);
+            if (m) m.last_read_at = data.lastReadAt;
+            refreshUnreadBadges();
         } catch (_) {}
     });
 
