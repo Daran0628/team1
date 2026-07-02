@@ -31,7 +31,6 @@ init_extensions(app)
 # 요청 본문 전체 상한 (개별 도메인 업로드 제한보다 여유 있게, 극단적으로 큰 요청에 대한 최소 방어선)
 app.config['MAX_CONTENT_LENGTH'] = 250 * 1024 * 1024
 
->>>>>>> f1652b4 (feat: vdi snapshot 기능 추가)
 _redis_pw = f":{REDIS_PASSWD}@" if REDIS_PASSWD else ""
 app.config["REDIS_URL"] = f"redis://{_redis_pw}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
