@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ | 업무지원포털</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <style>
+        .btn-write { display: none; }
+
+        .category-tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+        .tab-btn { padding: 6px 16px; border-radius: 20px; border: 1.5px solid #d1d5db; background: #fff; font-size: 0.8rem; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.2s; }
+        .tab-btn:hover { border-color: #4f46e5; color: #4f46e5; }
+        .tab-btn.active { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+
+        .search-wrap { margin-bottom: 1.25rem; }
+        .search-wrap input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
+        .search-wrap input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+
+        .faq-item { background: #fff; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; }
+        .faq-question { display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 1.25rem; cursor: pointer; transition: background 0.15s; gap: 12px; }
+        .faq-question:hover { background: #f9fafb; }
+        .faq-q-text { font-size: 0.9rem; font-weight: 600; color: #111827; display: flex; align-items: center; gap: 10px; }
+        .q-badge { font-size: 0.85rem; font-weight: 700; color: #4f46e5; flex-shrink: 0; }
+        .category-tag { font-size: 0.7rem; padding: 2px 8px; background: #ede9fe; color: #6d28d9; border-radius: 20px; font-weight: 600; flex-shrink: 0; }
+        .faq-arrow { font-size: 0.75rem; color: #9ca3af; transition: transform 0.2s; flex-shrink: 0; }
+        .faq-item.open .faq-arrow { transform: rotate(180deg); }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s; padding: 0 1.25rem; background: #fafafa; }
+        .faq-item.open .faq-answer { max-height: 400px; padding: 1rem 1.25rem; border-top: 1px solid #f3f4f6; }
+        .faq-answer p { font-size: 0.875rem; color: #4b5563; line-height: 1.7; }
+        .faq-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .btn-mini { padding: 4px 12px; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-mini-edit { background: #ede9fe; color: #6d28d9; }
+        .btn-mini-edit:hover { background: #ddd6fe; }
+        .btn-mini-delete { background: #fee2e2; color: #b91c1c; }
+        .btn-mini-delete:hover { background: #fecaca; }
+
+        .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .empty p { font-size: 0.9rem; }
+
+        .skeleton-item { background: #fff; border-radius: 12px; margin-bottom: 10px; padding: 1.1rem 1.25rem; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item active"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item">
+        <span class="nav-icon">🎫</span> 헬프데스크
+        <span id="notify-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">0</span>
+    </a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/board" class="nav-item"><span class="nav-icon">📋</span> 게시판</a>
+                    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+                    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+                    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
+                    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h1 class="page-title">FAQ</h1>
+        <button class="btn-write" id="btn-write" onclick="location.href='/static/pages/faq_create.html'">
+            ✏️ 등록
+        </button>
+    </div>
+
+    <div class="search-wrap">
+        <input type="text" id="search-input" placeholder="🔍  질문 검색..." oninput="filterFaqs()">
+    </div>
+
+    <div class="category-tabs" id="category-tabs">
+        <button class="tab-btn active" onclick="filterByCategory(null, this)">전체</button>
+    </div>
+
+    <div id="faq-list">
+        <div class="skeleton-item"><div class="skeleton-bar" style="width:70%"></div></div>
+        <div class="skeleton-item"><div class="skeleton-bar" style="width:55%"></div></div>
+        <div class="skeleton-item"><div class="skeleton-bar" style="width:65%"></div></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = sessionStorage.getItem('access_token');
+    const role  = sessionStorage.getItem('role');
+    const isAdmin = (role === 'ADMIN' || role === 'SUPERADMIN');
+    let allFaqs = [];
+    let currentCategory = null;
+
+    if (!token) location.replace('/login');
+    if (isAdmin) {
+        document.getElementById('btn-write').style.display = 'flex';
+        document.getElementById('admin-menu').style.display = 'flex';
+        document.getElementById('iam-menu').style.display = 'flex';
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function toggleFaq(item) {
+        item.classList.toggle('open');
+    }
+
+    function filterByCategory(category, btn) {
+        currentCategory = category;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterFaqs();
+    }
+
+    function filterFaqs() {
+        const q = document.getElementById('search-input').value.toLowerCase();
+        let filtered = allFaqs;
+        if (currentCategory) filtered = filtered.filter(f => f.category === currentCategory);
+        if (q) filtered = filtered.filter(f => f.question.toLowerCase().includes(q));
+        renderFaqs(filtered);
+    }
+
+    function renderFaqs(list) {
+        const container = document.getElementById('faq-list');
+        container.innerHTML = '';
+        if (!list.length) {
+            container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>등록된 FAQ가 없습니다.</p></div>`;
+            return;
+        }
+        list.forEach(f => {
+            const div = document.createElement('div');
+            div.className = 'faq-item';
+            div.innerHTML = `
+                <div class="faq-question" onclick="toggleFaq(this.parentElement)">
+                    <div class="faq-q-text">
+                        <span class="q-badge">Q</span>
+                        ${f.question}
+                        ${f.category ? `<span class="category-tag">${f.category}</span>` : ''}
+                    </div>
+                    <span class="faq-arrow">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p><strong>A.</strong> ${f.answer}</p>
+                    ${isAdmin ? `
+                        <div class="faq-actions">
+                            <button class="btn-mini btn-mini-edit" onclick="event.stopPropagation(); location.href='/static/pages/faq_edit.html?id=${f.faqId}'">수정</button>
+                            <button class="btn-mini btn-mini-delete" onclick="event.stopPropagation(); deleteFaq('${f.faqId}')">삭제</button>
+                        </div>` : ''}
+                </div>`;
+            container.appendChild(div);
+        });
+    }
+
+    async function deleteFaq(faqId) {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/faqs/${faqId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                showToast('삭제됐습니다.');
+                loadFaqs();
+            } else {
+                showToast('삭제에 실패했습니다.');
+            }
+        } catch {
+            showToast('오류가 발생했습니다.');
+        }
+    }
+
+    function buildCategoryTabs(faqs) {
+        const categories = [...new Set(faqs.map(f => f.category).filter(Boolean))];
+        const tabsEl = document.getElementById('category-tabs');
+        categories.forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'tab-btn';
+            btn.textContent = cat;
+            btn.onclick = () => filterByCategory(cat, btn);
+            tabsEl.appendChild(btn);
+        });
+    }
+
+    async function loadFaqs() {
+        try {
+            const res = await fetch('/api/faqs', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (res.status === 401) { location.replace('/login'); return; }
+            const data = await res.json();
+            allFaqs = data.result || [];
+            document.getElementById('category-tabs').innerHTML = `<button class="tab-btn active" onclick="filterByCategory(null, this)">전체</button>`;
+            buildCategoryTabs(allFaqs);
+            renderFaqs(allFaqs);
+        } catch { showToast('데이터를 불러오지 못했습니다.'); }
+    }
+
+    async function loadNotifyCount() {
+        if (!isAdmin) return;
+        try {
+            const res = await fetch('/api/tickets/notify/count', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            const count = data.result?.count || 0;
+            const badge = document.getElementById('notify-badge');
+            if (count > 0 && badge) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+            }
+        } catch {}
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        location.replace('/login');
+    }
+
+    loadFaqs();
+    loadNotifyCount();
+</script>
+</body>
+</html>

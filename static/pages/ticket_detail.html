@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>티켓 상세 | 업무지원포털</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <style>
+        .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #6b7280; font-size: 0.875rem; cursor: pointer; margin-bottom: 1.5rem; text-decoration: none; transition: color 0.2s; }
+        .back-btn:hover { color: #4f46e5; }
+
+        .detail-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); overflow: hidden; }
+        .detail-header { padding: 2rem 2.5rem; border-bottom: 1px solid #f3f4f6; }
+        .ticket-no { font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px; }
+        .detail-title { font-size: 1.4rem; font-weight: 700; color: #111827; margin-bottom: 1rem; line-height: 1.4; }
+        .badge-row { display: flex; gap: 8px; align-items: center; }
+
+        .badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .badge-open     { background: #dbeafe; color: #1d4ed8; }
+        .badge-progress { background: #fef3c7; color: #b45309; }
+        .badge-pending  { background: #ffedd5; color: #c2410c; }
+        .badge-resolved { background: #d1fae5; color: #065f46; }
+        .badge-closed   { background: #f3f4f6; color: #6b7280; }
+        .priority-high   { background: #fee2e2; color: #b91c1c; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .priority-medium { background: #fef3c7; color: #b45309; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+        .priority-low    { background: #d1fae5; color: #065f46; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+
+        .detail-body { padding: 2rem 2.5rem; font-size: 0.95rem; color: #374151; line-height: 1.8; white-space: pre-wrap; min-height: 160px; border-bottom: 1px solid #f3f4f6; }
+
+        .info-grid { padding: 1.5rem 2.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        .info-item { display: flex; flex-direction: column; gap: 4px; }
+        .info-label { font-size: 0.75rem; color: #9ca3af; font-weight: 600; }
+        .info-value { font-size: 0.9rem; color: #111827; font-weight: 500; }
+        .assignee-pending { color: #c2410c; font-weight: 600; }
+        .assignee-select { padding: 6px 10px; border: 1.5px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; outline: none; }
+
+        .detail-footer { padding: 1.25rem 2.5rem; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center; }
+        .btn { padding: 8px 18px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-list { background: #f3f4f6; color: #374151; }
+        .btn-list:hover { background: #e5e7eb; }
+        .btn-delete { background: #fee2e2; color: #b91c1c; }
+        .btn-delete:hover { background: #fecaca; }
+        .status-select { padding: 8px 12px; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 0.875rem; outline: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item active">
+        <span class="nav-icon">🎫</span> 헬프데스크
+        <span id="notify-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">0</span>
+    </a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/board" class="nav-item"><span class="nav-icon">📋</span> 게시판</a>
+                    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+                    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+                    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
+                    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+    <a class="back-btn" onclick="history.back()">← 목록으로</a>
+
+    <div class="detail-card">
+        <div class="detail-header">
+            <div class="ticket-no" id="ticket-no"></div>
+            <div class="detail-title" id="detail-title">로딩 중...</div>
+            <div class="badge-row" id="badge-row"></div>
+        </div>
+        <div class="detail-body" id="detail-body"></div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">작성일</span>
+                <span class="info-value" id="info-date"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">담당자</span>
+                <span class="info-value" id="info-assignee"></span>
+            </div>
+        </div>
+        <div class="detail-footer">
+            <button class="btn btn-list" onclick="location.href='/static/pages/ticket.html'">목록</button>
+            <div id="admin-controls" style="display:none; gap:8px; align-items:center;">
+                <select class="status-select" id="status-select" onchange="updateStatus(this.value)">
+                    <option value="OPEN">접수</option>
+                    <option value="IN_PROGRESS">처리중</option>
+                    <option value="PENDING">보류</option>
+                    <option value="RESOLVED">해결</option>
+                    <option value="CLOSED">종료</option>
+                </select>
+                <input type="text" class="assignee-select" id="assignee-input" placeholder="담당자 회원ID 입력">
+                <button class="btn btn-list" onclick="assignTicket()">담당자 배정</button>
+                <button class="btn btn-delete" onclick="deleteTicket()">삭제</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = sessionStorage.getItem('access_token');
+    const role  = sessionStorage.getItem('role');
+    const params = new URLSearchParams(location.search);
+    const ticketId = params.get('id');
+
+    if (!token) location.replace('/login');
+    if (!ticketId) location.replace('/static/pages/ticket.html');
+
+    if (role === 'ADMIN' || role === 'SUPERADMIN') {
+        document.getElementById('admin-menu').style.display = 'flex';
+        document.getElementById('iam-menu').style.display = 'flex';
+        document.getElementById('admin-controls').style.display = 'flex';
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function statusBadge(status) {
+        const map = {
+            'OPEN':        ['badge-open',     '접수'],
+            'IN_PROGRESS': ['badge-progress', '처리중'],
+            'PENDING':     ['badge-pending',  '보류'],
+            'RESOLVED':    ['badge-resolved', '해결'],
+            'CLOSED':      ['badge-closed',   '종료'],
+        };
+        const [cls, label] = map[status] || ['badge-closed', status];
+        return `<span class="badge ${cls}">${label}</span>`;
+    }
+
+    function priorityBadge(priority) {
+        const map = {
+            'HIGH':   ['priority-high',   '높음'],
+            'MEDIUM': ['priority-medium', '보통'],
+            'LOW':    ['priority-low',    '낮음'],
+        };
+        const [cls, label] = map[priority] || ['priority-medium', priority];
+        return `<span class="${cls}">${label}</span>`;
+    }
+
+    async function loadNotifyCount() {
+        if (role !== 'ADMIN' && role !== 'SUPERADMIN') return;
+        try {
+            const res = await fetch('/api/tickets/notify/count', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            const count = data.result?.count || 0;
+            const badge = document.getElementById('notify-badge');
+            if (count > 0 && badge) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+            }
+        } catch {}
+    }
+
+    async function loadTicket() {
+        try {
+            const res = await fetch(`/api/tickets/${ticketId}`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.status === 401) { location.replace('/login'); return; }
+            const data = await res.json();
+            const t = data.result;
+
+            document.getElementById('ticket-no').textContent = `#${t.ticketNo || '-'}`;
+            document.getElementById('detail-title').textContent = t.title;
+            document.getElementById('detail-body').textContent = t.content;
+            document.getElementById('badge-row').innerHTML = priorityBadge(t.priority) + statusBadge(t.status);
+            document.getElementById('info-date').textContent = t.createdAt.slice(0, 10);
+
+            const assigneeEl = document.getElementById('info-assignee');
+            if (!t.assignedTo) {
+                assigneeEl.innerHTML = '<span class="assignee-pending">배정중</span>';
+            } else {
+                assigneeEl.textContent = t.assigneeName || t.assignedTo;
+            }
+
+            if (role === 'ADMIN' || role === 'SUPERADMIN') {
+                document.getElementById('status-select').value = t.status;
+                document.getElementById('assignee-input').value = t.assignedTo || '';
+            }
+        } catch {
+            showToast('데이터를 불러오지 못했습니다.');
+        }
+    }
+
+    async function updateStatus(status) {
+        try {
+            const res = await fetch(`/api/tickets/${ticketId}/status`, {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            if (res.ok) { showToast('상태가 변경됐습니다. ✅'); loadTicket(); }
+            else showToast('상태 변경 실패했습니다.');
+        } catch { showToast('오류가 발생했습니다.'); }
+    }
+
+    async function assignTicket() {
+        const assignedTo = document.getElementById('assignee-input').value.trim();
+        if (!assignedTo) { showToast('담당자 회원ID를 입력해주세요.'); return; }
+        try {
+            const res = await fetch(`/api/tickets/${ticketId}/assign`, {
+                method: 'PUT',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ assignedTo })
+            });
+            if (res.ok) { showToast('담당자가 배정됐습니다. ✅'); loadTicket(); }
+            else showToast('배정에 실패했습니다.');
+        } catch { showToast('오류가 발생했습니다.'); }
+    }
+
+    async function deleteTicket() {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/tickets/${ticketId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (res.ok) {
+                showToast('삭제됐습니다.');
+                setTimeout(() => location.replace('/static/pages/ticket.html'), 1000);
+            }
+        } catch { showToast('삭제에 실패했습니다.'); }
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        location.replace('/login');
+    }
+
+    loadTicket();
+    loadNotifyCount();
+</script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 | 업무지원포털</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <style>
+        .btn-write { display: none; }
+
+        .search-wrap { margin-bottom: 1.25rem; }
+        .search-wrap input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; background: #fff; }
+        .search-wrap input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+
+        .td-title { font-weight: 500; color: #111827; display: flex; align-items: center; gap: 8px; }
+        .pin-badge { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; background: #ede9fe; color: #6d28d9; border-radius: 20px; }
+        .td-num { color: #9ca3af; font-size: 0.8rem; width: 60px; }
+        .td-date { color: #9ca3af; font-size: 0.8rem; white-space: nowrap; }
+        .td-view { color: #9ca3af; font-size: 0.8rem; width: 80px; }
+
+        .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .empty p { font-size: 0.9rem; }
+
+        .skeleton-row td { padding: 1rem 1.25rem; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item active"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item">
+        <span class="nav-icon">🎫</span> 헬프데스크
+        <span id="notify-badge" style="display:none;margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">0</span>
+    </a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/board" class="nav-item"><span class="nav-icon">📋</span> 게시판</a>
+                    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+                    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+                    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
+                    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h1 class="page-title">공지사항</h1>
+        <button class="btn-write" id="btn-write" onclick="location.href='/static/pages/notice_create.html'">
+            ✏️ 글쓰기
+        </button>
+    </div>
+
+    <div class="search-wrap">
+        <input type="text" id="search-input" placeholder="🔍  제목으로 검색..." oninput="filterNotices()">
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th class="td-num">번호</th>
+                    <th>제목</th>
+                    <th class="td-date">작성일</th>
+                    <th class="td-view">조회수</th>
+                </tr>
+            </thead>
+            <tbody id="notice-list">
+                <tr class="skeleton-row"><td><div class="skeleton-bar" style="width:30px"></div></td><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80px"></div></td><td><div class="skeleton-bar" style="width:30px"></div></td></tr>
+                <tr class="skeleton-row"><td><div class="skeleton-bar" style="width:30px"></div></td><td><div class="skeleton-bar" style="width:45%"></div></td><td><div class="skeleton-bar" style="width:80px"></div></td><td><div class="skeleton-bar" style="width:30px"></div></td></tr>
+                <tr class="skeleton-row"><td><div class="skeleton-bar" style="width:30px"></div></td><td><div class="skeleton-bar" style="width:55%"></div></td><td><div class="skeleton-bar" style="width:80px"></div></td><td><div class="skeleton-bar" style="width:30px"></div></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = sessionStorage.getItem('access_token');
+    const role  = sessionStorage.getItem('role');
+    let allNotices = [];
+
+    if (!token) location.replace('/login');
+    if (role === 'ADMIN' || role === 'SUPERADMIN') {
+        document.getElementById('btn-write').style.display = 'flex';
+        document.getElementById('admin-menu').style.display = 'flex';
+        document.getElementById('iam-menu').style.display = 'flex';
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function filterNotices() {
+        const q = document.getElementById('search-input').value.toLowerCase();
+        renderNotices(allNotices.filter(n => n.title.toLowerCase().includes(q)));
+    }
+
+    function renderNotices(list) {
+        const tbody = document.getElementById('notice-list');
+        tbody.innerHTML = '';
+        if (!list.length) {
+            tbody.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">📭</div><p>등록된 공지사항이 없습니다.</p></div></td></tr>`;
+            return;
+        }
+        let num = list.filter(n => !n.isPinned).length;
+        list.forEach(n => {
+            const tr = document.createElement('tr');
+            tr.onclick = () => location.href = `/static/pages/notice_detail.html?id=${n.noticeId}`;
+            tr.innerHTML = `
+                <td class="td-num">${n.isPinned ? '-' : num--}</td>
+                <td><div class="td-title">${n.isPinned ? '<span class="pin-badge">📌 고정</span>' : ''}${n.title}</div></td>
+                <td class="td-date">${n.createdAt.slice(0,10)}</td>
+                <td class="td-view">${n.viewCount}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function loadNotices() {
+        try {
+            const res = await fetch('/api/notices', { headers: { 'Authorization': 'Bearer ' + token } });
+            if (res.status === 401) { location.replace('/login'); return; }
+            const data = await res.json();
+            allNotices = data.result || [];
+            renderNotices(allNotices);
+        } catch { showToast('데이터를 불러오지 못했습니다.'); }
+    }
+
+    async function loadNotifyCount() {
+        if (role !== 'ADMIN' && role !== 'SUPERADMIN') return;
+        try {
+            const res = await fetch('/api/tickets/notify/count', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            const data = await res.json();
+            const count = data.result?.count || 0;
+            const badge = document.getElementById('notify-badge');
+            if (count > 0 && badge) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+            }
+        } catch {}
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        location.replace('/login');
+    }
+
+    loadNotices();
+    loadNotifyCount();
+</script>
+</body>
+</html>

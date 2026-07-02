@@ -5,9 +5,9 @@ flask-jwt-extended
 flask-bcrypt
 flask-sqlalchemy
 redis
+requests
 minio
 flask-sock
 flask-sse
 gunicorn
 gevent
-requests

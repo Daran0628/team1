@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구내식당</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/cafeteria.css">
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/board" class="nav-item"><span class="nav-icon">📋</span> 게시판</a>
+    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
+    <a href="/static/pages/cafeteria.html" class="nav-item active"><span class="nav-icon">🍽️</span> 구내식당</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" id="logout-link"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>구내식당</span>
+    </nav>
+    <h1>구내식당</h1>
+</header>
+
+<div class="cafeteria-grid">
+
+    <!-- 왼쪽: 캘린더 -->
+    <section class="calendar-section">
+        <div class="calendar-header">
+            <h2 id="calendarTitle"></h2>
+            <div class="calendar-nav">
+                <button id="btnPrevMonth">◀ 이전</button>
+                <button id="btnNextMonth">다음 ▶</button>
+            </div>
+        </div>
+        <table class="calendar-table">
+            <thead>
+                <tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr>
+            </thead>
+            <tbody id="calendarBody"></tbody>
+        </table>
+    </section>
+
+    <!-- 오른쪽: 오늘 메뉴 + 추천 -->
+    <section class="today-section">
+        <div class="today-card">
+            <h3>🍽️ 오늘의 메뉴</h3>
+            <div class="today-menu-text" id="todayMenuText">불러오는 중...</div>
+        </div>
+        <div class="recommend-card">
+            <h3 class="recommend-title"><span class="dice">🎲</span> <span class="recommend-main">오늘 날씨엔</span> <span class="recommend-sub">이런 메뉴 어때요?</span></h3>
+            <button class="recommend-btn" id="btnRecommend">날씨 기반 메뉴 추천받기</button>
+            <div class="recommend-result" id="recommendResult">
+                <div class="recommend-food" id="recFood"></div>
+                <div class="recommend-reason" id="recReason"></div>
+                <div class="recommend-weather" id="recWeather"></div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+</div><!-- /.main -->
+
+<!-- 메뉴 상세 모달 -->
+<div class="menu-detail-overlay" id="menuDetailOverlay">
+    <div class="menu-detail-box">
+        <div class="menu-detail-date" id="detailDate"></div>
+        <div class="menu-detail-text" id="detailText"></div>
+        <button class="menu-detail-close" id="detailCloseBtn">닫기</button>
+    </div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/cafeteria.js"></script>
+<script src="/static/js/sidebar_auth.js"></script>
+</body>
+</html>

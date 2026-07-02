@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' blob:">
+    <title>게시글</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/board.css">
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/board" class="nav-item active"><span class="nav-icon">📋</span> 게시판</a>
+    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
+    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <a href="/static/pages/admin.html" class="nav-item" id="admin-menu" style="display:none"><span class="nav-icon">⚙️</span> 관리자</a>
+    <a href="/static/pages/iam.html" class="nav-item" id="iam-menu" style="display:none"><span class="nav-icon">🔐</span> 권한 관리(IAM)</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" id="logout-link"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+<div class="main">
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <a href="/board">게시판</a> <span>›</span>
+        <a href="#" id="breadcrumbBoardLink">...</a> <span>›</span>
+        <span id="breadcrumbPost">게시글</span>
+    </nav>
+    <h1 id="postTitle">게시글</h1>
+</header>
+
+<main class="main-content">
+<div class="post-wrap">
+
+    <!-- 메타 & 액션 -->
+    <div class="post-meta-bar">
+        <span id="postStatusBadge" class="status-badge status-PUBLISHED"></span>
+        <span class="post-author" id="postAuthor"></span>
+        <span class="post-dot">·</span>
+        <span id="postDate"></span>
+        <span class="post-dot">·</span>
+        <span id="postViews"></span>
+        <span class="post-meta-actions">
+            <button id="btnApprovePost" class="btn btn-primary" hidden>승인</button>
+            <button id="btnRejectPost"  class="btn btn-ghost"   hidden>반려</button>
+            <button id="btnEditPost"    class="btn btn-ghost"   hidden>수정</button>
+            <button id="btnDeletePost"  class="btn btn-danger"  hidden>삭제</button>
+        </span>
+    </div>
+
+    <!-- 본문 -->
+    <div class="post-content-wrap" id="postContent"></div>
+
+    <!-- 이미지 갤러리 -->
+    <div class="image-gallery" id="imageGallery" hidden></div>
+
+    <!-- 비이미지 첨부파일 -->
+    <div class="attachments-section" id="attachmentsSection" hidden>
+        <div class="attachments-label">첨부파일</div>
+        <div class="attachment-list" id="attachmentList"></div>
+    </div>
+
+    <!-- 좋아요 -->
+    <div class="like-bar">
+        <button class="btn-like" id="btnLike">
+            👍 추천 <span class="like-count" id="likeCount">0</span>
+        </button>
+    </div>
+
+    <!-- 댓글 -->
+    <div class="comments-section">
+        <div class="comments-label" id="commentsLabel">댓글</div>
+        <div class="comment-form">
+            <textarea id="newCommentText" class="post-textarea" placeholder="댓글을 입력하세요..."></textarea>
+            <div class="comment-form-actions">
+                <button class="btn btn-primary" id="btnSubmitComment">댓글 작성</button>
+            </div>
+        </div>
+        <div class="comment-list" id="commentList"></div>
+    </div>
+
+</div>
+</main>
+
+<!-- ══ 게시글 수정 모달 ════════════════════════════════════════ -->
+<div class="modal-overlay" id="editPostModal" hidden>
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h2>게시글 수정</h2>
+            <button class="btn-x" data-close="editPostModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="editPostTitle">제목 <span class="req">*</span></label>
+                <input type="text" id="editPostTitle" maxlength="255">
+            </div>
+            <div class="field">
+                <label for="editPostContent">내용 <span class="req">*</span></label>
+                <textarea id="editPostContent" class="post-textarea post-textarea-lg"></textarea>
+            </div>
+            <div class="form-error" id="editPostErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="editPostModal">취소</button>
+            <button class="btn btn-primary" id="btnConfirmEditPost">저장</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 게시글 삭제 확인 모달 ══════════════════════════════════ -->
+<div class="modal-overlay" id="deletePostModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>게시글 삭제</h2>
+            <button class="btn-x" data-close="deletePostModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p class="delete-msg">이 게시글을 삭제하시겠습니까?</p>
+            <div class="form-error" id="deletePostErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="deletePostModal">취소</button>
+            <button class="btn btn-danger" id="btnConfirmDeletePost">삭제</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 이미지 확대 Lightbox ════════════════════════════════════ -->
+<div class="lightbox-overlay" id="lightboxOverlay" hidden>
+    <img class="lightbox-img" id="lightboxImg" alt="확대 이미지">
+</div>
+</div><!-- /.main -->
+
+<script src="/static/js/sidebar_auth.js"></script>
+<div class="toast-container" id="toastContainer"></div>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/board-post.js"></script>
+</body>
+</html>

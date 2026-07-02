@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공지사항 등록 | 업무지원포털</title>
+    <link rel="stylesheet" href="/static/css/common-layout.css">
+    <style>
+        .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #6b7280; font-size: 0.875rem; cursor: pointer; margin-bottom: 1.5rem; text-decoration: none; transition: color 0.2s; }
+        .back-btn:hover { color: #4f46e5; }
+        .page-title { margin-bottom: 1.5rem; }
+
+        .form-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 2rem 2.5rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; font-family: inherit; }
+        .form-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+        textarea.form-input { resize: vertical; min-height: 200px; }
+
+        .pin-toggle { display: flex; align-items: center; gap: 10px; }
+        .toggle { position: relative; width: 44px; height: 24px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #d1d5db; border-radius: 24px; transition: 0.3s; }
+        .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
+        input:checked + .toggle-slider { background: #4f46e5; }
+        input:checked + .toggle-slider:before { transform: translateX(20px); }
+        .toggle-label { font-size: 0.875rem; color: #374151; }
+
+        .form-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #f3f4f6; }
+        .btn { padding: 10px 24px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-cancel { background: #f3f4f6; color: #374151; }
+        .btn-cancel:hover { background: #e5e7eb; }
+        .btn-submit { background: #4f46e5; color: #fff; }
+        .btn-submit:hover { background: #4338ca; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">Work<span>Portal</span></div>
+    <a href="/static/pages/dashboard.html" class="nav-item"><span class="nav-icon">🏠</span> 대시보드</a>
+    <a href="/static/pages/notice.html" class="nav-item active"><span class="nav-icon">📢</span> 공지사항</a>
+    <a href="/static/pages/faq.html" class="nav-item"><span class="nav-icon">❓</span> FAQ</a>
+    <a href="/static/pages/ticket.html" class="nav-item"><span class="nav-icon">🎫</span> 헬프데스크</a>
+    <a href="/mail" class="nav-item"><span class="nav-icon">📧</span> 메일</a>
+    <a href="/chat" class="nav-item"><span class="nav-icon">💬</span> 채팅</a>
+    <a href="/board" class="nav-item"><span class="nav-icon">📋</span> 게시판</a>
+                    <a href="/objstorage" class="nav-item"><span class="nav-icon">🗄️</span> 오브젝트 스토리지</a>
+                    <a href="/static/pages/person.html" class="nav-item"><span class="nav-icon">🔍</span> 인물 검색</a>
+                    <a href="/vdi/list" class="nav-item"><span class="nav-icon">🖥️</span> VDI 관리</a>
+    <a href="/static/pages/cafeteria.html" class="nav-item"><span class="nav-icon">🍽️</span> 오늘의 식사</a>
+                    <a href="/static/pages/mypage.html" class="nav-item"><span class="nav-icon">👤</span> 마이페이지</a>
+    <div class="sidebar-bottom">
+        <a href="#" class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span> 로그아웃</a>
+    </div>
+</div>
+
+<div class="main">
+    <a class="back-btn" onclick="history.back()">← 목록으로</a>
+    <h1 class="page-title">공지사항 등록</h1>
+
+    <div class="form-card">
+        <div class="form-group">
+            <label class="form-label">제목 *</label>
+            <input type="text" class="form-input" id="input-title" placeholder="제목을 입력해주세요">
+        </div>
+        <div class="form-group">
+            <label class="form-label">내용 *</label>
+            <textarea class="form-input" id="input-content" placeholder="내용을 입력해주세요"></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">상단 고정</label>
+            <div class="pin-toggle">
+                <label class="toggle">
+                    <input type="checkbox" id="input-pinned">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">고정 공지로 설정</span>
+            </div>
+        </div>
+        <div class="form-footer">
+            <button class="btn btn-cancel" onclick="history.back()">취소</button>
+            <button class="btn btn-submit" onclick="submitNotice()">등록</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const token = sessionStorage.getItem('access_token');
+    const role  = sessionStorage.getItem('role');
+
+    if (!token) location.replace('/login');
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+        alert('관리자만 접근 가능합니다.');
+        location.replace('/static/pages/notice.html');
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    async function submitNotice() {
+        const title    = document.getElementById('input-title').value.trim();
+        const content  = document.getElementById('input-content').value.trim();
+        const isPinned = document.getElementById('input-pinned').checked;
+
+        if (!title) { showToast('제목을 입력해주세요.'); return; }
+        if (!content) { showToast('내용을 입력해주세요.'); return; }
+
+        try {
+            const res = await fetch('/api/notices', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title, content, isPinned })
+            });
+
+            if (res.status === 401) { location.replace('/login'); return; }
+            const data = await res.json();
+
+            if (data.isSuccess) {
+                showToast('등록됐습니다! 🎉');
+                setTimeout(() => location.replace('/static/pages/notice.html'), 1000);
+            } else {
+                showToast(data.message || '등록에 실패했습니다.');
+            }
+        } catch {
+            showToast('오류가 발생했습니다.');
+        }
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        location.replace('/login');
+    }
+</script>
+</body>
+</html>
