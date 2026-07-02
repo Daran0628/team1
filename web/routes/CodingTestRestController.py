@@ -55,6 +55,7 @@ def api_create_problem():
         dto = CreateProblemRequestDTO(
             title=body.get('title', ''),
             description=body.get('description', ''),
+            difficulty=body.get('difficulty', 'BEGINNER'),
             time_limit_ms=int(body.get('timeLimitMs', 2000)),
             memory_limit_mb=int(body.get('memoryLimitMb', 256)),
             test_cases=[
@@ -75,7 +76,8 @@ def api_create_problem():
 @jwt_required()
 def api_list_problems():
     def work():
-        result = coding_test_service.list_problems()
+        difficulty = request.args.get('difficulty')
+        result = coding_test_service.list_problems(difficulty)
         return ApiResponse.on_success(SuccessStatus.CODE_PROBLEM_LIST, result)
     return _handle(work)
 

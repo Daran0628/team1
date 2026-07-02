@@ -62,6 +62,7 @@ def create_problem(dto: CreateProblemRequestDTO, created_by: str) -> ProblemDeta
     problem = Problem(
         title=dto.title.strip(),
         description=dto.description.strip(),
+        difficulty=dto.difficulty,
         time_limit_ms=dto.time_limit_ms,
         memory_limit_mb=dto.memory_limit_mb,
         created_by=created_by,
@@ -81,8 +82,11 @@ def create_problem(dto: CreateProblemRequestDTO, created_by: str) -> ProblemDeta
     return _problem_to_detail_dto(problem)
 
 
-def list_problems() -> list[ProblemSummaryDTO]:
-    problems = Problem.query.order_by(Problem.created_at.desc()).all()
+def list_problems(difficulty: str | None = None) -> list[ProblemSummaryDTO]:
+    query = Problem.query
+    if difficulty:
+        query = query.filter_by(difficulty=difficulty)
+    problems = query.order_by(Problem.created_at.desc()).all()
     return [_problem_to_summary_dto(p) for p in problems]
 
 
@@ -170,6 +174,7 @@ def _problem_to_summary_dto(problem: Problem) -> ProblemSummaryDTO:
     return ProblemSummaryDTO(
         problem_id=problem.problem_id,
         title=problem.title,
+        difficulty=problem.difficulty,
         time_limit_ms=problem.time_limit_ms,
         memory_limit_mb=problem.memory_limit_mb,
         created_by=problem.created_by,
@@ -183,6 +188,7 @@ def _problem_to_detail_dto(problem: Problem) -> ProblemDetailDTO:
         problem_id=problem.problem_id,
         title=problem.title,
         description=problem.description,
+        difficulty=problem.difficulty,
         time_limit_ms=problem.time_limit_ms,
         memory_limit_mb=problem.memory_limit_mb,
         created_by=problem.created_by,

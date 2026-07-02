@@ -14,6 +14,11 @@ class Problem(db.Model):
     time_limit_ms   = db.Column(db.Integer, nullable=False, default=2000)
     memory_limit_mb = db.Column(db.Integer, nullable=False, default=256)
 
+    difficulty = db.Column(
+        db.Enum('BEGINNER', 'BASIC', 'INTERMEDIATE', 'ADVANCED', name='problem_difficulty'),
+        nullable=False, default='BEGINNER',
+    )
+
     created_by = db.Column(db.String(36), nullable=False)  # member_id
 
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))

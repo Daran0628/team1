@@ -14,15 +14,24 @@ function parseJwt(t) {
     try { return JSON.parse(atob(t.split('.')[1])); } catch { return {}; }
 }
 
+const DIFFICULTY_LABEL = {
+    BEGINNER: '입문',
+    BASIC: '초급',
+    INTERMEDIATE: '중급',
+    ADVANCED: '고급',
+};
+
 const state = {
     problems: [],
     filtered: [],
+    difficulty: '',
 };
 
-const problemBody   = document.getElementById('problemBody');
-const searchInput   = document.getElementById('searchInput');
-const itemsCount    = document.getElementById('itemsCount');
-const btnCreate     = document.getElementById('btnCreateProblem');
+const problemBody     = document.getElementById('problemBody');
+const searchInput     = document.getElementById('searchInput');
+const itemsCount      = document.getElementById('itemsCount');
+const btnCreate       = document.getElementById('btnCreateProblem');
+const difficultyTabs  = document.getElementById('difficultyTabs');
 
 function isAdmin() {
     const payload = parseJwt(getToken() || '');
@@ -39,7 +48,7 @@ function formatDate(iso) {
 
 function renderTable() {
     if (state.filtered.length === 0) {
-        problemBody.innerHTML = '<tr><td colspan="4" class="state-cell">등록된 문제가 없습니다.</td></tr>';
+        problemBody.innerHTML = '<tr><td colspan="5" class="state-cell">등록된 문제가 없습니다.</td></tr>';
         itemsCount.textContent = '';
         return;
     }
@@ -47,6 +56,7 @@ function renderTable() {
     problemBody.innerHTML = state.filtered.map(p => `
         <tr class="problem-row" data-id="${esc(p.problem_id)}">
             <td>${esc(p.title)}</td>
+            <td><span class="difficulty-pill ${esc(p.difficulty)}">${esc(DIFFICULTY_LABEL[p.difficulty] || p.difficulty)}</span></td>
             <td>${p.time_limit_ms != null ? esc(String(p.time_limit_ms)) + ' ms' : '-'}</td>
             <td>${p.memory_limit_mb != null ? esc(String(p.memory_limit_mb)) + ' MB' : '-'}</td>
             <td>${formatDate(p.created_at)}</td>
@@ -67,14 +77,21 @@ function applySearch() {
     renderTable();
 }
 
+let loadRequestSeq = 0;
+
 async function loadProblems() {
-    problemBody.innerHTML = '<tr><td colspan="4" class="state-cell">불러오는 중...</td></tr>';
+    const seq = ++loadRequestSeq;
+    problemBody.innerHTML = '<tr><td colspan="5" class="state-cell">불러오는 중...</td></tr>';
+    itemsCount.textContent = '';
     try {
-        const result = await apiJSON('/api/coding-test/problems');
+        const qs = state.difficulty ? `?difficulty=${encodeURIComponent(state.difficulty)}` : '';
+        const result = await apiJSON(`/api/coding-test/problems${qs}`);
+        if (seq !== loadRequestSeq) return; // 더 최신 요청이 이미 진행 중이면 이 응답은 버린다
         state.problems = result || [];
         applySearch();
     } catch (e) {
-        problemBody.innerHTML = `<tr><td colspan="4" class="state-cell">불러오기 실패: ${esc(e.message)}</td></tr>`;
+        if (seq !== loadRequestSeq) return;
+        problemBody.innerHTML = `<tr><td colspan="5" class="state-cell">불러오기 실패: ${esc(e.message)}</td></tr>`;
     }
 }
 
@@ -112,6 +129,7 @@ function addTestCaseRow(prefill) {
 function resetCreateModal() {
     document.getElementById('inputTitle').value = '';
     document.getElementById('inputDescription').value = '';
+    document.getElementById('inputDifficulty').value = 'BEGINNER';
     document.getElementById('inputTimeLimit').value = 2000;
     document.getElementById('inputMemoryLimit').value = 256;
     document.getElementById('createModalErr').textContent = '';
@@ -127,6 +145,7 @@ async function saveProblem() {
 
     const title = document.getElementById('inputTitle').value.trim();
     const description = document.getElementById('inputDescription').value.trim();
+    const difficulty = document.getElementById('inputDifficulty').value;
     const timeLimitMs = parseInt(document.getElementById('inputTimeLimit').value, 10) || 2000;
     const memoryLimitMb = parseInt(document.getElementById('inputMemoryLimit').value, 10) || 256;
 
@@ -149,7 +168,7 @@ async function saveProblem() {
     try {
         await apiJSON('/api/coding-test/problems', {
             method: 'POST',
-            body: JSON.stringify({ title, description, timeLimitMs, memoryLimitMb, testCases }),
+            body: JSON.stringify({ title, description, difficulty, timeLimitMs, memoryLimitMb, testCases }),
         });
         closeModal('createModal');
         showToast('문제가 등록되었습니다.', 'success');
@@ -187,6 +206,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     searchInput.addEventListener('input', applySearch);
+
+    difficultyTabs.querySelectorAll('.difficulty-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            difficultyTabs.querySelector('.difficulty-tab.active')?.classList.remove('active');
+            tab.classList.add('active');
+            state.difficulty = tab.dataset.difficulty;
+            loadProblems();
+        });
+    });
 
     loadProblems();
 });

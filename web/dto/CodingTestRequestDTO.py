@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List
 
+DIFFICULTY_LEVELS = ('BEGINNER', 'BASIC', 'INTERMEDIATE', 'ADVANCED')
+
 
 @dataclass
 class TestCaseInputDTO:
@@ -13,6 +15,7 @@ class TestCaseInputDTO:
 class CreateProblemRequestDTO:
     title:           str
     description:     str
+    difficulty:      str = 'BEGINNER'
     time_limit_ms:   int = 2000
     memory_limit_mb: int = 256
     test_cases:      List[TestCaseInputDTO] = field(default_factory=list)
@@ -24,6 +27,8 @@ class CreateProblemRequestDTO:
             raise ValueError("description은 필수입니다.")
         if not self.test_cases:
             raise ValueError("테스트케이스가 최소 1개 필요합니다.")
+        if self.difficulty not in DIFFICULTY_LEVELS:
+            raise ValueError(f"difficulty는 {', '.join(DIFFICULTY_LEVELS)} 중 하나여야 합니다.")
 
 
 @dataclass

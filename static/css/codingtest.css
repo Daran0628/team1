@@ -59,6 +59,47 @@
 
 .col-limit { width: 140px; }
 .col-date  { width: 140px; }
+.col-diff  { width: 100px; }
+
+/* ── 난이도 탭 ────────────────────────────────────────────── */
+.difficulty-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+.difficulty-tab {
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 99px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.difficulty-tab:hover { border-color: var(--primary); color: var(--primary); }
+.difficulty-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+/* ── 난이도 배지 (상태 배지와 동일 톤앤매너) ──────────────────── */
+.difficulty-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 99px;
+    white-space: nowrap;
+}
+.difficulty-pill.BEGINNER     { background: rgba(107, 114, 128, 0.15); color: var(--lo-muted); }
+.difficulty-pill.BASIC        { background: rgba(34, 197, 94, 0.15);   color: #15803d; }
+.difficulty-pill.INTERMEDIATE { background: rgba(9, 102, 146, 0.15);   color: var(--lo-secondary); }
+.difficulty-pill.ADVANCED     { background: rgba(232, 62, 62, 0.15);   color: var(--lo-danger); }
+
+[data-theme="dark"] .difficulty-pill.BASIC        { color: #86efac; }
+[data-theme="dark"] .difficulty-pill.ADVANCED     { color: #f3a3a3; }
 
 .problem-row { cursor: pointer; }
 .problem-row:hover { background: var(--hover-row); }

@@ -28,6 +28,14 @@
 
 <main class="main-content">
 
+    <div class="difficulty-tabs" id="difficultyTabs">
+        <button type="button" class="difficulty-tab active" data-difficulty="">전체</button>
+        <button type="button" class="difficulty-tab" data-difficulty="BEGINNER">입문</button>
+        <button type="button" class="difficulty-tab" data-difficulty="BASIC">초급</button>
+        <button type="button" class="difficulty-tab" data-difficulty="INTERMEDIATE">중급</button>
+        <button type="button" class="difficulty-tab" data-difficulty="ADVANCED">고급</button>
+    </div>
+
     <div class="toolbar">
         <div class="toolbar-left">
             <button id="btnCreateProblem" class="btn btn-primary" hidden>⊕ 문제 출제</button>
@@ -43,13 +51,14 @@
             <thead>
                 <tr>
                     <th class="col-name">제목</th>
+                    <th class="col-diff">난이도</th>
                     <th class="col-limit">시간 제한</th>
                     <th class="col-limit">메모리 제한</th>
                     <th class="col-date">등록일</th>
                 </tr>
             </thead>
             <tbody id="problemBody">
-                <tr><td colspan="4" class="state-cell">불러오는 중...</td></tr>
+                <tr><td colspan="5" class="state-cell">불러오는 중...</td></tr>
             </tbody>
         </table>
     </div>
@@ -73,6 +82,15 @@
                 <textarea id="inputDescription" rows="6" placeholder="문제 설명, 입출력 형식, 제약조건 등"></textarea>
             </div>
             <div class="field-row">
+                <div class="field">
+                    <label for="inputDifficulty">난이도</label>
+                    <select id="inputDifficulty">
+                        <option value="BEGINNER">입문</option>
+                        <option value="BASIC">초급</option>
+                        <option value="INTERMEDIATE">중급</option>
+                        <option value="ADVANCED">고급</option>
+                    </select>
+                </div>
                 <div class="field">
                     <label for="inputTimeLimit">시간 제한 (ms)</label>
                     <input type="number" id="inputTimeLimit" value="2000" min="100">

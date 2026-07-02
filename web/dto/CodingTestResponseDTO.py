@@ -7,6 +7,7 @@ from typing import List, Optional
 class ProblemSummaryDTO:
     problem_id:      str
     title:           str
+    difficulty:      str
     time_limit_ms:   int
     memory_limit_mb: int
     created_by:      str
@@ -26,6 +27,7 @@ class ProblemDetailDTO:
     problem_id:      str
     title:           str
     description:     str
+    difficulty:      str
     time_limit_ms:   int
     memory_limit_mb: int
     created_by:      str

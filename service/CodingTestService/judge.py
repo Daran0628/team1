@@ -178,7 +178,7 @@ def _run_in_sandbox(image: str, cmd: list[str], workdir: str, stdin_data: str,
             input=stdin_data,
             capture_output=True,
             text=True,
-            timeout=(time_limit_ms / 1000) + 5,  # docker 자체 오버헤드 여유분
+            timeout=(time_limit_ms / 1000) + 60,  # 공용 VM 메모리 부족으로 인한 스왑 지연 방어용 여유분 (근본 해결 아님, VM 리소스 이슈)
         )
     except subprocess.TimeoutExpired:
         return None

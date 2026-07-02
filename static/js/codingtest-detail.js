@@ -12,6 +12,13 @@ async function apiJSON(url, options) {
 
 const PROBLEM_ID = window.location.pathname.split('/').filter(Boolean).pop();
 
+const DIFFICULTY_LABEL = {
+    BEGINNER: '입문',
+    BASIC: '초급',
+    INTERMEDIATE: '중급',
+    ADVANCED: '고급',
+};
+
 const STATUS_LABEL = {
     PENDING: '대기중',
     JUDGING: '채점중',
@@ -38,6 +45,7 @@ async function loadProblem() {
         document.title = `${problem.title} — 코딩테스트`;
 
         document.getElementById('problemMeta').innerHTML = `
+            <span class="difficulty-pill ${esc(problem.difficulty)}">${esc(DIFFICULTY_LABEL[problem.difficulty] || problem.difficulty)}</span>
             <span class="ct-limit-pill">⏱ ${esc(String(problem.time_limit_ms))} ms</span>
             <span class="ct-limit-pill">💾 ${esc(String(problem.memory_limit_mb))} MB</span>
         `;
@@ -105,12 +113,27 @@ async function submitCode() {
             method: 'POST',
             body: JSON.stringify({ problemId: PROBLEM_ID, language, sourceCode }),
         });
-        showToast('코드가 제출되었습니다. 채점 기능은 아직 준비 중이라 상태는 대기중으로 유지됩니다.', 'info');
+        showToast('코드가 제출되었습니다. 채점이 진행됩니다.', 'info');
         loadSubmissions();
+        pollLatestSubmission();
     } catch (e) {
         errEl.textContent = e.message;
     } finally {
         btn.disabled = false;
+    }
+}
+
+async function pollLatestSubmission() {
+    for (let i = 0; i < 15; i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+            const list = await apiJSON(`/api/coding-test/submissions?problemId=${encodeURIComponent(PROBLEM_ID)}`);
+            const latest = list && list[0];
+            await loadSubmissions();
+            if (!latest || !['PENDING', 'JUDGING'].includes(latest.status)) return;
+        } catch {
+            return;
+        }
     }
 }
 

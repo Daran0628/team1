@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS tb_problem (
     time_limit_ms   INT             NOT NULL DEFAULT 2000,
     memory_limit_mb INT             NOT NULL DEFAULT 256,
 
+    difficulty      ENUM('BEGINNER','BASIC','INTERMEDIATE','ADVANCED')
+                    NOT NULL DEFAULT 'BEGINNER',  -- 입문/초급/중급/고급
+
     created_by      CHAR(36)        NOT NULL,   -- tb_members.member_id (출제자)
 
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
