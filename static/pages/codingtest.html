@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; script-src 'self'">
+    <title>코딩테스트</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/group.css">
+    <link rel="stylesheet" href="/static/css/codingtest.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
+</head>
+<body>
+
+<div class="app-shell">
+<div id="shellSlot"></div>
+<div class="app-main">
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <span>코딩테스트</span>
+    </nav>
+    <h1>코딩테스트</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnCreateProblem" class="btn btn-primary" hidden>⊕ 문제 출제</button>
+        </div>
+        <div class="toolbar-right">
+            <span id="itemsCount" class="items-count"></span>
+            <input type="search" id="searchInput" class="search-input" placeholder="문제 제목 검색...">
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-name">제목</th>
+                    <th class="col-limit">시간 제한</th>
+                    <th class="col-limit">메모리 제한</th>
+                    <th class="col-date">등록일</th>
+                </tr>
+            </thead>
+            <tbody id="problemBody">
+                <tr><td colspan="4" class="state-cell">불러오는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<!-- ══ 문제 출제 모달 ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="createModal" hidden>
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h2>문제 출제</h2>
+            <button class="btn-x" data-close="createModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputTitle">제목 <span class="req">*</span></label>
+                <input type="text" id="inputTitle" maxlength="200" placeholder="예: 두 수의 합">
+            </div>
+            <div class="field">
+                <label for="inputDescription">지문 <span class="req">*</span></label>
+                <textarea id="inputDescription" rows="6" placeholder="문제 설명, 입출력 형식, 제약조건 등"></textarea>
+            </div>
+            <div class="field-row">
+                <div class="field">
+                    <label for="inputTimeLimit">시간 제한 (ms)</label>
+                    <input type="number" id="inputTimeLimit" value="2000" min="100">
+                </div>
+                <div class="field">
+                    <label for="inputMemoryLimit">메모리 제한 (MB)</label>
+                    <input type="number" id="inputMemoryLimit" value="256" min="16">
+                </div>
+            </div>
+
+            <div class="field">
+                <label>테스트케이스 <span class="req">*</span></label>
+                <div id="testCaseList" class="test-case-list"></div>
+                <button type="button" class="btn btn-ghost" id="btnAddTestCase">＋ 테스트케이스 추가</button>
+            </div>
+
+            <div class="form-error" id="createModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="createModal">취소</button>
+            <button class="btn btn-primary" id="btnSaveProblem">등록</button>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer"></div>
+
+</div>
+</div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/layout.js"></script>
+<script src="/static/js/codingtest.js"></script>
+</body>
+</html>

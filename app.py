@@ -118,6 +118,21 @@ def mypage():
     )
 
 
+@app.route('/coding-test')
+def coding_test_page():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'codingtest.html'
+    )
+
+@app.route('/coding-test/<problem_id>')
+def coding_test_detail_page(problem_id):
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), 'static', 'pages'),
+        'codingtest-detail.html'
+    )
+
+
 @app.route('/vdi/list')
 def vdi_list_page():
     return send_from_directory(

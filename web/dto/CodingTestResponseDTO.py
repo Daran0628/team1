@@ -5,10 +5,12 @@ from typing import List, Optional
 
 @dataclass
 class ProblemSummaryDTO:
-    problem_id: str
-    title:      str
-    created_by: str
-    created_at: datetime
+    problem_id:      str
+    title:           str
+    time_limit_ms:   int
+    memory_limit_mb: int
+    created_by:      str
+    created_at:      datetime
 
 
 @dataclass

@@ -166,6 +166,8 @@ def _problem_to_summary_dto(problem: Problem) -> ProblemSummaryDTO:
     return ProblemSummaryDTO(
         problem_id=problem.problem_id,
         title=problem.title,
+        time_limit_ms=problem.time_limit_ms,
+        memory_limit_mb=problem.memory_limit_mb,
         created_by=problem.created_by,
         created_at=problem.created_at,
     )

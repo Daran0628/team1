@@ -13,7 +13,7 @@ const SIDEBAR_MENU = [
     { label: 'Chatting',         icon: 'fa-solid fa-comment-dots',     href: '/chat' },
     { label: '공유 스토리지',    icon: 'fa-solid fa-box-archive',      href: '/objstorage' },
     { label: 'VDI',              icon: 'fa-solid fa-display',          href: '/vdi/list' },
-    { label: '코딩테스트',       icon: 'fa-solid fa-code',             href: null },
+    { label: '코딩테스트',       icon: 'fa-solid fa-code',             href: '/coding-test' },
     { label: '인물 검색',        icon: 'fa-solid fa-magnifying-glass', href: '/person' },
     { label: '마이페이지',       icon: 'fa-solid fa-user',             href: '/mypage' },
     { label: '관리자 페이지',    icon: 'fa-solid fa-gear',             href: '/iam' },
