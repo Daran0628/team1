@@ -1,5 +1,25 @@
 /* person.css — 인물 검색 페이지 전용 오버라이드 */
 
+/* rbac.css/group.css는 이 프로젝트 초기에 만든 별도의 --primary/--bg 등
+   색상 변수를 쓰고 있어서 대시보드 테마(--lo-*)와 연결이 안 되어 있었다.
+   이 페이지는 person.css에서만 로드되므로, 여기서 레거시 변수 이름을
+   --lo-* 값으로 다시 매핑해서 라이트/다크 테마를 그대로 물려받게 한다. */
+:root {
+    --primary:   var(--lo-secondary);
+    --primary-h: #075271;
+    --danger:    var(--lo-danger);
+    --bg:        var(--lo-bg);
+    --surface:   var(--lo-surface);
+    --border:    var(--lo-border);
+    --text:      var(--lo-text-strong);
+    --muted:     var(--lo-muted);
+}
+
+/* 대시보드와 같은 좌우 여백 컨셉 */
+.main-content {
+    padding: 1.5rem 5% 3rem;
+}
+
 .toolbar {
     justify-content: center;
 }

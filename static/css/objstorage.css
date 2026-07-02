@@ -11,7 +11,7 @@
     border-radius: 10px;
     overflow: hidden;
     background: var(--surface);
-    height: calc(100vh - 110px);
+    flex: 1;
     min-height: 400px;
 }
 
@@ -371,7 +371,7 @@
 
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
-    .browser-layout { margin: 0 1rem 1rem; height: calc(100vh - 100px); }
+    .browser-layout { margin: 0 1rem 1rem; }
     .bucket-sidebar { width: 160px; }
     .col-modified, .col-size { display: none; }
 }
