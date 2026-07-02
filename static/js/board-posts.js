@@ -1,8 +1,9 @@
 (function () {
     'use strict';
 
-    /* ── URL에서 boardId 추출 ─────────────────────────────── */
-    var BOARD_ID = window.location.pathname.split('/')[2] || '';
+    /* ── URL에서 게시판 이름 추출, boardId는 API 조회 후 할당 ── */
+    var BOARD_NAME = decodeURIComponent(window.location.pathname.split('/')[2] || '');
+    var BOARD_ID   = null;
 
     /* ── 상태 ─────────────────────────────────────────────── */
     var currentPage       = 1;
@@ -12,7 +13,11 @@
     var isAdmin           = false;
     var isApprover        = false;
     var myMemberId        = null;
-    var pendingOnly       = false;
+    var pendingOnly           = false;
+    var boardRequiresApproval = false;   /* 승인제 게시판 여부 */
+    var showActionsColumn     = false;   /* Actions 컬럼 표시 여부 */
+    var canApprove            = false;   /* RBAC BOARD APPROVE 권한 */
+    var canDeletePost         = false;   /* RBAC POST DELETE 권한 */
     var deletingPostId    = null;
     var inlineImageFiles  = [];   /* 본문 삽입용 이미지 파일 목록 */
     var inlinePrevUrls    = [];   /* ObjectURL 해제용 */
@@ -26,7 +31,8 @@
     var itemsCount   = document.getElementById('itemsCount');
     var btnWrite     = document.getElementById('btnWritePost');
     var btnRefresh   = document.getElementById('btnRefresh');
-    var btnPending   = document.getElementById('btnPendingOnly');
+    var btnPending        = document.getElementById('btnPendingOnly');
+    var colActionsHeader  = document.getElementById('colActionsHeader');
     var inputTitle   = document.getElementById('inputPostTitle');
     var inputContent = document.getElementById('inputPostContent');
     var inputFiles   = document.getElementById('inputPostFiles');
@@ -53,14 +59,16 @@
         } catch (_) { return {}; }
     }
 
-    /* ── 게시판 정보 조회 ─────────────────────────────────── */
+    /* ── 게시판 정보 조회 (이름 기반, BOARD_ID 할당 포함) ───── */
     async function fetchBoardInfo() {
         try {
-            var res = await apiFetch('/api/board/boards/' + BOARD_ID);
+            var res = await apiFetch('/api/board/boards/by-name/' + encodeURIComponent(BOARD_NAME));
             if (!res || !res.ok) return;
             var json = await res.json();
             var b = json.result;
             if (!b) return;
+            BOARD_ID = b.boardId;
+            boardRequiresApproval = !!b.requiresApproval;
             pageTitle.textContent = b.boardName;
             breadcrumb.textContent = b.boardName;
             document.title = b.boardName + ' — 게시글';
@@ -70,7 +78,8 @@
     /* ── 게시글 목록 조회 ─────────────────────────────────── */
     async function fetchPosts() {
         try {
-            postsBody.innerHTML = '<tr><td colspan="7" class="state-cell">불러오는 중...</td></tr>';
+            var COLSPAN = showActionsColumn ? 7 : 6;
+            postsBody.innerHTML = '<tr><td colspan="' + COLSPAN + '" class="state-cell">불러오는 중...</td></tr>';
             var url = '/api/board/boards/' + BOARD_ID + '/posts?page=' + currentPage + '&size=' + pageSize;
             var res = await apiFetch(url);
             if (!res || !res.ok) { showToast('게시글 목록 조회 실패', 'error'); return; }
@@ -94,8 +103,9 @@
             : allPosts;
         if (q) posts = posts.filter(function (p) { return p.title.toLowerCase().includes(q); });
 
+        var COLSPAN = showActionsColumn ? 7 : 6;
         if (!posts.length) {
-            postsBody.innerHTML = '<tr><td colspan="7" class="state-cell">게시글이 없습니다.</td></tr>';
+            postsBody.innerHTML = '<tr><td colspan="' + COLSPAN + '" class="state-cell">게시글이 없습니다.</td></tr>';
             return;
         }
         postsBody.innerHTML = '';
@@ -105,18 +115,23 @@
             var tr = document.createElement('tr');
             tr.className = 'role-row';
 
-            /* 승인/반려: 승인자 또는 관리자, PENDING인 경우만 */
-            var approveHtml = (isAdmin || isApprover) && p.status === 'PENDING'
+            /* 승인/반려: 승인제 게시판이면서 권한 있는 경우 + PENDING 상태만 */
+            var approveHtml = boardRequiresApproval
+                && (isAdmin || isApprover || canApprove)
+                && p.status === 'PENDING'
                 ? '<button class="act-btn btn-approve" data-id="' + esc(p.postId) + '">승인</button>'
                 + '<button class="act-btn act-del btn-reject" data-id="' + esc(p.postId) + '">반려</button>'
                 : '';
 
-            /* 삭제: 작성자 또는 관리자 */
-            var deleteHtml = (isAdmin || p.authorAccountId === myMemberId)
+            /* 삭제: 작성자, 관리자, 또는 RBAC POST DELETE 권한 보유자 */
+            var deleteHtml = (isAdmin || p.authorAccountId === myMemberId || canDeletePost)
                 ? '<button class="act-btn act-del btn-del-post" data-id="' + esc(p.postId) + '">삭제</button>'
                 : '';
 
-            var actionsHtml = approveHtml + deleteHtml || '<span>—</span>';
+            /* Actions td: showActionsColumn 인 경우에만 렌더링 */
+            var actionsTd = showActionsColumn
+                ? '<td class="row-actions">' + (approveHtml + deleteHtml || '<span>—</span>') + '</td>'
+                : '';
 
             tr.innerHTML =
                 '<td><span class="status-badge status-' + esc(p.status) + '">'
@@ -127,7 +142,7 @@
               + '<td class="role-desc">' + esc(fmtDate(p.createdAt)) + '</td>'
               + '<td class="num-cell">' + (p.viewCount || 0) + '</td>'
               + '<td class="num-cell">' + (p.likeCount || 0) + '</td>'
-              + '<td class="row-actions">' + actionsHtml + '</td>';
+              + actionsTd;
 
             /* textContent로 XSS 방지 */
             tr.querySelector('.post-title-link').textContent = p.title;
@@ -135,7 +150,7 @@
 
             /* 제목 클릭 → 상세 페이지 */
             tr.querySelector('.post-title-link').addEventListener('click', function () {
-                window.location.href = '/board/' + BOARD_ID + '/post/' + p.postId;
+                window.location.href = '/board/' + encodeURIComponent(BOARD_NAME) + '/post/' + p.postId;
             });
 
             frag.appendChild(tr);
@@ -403,15 +418,34 @@
     btnInsertImage.addEventListener('click', function () { inputInlineImage.click(); });
     inputInlineImage.addEventListener('change', function () { addInlineImages(this.files); });
 
+    /* ── RBAC 권한 조회 ──────────────────────────────────────── */
+    async function fetchMyPermissions() {
+        try {
+            var permRes = await apiFetch('/api/board/my-permissions');
+            if (!permRes || !permRes.ok) return;
+            var p = (await permRes.json()).result || {};
+            canApprove    = !!p.boardApprove;
+            canDeletePost = !!p.postDelete;
+        } catch (_) { /* 권한 조회 실패 시 기본값 유지 */ }
+        finally { /* nothing */ }
+    }
+
     /* ── 초기화 (bfcache 대응: readyState 확인) ─────────────── */
     async function init() {
-        if (!BOARD_ID) { showToast('잘못된 접근입니다.', 'error'); return; }
+        if (!BOARD_NAME) { showToast('잘못된 접근입니다.', 'error'); return; }
         var payload = parseJwt();
         myMemberId  = payload.sub || null;
         isAdmin     = payload.role === 'ADMIN';
-        await Promise.all([fetchBoardInfo(), fetchPosts()]);
-        await checkApprover();
-        if (isAdmin || isApprover) btnPending.hidden = false;
+        /* fetchBoardInfo가 BOARD_ID를 할당해야 fetchPosts 등이 동작 */
+        await fetchBoardInfo();
+        if (!BOARD_ID) { showToast('게시판을 찾을 수 없습니다.', 'error'); return; }
+        /* 권한 먼저 확정 후 게시글 렌더링 (경쟁 조건 방지) */
+        await Promise.all([checkApprover(), fetchMyPermissions()]);
+        showActionsColumn = isAdmin || isApprover || canApprove || canDeletePost;
+        colActionsHeader.hidden = !showActionsColumn;
+        /* 승인 대기만 보기 버튼: 승인제 게시판 + 권한 있는 경우만 */
+        btnPending.hidden = !(boardRequiresApproval && (isAdmin || isApprover || canApprove));
+        await fetchPosts();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

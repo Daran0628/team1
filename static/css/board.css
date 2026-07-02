@@ -25,9 +25,8 @@
 
 .board-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.25rem;
-    max-width: 1100px;
 }
 
 .board-card {
@@ -79,6 +78,12 @@
     flex: 1;
 }
 
+.board-card-approver {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+}
+
 .board-card-footer {
     padding: 0.85rem 1.5rem;
     border-top: 1px solid var(--border);
@@ -102,6 +107,7 @@
     color: #fff;
 }
 .badge-approval { background: #6b7280; }
+.badge-expired  { background: #ef4444; }
 
 /* ── 체크박스 필드 정렬 ─────────────────────────────────────── */
 .field-check label {

@@ -4,6 +4,9 @@
     /* ── 상태 ─────────────────────────────────────────────── */
     var allBoards      = [];
     var isAdmin        = false;
+    var canCreateBoard = false;   /* RBAC BOARD CREATE 권한 */
+    var canUpdateBoard = false;   /* RBAC BOARD UPDATE 권한 */
+    var canDeleteBoard = false;   /* RBAC BOARD DELETE 권한 */
     var editingBoardId = null;
     var deletingBoardId = null;
     var myDeptId       = null;
@@ -22,10 +25,8 @@
     var inputDeptId     = document.getElementById('inputDeptId');
     var inputIsPublic   = document.getElementById('inputIsPublic');
     var inputReqApproval = document.getElementById('inputRequiresApproval');
-    var inputExpires     = document.getElementById('inputApprovalExpires');
     var inputPurpose     = document.getElementById('inputApprovalPurpose');
     var fieldDept        = document.getElementById('fieldDepartment');
-    var fieldExpires     = document.getElementById('fieldApprovalExpires');
     var fieldPurpose     = document.getElementById('fieldApprovalPurpose');
     var deptDisplay      = document.getElementById('deptDisplay');
     var boardModalErr    = document.getElementById('boardModalErr');
@@ -99,11 +100,15 @@
             var card = document.createElement('div');
             card.className = 'board-card';
 
-            var adminHtml = isAdmin
-                ? '<div class="board-card-actions">'
-                  + '<button class="act-btn btn-edit-board" data-id="' + esc(b.boardId) + '">편집</button>'
-                  + '<button class="act-btn act-del btn-del-board" data-id="' + esc(b.boardId) + '">삭제</button>'
-                  + '</div>'
+            /* 편집/삭제 버튼: 관리자 또는 RBAC 권한 보유자에게 표시 */
+            var editBtn = (isAdmin || canUpdateBoard)
+                ? '<button class="act-btn btn-edit-board" data-id="' + esc(b.boardId) + '">편집</button>'
+                : '';
+            var delBtn  = (isAdmin || canDeleteBoard)
+                ? '<button class="act-btn act-del btn-del-board" data-id="' + esc(b.boardId) + '">삭제</button>'
+                : '';
+            var adminHtml = (editBtn || delBtn)
+                ? '<div class="board-card-actions">' + editBtn + delBtn + '</div>'
                 : '';
 
             card.innerHTML =
@@ -114,6 +119,9 @@
               +   '</div>'
               +   '<div class="board-card-title"></div>'
               +   '<div class="board-card-desc"></div>'
+              + (b.requiresApproval && b.approvers && b.approvers.length
+                  ? '<div class="board-card-approver"></div>'
+                  : '')
               + '</div>'
               + '<div class="board-card-footer">'
               +   '<div>'
@@ -129,11 +137,15 @@
             card.querySelector('.board-card-title').textContent = b.boardName;
             card.querySelector('.board-card-desc').textContent =
                 b.approvalPurpose || (TYPE_LABELS[b.boardType] || '') + ' 게시판';
+            var approverEl = card.querySelector('.board-card-approver');
+            if (approverEl) {
+                approverEl.textContent = '승인자: ' + (b.approvers || []).join(', ');
+            }
 
-            /* 카드 클릭 → 게시글 목록 */
+            /* 카드 클릭 → 게시글 목록 (이름 기반 URL) */
             card.addEventListener('click', function (e) {
                 if (e.target.closest('.act-btn')) return;
-                window.location.href = '/board/' + b.boardId;
+                window.location.href = '/board/' + encodeURIComponent(b.boardName);
             });
 
             grid.appendChild(card);
@@ -173,11 +185,9 @@
         deptDisplay.textContent = myDeptName || '—';
         inputIsPublic.checked = true;
         inputReqApproval.checked = false;
-        inputExpires.value = '';
         inputPurpose.value = '';
         boardModalErr.textContent = '';
         fieldDept.hidden = true;
-        fieldExpires.hidden = true;
         fieldPurpose.hidden = true;
         openModal('boardModal');
     }
@@ -194,11 +204,9 @@
         deptDisplay.textContent = (b.departmentId ? (deptMap[b.departmentId] || b.departmentId) : myDeptName) || '—';
         inputIsPublic.checked = b.isPublic !== false;
         inputReqApproval.checked = !!b.requiresApproval;
-        inputExpires.value = b.approvalExpiresAt ? b.approvalExpiresAt.slice(0, 16) : '';
         inputPurpose.value = b.approvalPurpose || '';
         boardModalErr.textContent = '';
         fieldDept.hidden = b.boardType !== 'DEPARTMENT';
-        fieldExpires.hidden = !b.requiresApproval;
         fieldPurpose.hidden = !b.requiresApproval;
         openModal('boardModal');
     }
@@ -220,7 +228,6 @@
             departmentId: inputDeptId.value.trim() || null,
             isPublic: inputIsPublic.checked,
             requiresApproval: inputReqApproval.checked,
-            approvalExpiresAt: inputExpires.value || null,
             approvalPurpose: inputPurpose.value.trim() || null,
         };
         try {
@@ -289,7 +296,6 @@
         fieldDept.hidden = inputType.value !== 'DEPARTMENT';
     });
     inputReqApproval.addEventListener('change', function () {
-        fieldExpires.hidden = !inputReqApproval.checked;
         fieldPurpose.hidden = !inputReqApproval.checked;
     });
 
@@ -301,10 +307,26 @@
     searchInput.addEventListener('input', filterBoards);
 
     /* ── 초기화 (bfcache 대응: readyState 확인) ─────────────── */
+    /* ── RBAC 권한 조회 ──────────────────────────────────────── */
+    async function fetchMyPermissions() {
+        try {
+            var res = await apiFetch('/api/board/my-permissions');
+            if (!res || !res.ok) return;
+            var json = await res.json();
+            var p = json.result || {};
+            canCreateBoard = !!p.boardCreate;
+            canUpdateBoard = !!p.boardUpdate;
+            canDeleteBoard = !!p.boardDelete;
+        } catch (_) { /* 권한 조회 실패 시 기본값 유지 */ }
+        finally { /* nothing */ }
+    }
+
     async function init() {
         isAdmin = getRole() === 'ADMIN';
-        if (isAdmin) btnAdd.hidden = false;
-        await Promise.all([fetchMyDeptInfo(), fetchBoards()]);
+        await Promise.all([fetchMyDeptInfo(), fetchMyPermissions()]);
+        /* 게시판 추가 버튼: BOARD CREATE 권한 보유 시 표시 (관리자 포함) */
+        btnAdd.hidden = !canCreateBoard;
+        await fetchBoards();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

@@ -1,10 +1,11 @@
 (function () {
     'use strict';
 
-    /* ── URL 파싱: /board/{boardId}/post/{postId} ────────── */
-    var parts    = window.location.pathname.split('/');
-    var BOARD_ID = parts[2] || '';
-    var POST_ID  = parts[4] || '';
+    /* ── URL 파싱: /board/{boardName}/post/{postId} ─────── */
+    var parts      = window.location.pathname.split('/');
+    var BOARD_NAME = decodeURIComponent(parts[2] || '');
+    var POST_ID    = parts[4] || '';
+    var BOARD_ID   = null;  /* by-name API 조회 후 할당 */
 
     /* ── 상태 ─────────────────────────────────────────────── */
     var postData          = null;
@@ -12,6 +13,10 @@
     var isAdmin           = false;
     var isApprover        = false;
     var isLiked           = false;
+    var canUpdatePost          = false;   /* RBAC POST UPDATE 권한 */
+    var canDeletePost          = false;   /* RBAC POST DELETE 권한 */
+    var canApprove             = false;   /* RBAC BOARD APPROVE 권한 */
+    var boardRequiresApproval  = false;   /* 승인제 게시판 여부 */
     var blobUrls          = [];   /* 페이지 언로드 시 해제 */
     var inlineAttachIds   = new Set();  /* content 내 이미 렌더된 첨부 UUID */
     var attachmentItems   = [];         /* 전체 첨부파일 목록 (수정 모달에서 이름 치환용) */
@@ -89,13 +94,19 @@
     function renderPost() {
         if (!postData) return;
 
+        /* 버튼 상태 초기화 (재렌더 시 이전 상태 잔존 방지) */
+        btnApprove.hidden    = true;
+        btnReject.hidden     = true;
+        btnEditPost.hidden   = true;
+        btnDeletePost.hidden = true;
+
         document.title = postData.title + ' — 게시판';
         postTitleEl.textContent   = postData.title;
         breadPostEl.textContent   = postData.title;
 
-        /* breadcrumb 게시판 링크 */
+        /* breadcrumb 게시판 링크 (이름 기반 URL) */
         breadBoardLink.textContent = postData.boardName || '게시판';
-        breadBoardLink.href        = '/board/' + BOARD_ID;
+        breadBoardLink.href        = '/board/' + encodeURIComponent(BOARD_NAME);
 
         /* 상태 배지 */
         statusBadge.className   = 'status-badge status-' + postData.status;
@@ -112,14 +123,18 @@
         isLiked = !!postData.isLiked;
         updateLikeBtn(postData.likeCount || 0);
 
-        /* 수정/삭제 버튼 */
-        if (isAdmin || postData.authorAccountId === myMemberId) {
-            btnEditPost.hidden   = false;
+        /* 수정/삭제 버튼: 작성자, 관리자, 또는 RBAC POST 권한 보유자 */
+        if (isAdmin || postData.authorAccountId === myMemberId || canUpdatePost) {
+            btnEditPost.hidden = false;
+        }
+        if (isAdmin || postData.authorAccountId === myMemberId || canDeletePost) {
             btnDeletePost.hidden = false;
         }
 
-        /* 승인/반려 버튼 */
-        if ((isAdmin || isApprover) && postData.status === 'PENDING') {
+        /* 승인/반려 버튼: 승인제 게시판이면서 권한 있는 경우 + PENDING 상태에만 표시 */
+        if (boardRequiresApproval
+                && (isAdmin || isApprover || canApprove)
+                && postData.status === 'PENDING') {
             btnApprove.hidden = false;
             btnReject.hidden  = false;
         }
@@ -678,11 +693,37 @@
 
     /* ── 초기화 (bfcache 대응: readyState 확인) ─────────────── */
     async function init() {
-        if (!BOARD_ID || !POST_ID) { showToast('잘못된 접근입니다.', 'error'); return; }
+        /* BOARD_NAME, POST_ID 유효성 검사 */
+        if (!BOARD_NAME || !POST_ID) { showToast('잘못된 접근입니다.', 'error'); return; }
         var payload = parseJwt();
         myMemberId  = payload.sub || null;
         isAdmin     = payload.role === 'ADMIN';
-        await checkApprover();
+        /* 게시판 이름으로 boardId 조회 */
+        try {
+            var nameRes = await apiFetch('/api/board/boards/by-name/' + encodeURIComponent(BOARD_NAME));
+            if (!nameRes || !nameRes.ok) { showToast('게시판을 찾을 수 없습니다.', 'error'); return; }
+            var nameJson = await nameRes.json();
+            BOARD_ID = nameJson.result && nameJson.result.boardId;
+            boardRequiresApproval = !!(nameJson.result && nameJson.result.requiresApproval);
+            if (!BOARD_ID) { showToast('게시판을 찾을 수 없습니다.', 'error'); return; }
+        } catch (_) {
+            showToast('게시판 조회 중 오류가 발생했습니다.', 'error');
+            return;
+        } finally { /* nothing */ }
+        /* 승인자 확인 + RBAC 권한 조회를 병렬 처리 */
+        await Promise.all([checkApprover(), (async function () {
+            try {
+                var permRes = await apiFetch('/api/board/my-permissions');
+                if (permRes && permRes.ok) {
+                    var permJson = await permRes.json();
+                    var p = permJson.result || {};
+                    canUpdatePost = !!p.postUpdate;
+                    canDeletePost = !!p.postDelete;
+                    canApprove    = !!p.boardApprove;
+                }
+            } catch (_) { /* 권한 조회 실패 시 기본값 유지 */ }
+            finally { /* nothing */ }
+        })()]);
         /* fetchPost가 먼저 완료돼야 inlineAttachIds가 채워져서 갤러리 필터가 정확 */
         await Promise.all([fetchPost(), fetchComments()]);
         await fetchAttachments();

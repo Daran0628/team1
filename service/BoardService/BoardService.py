@@ -1,5 +1,6 @@
 import io
 import logging
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -8,6 +9,7 @@ from flask_jwt_extended import get_jwt_identity, get_jwt
 from minio import S3Error
 
 from core.config.MinioConfig import get_minio_client
+from core.rbac.RBACUtils import check_board_action, check_post_action
 from core.response.ErrorStatus import ErrorStatus
 from domain.enum.PostStatus import PostStatus
 from domain.model.Board import Board, Post, PostAttachment, PostComment, PostLike, PostView, BoardApprover
@@ -82,6 +84,16 @@ def _get_post_or_raise(board_id: str, post_id: str) -> Post:
     return post
 
 
+_UUID_RE = re.compile(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE
+)
+
+
+def _is_uuid(s: str) -> bool:
+    """UUID v4 형식인지 확인한다."""
+    return bool(_UUID_RE.match(s))
+
+
 def _is_approver(board_id: str, member_id: str) -> bool:
     """해당 게시판의 승인자 여부를 반환한다."""
     return BoardApprover.query.filter_by(board_id=board_id, member_id=member_id).first() is not None
@@ -100,18 +112,19 @@ def _parse_dt(value: Optional[str]) -> Optional[datetime]:
 # ── Board CRUD ───────────────────────────────────────────────
 
 def list_boards() -> list:
-    """접근 가능한 게시판 목록을 반환한다. 부서 게시판은 소속 부서원만 포함."""
+    """접근 가능한 게시판 목록을 반환한다. BOARD READ 권한 보유 시 전체 조회."""
     member = _current_member()
+    can_read_all = check_board_action('READ')
     boards = Board.query.filter_by(is_active=True).all()
     return [
-        _board_to_dict(b) for b in boards
-        if b.is_public or b.department_id == member.department_id
+        _board_to_dict(b, member) for b in boards
+        if can_read_all or b.is_public or b.department_id == member.department_id
     ]
 
 
 def create_board(data: dict) -> dict:
-    """새 게시판을 생성한다. 관리자만 호출 가능."""
-    if not _is_admin():
+    """새 게시판을 생성한다. BOARD CREATE 권한 보유자만 호출 가능."""
+    if not check_board_action('CREATE'):
         raise BoardException(ErrorStatus.BOARD_ACCESS_DENIED)
 
     member = _current_member()
@@ -137,17 +150,20 @@ def create_board(data: dict) -> dict:
         is_active=True,
         is_public=bool(is_public),
         requires_approval=bool(data.get("requiresApproval", False)),
-        approval_expires_at=_parse_dt(data.get("approvalExpiresAt")),
         approval_purpose=data.get("approvalPurpose"),
         created_by=member.id,
     )
     try:
         db.session.add(board)
+        db.session.flush()  # board.id 확보
+        # 승인제 게시판은 생성자를 첫 승인자로 자동 등록
+        if board.requires_approval:
+            db.session.add(BoardApprover(board_id=board.id, member_id=member.id, granted_by=member.id))
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         raise e
-    return _board_to_dict(board)
+    return _board_to_dict(board, member)
 
 
 def get_board(board_id: str) -> dict:
@@ -155,12 +171,12 @@ def get_board(board_id: str) -> dict:
     member = _current_member()
     board = _get_board_or_raise(board_id)
     _assert_board_readable(board, member)
-    return _board_to_dict(board)
+    return _board_to_dict(board, member)
 
 
 def update_board(board_id: str, data: dict) -> dict:
-    """게시판 정보를 수정한다. 관리자만 호출 가능."""
-    if not _is_admin():
+    """게시판 정보를 수정한다. BOARD UPDATE 권한 보유자만 호출 가능."""
+    if not check_board_action('UPDATE'):
         raise BoardException(ErrorStatus.BOARD_ACCESS_DENIED)
 
     board = _get_board_or_raise(board_id)
@@ -172,8 +188,6 @@ def update_board(board_id: str, data: dict) -> dict:
         board.is_active = bool(data["isActive"])
     if "requiresApproval" in data:
         board.requires_approval = bool(data["requiresApproval"])
-    if "approvalExpiresAt" in data:
-        board.approval_expires_at = _parse_dt(data["approvalExpiresAt"])
     if "approvalPurpose" in data:
         board.approval_purpose = data["approvalPurpose"]
     if "isPublic" in data:
@@ -184,12 +198,12 @@ def update_board(board_id: str, data: dict) -> dict:
     except Exception as e:
         db.session.rollback()
         raise e
-    return _board_to_dict(board)
+    return _board_to_dict(board, _current_member())
 
 
 def delete_board(board_id: str) -> None:
-    """게시판을 비활성화(소프트 삭제)한다. 관리자만 호출 가능."""
-    if not _is_admin():
+    """게시판을 비활성화(소프트 삭제)한다. BOARD DELETE 권한 보유자만 호출 가능."""
+    if not check_board_action('DELETE'):
         raise BoardException(ErrorStatus.BOARD_ACCESS_DENIED)
 
     board = _get_board_or_raise(board_id)
@@ -199,6 +213,18 @@ def delete_board(board_id: str) -> None:
     except Exception as e:
         db.session.rollback()
         raise e
+
+
+def get_board_by_name(name: str) -> dict:
+    """게시판 이름(또는 하위 호환을 위한 UUID)으로 조회한다."""
+    member = _current_member()
+    board = Board.query.filter_by(board_name=name, is_active=True).first()
+    if not board and _is_uuid(name):
+        board = Board.query.filter_by(id=name, is_active=True).first()
+    if not board:
+        raise BoardException(ErrorStatus.BOARD_NOT_FOUND)
+    _assert_board_readable(board, member)
+    return _board_to_dict(board, member)
 
 
 # ── Post CRUD ────────────────────────────────────────────────
@@ -243,12 +269,8 @@ def create_post(board_id: str, data: dict) -> dict:
     if not content:
         raise ValueError("content는 필수입니다.")
 
-    # 승인 기간이 만료되었거나 승인자·관리자면 바로 게시
-    approval_expired = (
-        board.approval_expires_at
-        and board.approval_expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc)
-    )
-    if board.requires_approval and not _is_admin() and not _is_approver(board_id, member.id) and not approval_expired:
+    # 승인자·관리자면 바로 게시, 그 외는 PENDING 처리
+    if board.requires_approval and not _is_admin() and not _is_approver(board_id, member.id):
         status = PostStatus.Pending
     else:
         status = PostStatus.Published
@@ -299,11 +321,11 @@ def get_post(board_id: str, post_id: str) -> dict:
 
 
 def update_post(board_id: str, post_id: str, data: dict) -> dict:
-    """게시글을 수정한다. 작성자 또는 관리자만 가능."""
+    """게시글을 수정한다. 작성자, 관리자, 또는 POST UPDATE 권한 보유자만 가능."""
     member = _current_member()
     post = _get_post_or_raise(board_id, post_id)
 
-    if post.author_id != member.id and not _is_admin():
+    if post.author_id != member.id and not _is_admin() and not check_post_action('UPDATE'):
         raise BoardException(ErrorStatus.POST_NOT_AUTHOR)
 
     if "title" in data:
@@ -322,11 +344,11 @@ def update_post(board_id: str, post_id: str, data: dict) -> dict:
 
 
 def delete_post(board_id: str, post_id: str) -> None:
-    """게시글을 소프트 삭제한다. 작성자 또는 관리자만 가능."""
+    """게시글을 소프트 삭제한다. 작성자, 관리자, 또는 POST DELETE 권한 보유자만 가능."""
     member = _current_member()
     post = _get_post_or_raise(board_id, post_id)
 
-    if post.author_id != member.id and not _is_admin():
+    if post.author_id != member.id and not _is_admin() and not check_post_action('DELETE'):
         raise BoardException(ErrorStatus.POST_NOT_AUTHOR)
 
     post.is_deleted = True
@@ -730,21 +752,25 @@ def delete_attachment(board_id: str, post_id: str, attachment_id: str) -> None:
         raise e
 
 
-def _board_to_dict(b: Board) -> dict:
-    """Board 모델을 응답 dict로 변환한다."""
+def _board_to_dict(b: Board, member: Member = None) -> dict:
+    """Board 모델을 응답 dict로 변환한다. member 전달 시 승인자 여부도 포함한다."""
+    approver_ids   = {a.member_id for a in b.approvers}
+    approver_names = [a.member.name_ko for a in b.approvers if a.member]
     return {
-        "boardId":           b.id,
-        "boardName":         b.board_name,
-        "boardType":         b.board_type.value,
-        "description":       b.description,
-        "departmentId":      b.department_id,
-        "isActive":          b.is_active,
-        "isPublic":          b.is_public,
-        "requiresApproval":  b.requires_approval,
-        "approvalExpiresAt": b.approval_expires_at.isoformat() if b.approval_expires_at else None,
-        "approvalPurpose":   b.approval_purpose,
-        "createdBy":         b.created_by,
-        "createdAt":         b.created_at.isoformat(),
+        "boardId":               b.id,
+        "boardName":             b.board_name,
+        "boardType":             b.board_type.value,
+        "description":           b.description,
+        "departmentId":          b.department_id,
+        "isActive":              b.is_active,
+        "isPublic":              b.is_public,
+        "requiresApproval":      b.requires_approval,
+        "approvalExpiresAt":     b.approval_expires_at.isoformat() if b.approval_expires_at else None,
+        "approvalPurpose":       b.approval_purpose,
+        "createdBy":             b.created_by,
+        "createdAt":             b.created_at.isoformat(),
+        "approvers":             approver_names,
+        "isCurrentUserApprover": member is not None and member.id in approver_ids,
     }
 
 

@@ -1,5 +1,8 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* .btn 등 display를 지정하는 규칙이 UA의 [hidden] 규칙을 덮어써 버튼이 계속 보이는 문제 방지 */
+[hidden] { display: none !important; }
+
 :root {
     --primary:       #512fc9;
     --primary-h:     #3f24a5;

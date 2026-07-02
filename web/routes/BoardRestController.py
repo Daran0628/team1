@@ -10,6 +10,7 @@ from service.BoardService.BoardService import (
     list_boards,
     create_board,
     get_board,
+    get_board_by_name,
     update_board,
     delete_board,
     list_posts,
@@ -50,6 +51,26 @@ def _handle(fn):
         return ApiResponse.on_failure(ErrorStatus._INTERNAL_SERVER_ERROR, str(e))
 
 
+# ── 현재 사용자 권한 조회 ─────────────────────────────────────
+
+@board_bp.route("/my-permissions", methods=["GET"])
+@jwt_required()
+def api_board_my_permissions():
+    """현재 사용자의 게시판 관련 RBAC 권한 조회."""
+    from core.rbac.RBACUtils import check_board_action, check_post_action
+    def work():
+        return ApiResponse.on_success(SuccessStatus.BOARD_READ, {
+            "boardCreate":   check_board_action('CREATE'),
+            "boardUpdate":   check_board_action('UPDATE'),
+            "boardDelete":   check_board_action('DELETE'),
+            "boardReadAll":  check_board_action('READ'),
+            "boardApprove":  check_board_action('APPROVE'),
+            "postUpdate":    check_post_action('UPDATE'),
+            "postDelete":    check_post_action('DELETE'),
+        })
+    return _handle(work)
+
+
 # ── Board ────────────────────────────────────────────────────
 
 @board_bp.route("/boards", methods=["GET"])
@@ -68,6 +89,15 @@ def api_create_board():
     body = request.get_json(silent=True) or {}
     def work():
         return ApiResponse.on_success(SuccessStatus.BOARD_CREATE, create_board(body))
+    return _handle(work)
+
+
+@board_bp.route("/boards/by-name/<string:board_name>", methods=["GET"])
+@jwt_required()
+def api_get_board_by_name(board_name: str):
+    """게시판 이름으로 단건 조회 (URL 기반 네비게이션용)."""
+    def work():
+        return ApiResponse.on_success(SuccessStatus.BOARD_READ, get_board_by_name(board_name))
     return _handle(work)
 
 
