@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' blob:">
+    <title>게시글 목록</title>
+    <link rel="stylesheet" href="/static/css/rbac.css">
+    <link rel="stylesheet" href="/static/css/board.css">
+</head>
+<body>
+
+<header class="page-header">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> <span>›</span>
+        <a href="/board">게시판</a> <span>›</span>
+        <span id="breadcrumbBoard">게시글 목록</span>
+    </nav>
+    <h1 id="pageTitle">게시글 목록</h1>
+</header>
+
+<main class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button id="btnWritePost" class="btn btn-primary">✏️ 글쓰기</button>
+            <button id="btnRefresh" class="btn btn-icon" title="새로고침">↻</button>
+            <button id="btnPendingOnly" class="btn btn-ghost" hidden>승인 대기만 보기</button>
+        </div>
+        <div class="toolbar-right">
+            <span id="itemsCount" class="items-count"></span>
+            <input type="search" id="searchInput" class="search-input" placeholder="제목 검색...">
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="col-status">상태</th>
+                    <th class="col-name">제목</th>
+                    <th class="col-author">작성자</th>
+                    <th class="col-date">날짜</th>
+                    <th class="col-views">조회</th>
+                    <th class="col-likes">추천</th>
+                    <th class="col-post-actions" id="colActionsHeader">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="postsBody">
+                <tr><td colspan="7" class="state-cell">불러오는 중...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-bar" id="paginationBar"></div>
+
+</main>
+
+<!-- ══ 글쓰기 모달 ════════════════════════════════════════════ -->
+<div class="modal-overlay" id="writeModal" hidden>
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h2>글쓰기</h2>
+            <button class="btn-x" data-close="writeModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="field">
+                <label for="inputPostTitle">제목 <span class="req">*</span></label>
+                <input type="text" id="inputPostTitle" maxlength="255" placeholder="제목을 입력하세요">
+            </div>
+            <div class="field">
+                <label for="inputPostContent">내용 <span class="req">*</span></label>
+                <div class="inline-img-toolbar">
+                    <button type="button" id="btnInsertImage" class="btn btn-ghost">🖼 이미지 삽입</button>
+                    <input type="file" id="inputInlineImage" accept="image/*" multiple hidden>
+                    <span class="inline-img-hint">클릭 시 커서 위치에 이미지 마커 삽입</span>
+                </div>
+                <textarea id="inputPostContent" class="post-textarea post-textarea-lg" placeholder="내용을 입력하세요"></textarea>
+                <div id="inlinePreviewWrap" class="inline-img-previews"></div>
+            </div>
+            <div class="field">
+                <label for="inputPostFiles">첨부파일 (복수 선택 가능)</label>
+                <input type="file" id="inputPostFiles" multiple>
+            </div>
+            <div class="form-error" id="writeModalErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="writeModal">취소</button>
+            <button class="btn btn-primary" id="btnSavePost">등록</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ 게시글 삭제 확인 모달 ══════════════════════════════════ -->
+<div class="modal-overlay" id="deletePostModal" hidden>
+    <div class="modal modal-sm">
+        <div class="modal-head">
+            <h2>게시글 삭제</h2>
+            <button class="btn-x" data-close="deletePostModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <p class="delete-msg">이 게시글을 삭제하시겠습니까?</p>
+            <div class="form-error" id="deletePostErr"></div>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ghost" data-close="deletePostModal">취소</button>
+            <button class="btn btn-danger" id="btnConfirmDeletePost">삭제</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/board-posts.js"></script>
+</body>
+</html>
