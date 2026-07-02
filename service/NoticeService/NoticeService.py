@@ -12,7 +12,14 @@ class NoticeService:
         ).all()
 
     def get_one(self, notice_id: str):
-        """공지사항 단건 조회 + 조회수 증가"""
+        """공지사항 단건 조회 (조회수 증가 없음 - 수정용)"""
+        notice = Notice.query.get(notice_id)
+        if notice is None:
+            raise ValueError("존재하지 않는 공지사항입니다.")
+        return notice
+
+    def get_one_for_view(self, notice_id: str):
+        """공지사항 단건 조회 + 조회수 증가 (상세보기용)"""
         notice = Notice.query.get(notice_id)
         if notice is None:
             raise ValueError("존재하지 않는 공지사항입니다.")
