@@ -304,9 +304,15 @@ class ChatService:
         return [_to_message_dto(m) for m in reversed(messages)]
 
     def mark_read(self, room_id: str, member_id: str) -> None:
+        """읽음 시각을 갱신하고, 같은 방의 다른 클라이언트에 실시간으로 알린다."""
         ms = self._get_membership(room_id, member_id)
         ms.last_read_at = datetime.now(timezone.utc)
         db.session.commit()
+        sse.publish(
+            {"memberId": member_id, "lastReadAt": ms.last_read_at.isoformat()},
+            type="read",
+            channel=f"room:{room_id}",
+        )
 
     # ── 파일 / 이미지 첨부 ──────────────────────────────────────
 
