@@ -41,7 +41,7 @@ def get_notices():
 def get_notice(notice_id):
     """공지사항 상세 조회"""
     try:
-        notice = _service.get_one(notice_id)
+        notice = _service.get_one_for_view(notice_id)
         return ApiResponse.on_success(SuccessStatus._OK, _notice_to_dict(notice))
     except ValueError as e:
         return ApiResponse.on_failure(ErrorStatus._NOT_FOUND, str(e))
