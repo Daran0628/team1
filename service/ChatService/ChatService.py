@@ -84,6 +84,7 @@ def _to_room_dto(room: ChatRoom, membership: ChatRoomMember = None) -> ChatRoomR
             ChatMessage.room_id == room.id,
             ChatMessage.created_at > cutoff,
             ChatMessage.is_deleted == False,
+            ChatMessage.sender_id != membership.member_id,
         ).count()
 
     last_msg = (
